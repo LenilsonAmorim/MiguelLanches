@@ -8,11 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Baixar projeto
         uses: actions/checkout@v4
 
       - name: Descompactar projeto
         run: |
+          rm -rf projeto
+          mkdir projeto
           unzip -q MiguelLanchesFuncionario_Android.zip -d projeto
 
       - name: Configurar Java
@@ -21,6 +24,201 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Corrigir projeto Android
+        working-directory: projeto
+        run: |
+          cat > settings.gradle.kts <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "MiguelLanchesFuncionario"
+          include(":app")
+          EOF
+
+          cat > build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application") version "8.7.3" apply false
+              id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+          }
+          EOF
+
+          mkdir -p app/src/main/java/br/com/miguellanches/funcionario
+
+          cat > app/build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "br.com.miguellanches.funcionario"
+              compileSdk = 35
+
+              defaultConfig {
+                  applicationId = "br.com.miguellanches.funcionario"
+                  minSdk = 23
+                  targetSdk = 35
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+
+          dependencies {
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <application
+                  android:theme="@style/AppTheme"
+                  android:label="Miguel Lanches"
+                  android:allowBackup="true"
+                  android:supportsRtl="true">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+
+                  </activity>
+
+              </application>
+
+          </manifest>
+          EOF
+
+          mkdir -p app/src/main/res/values
+
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:colorAccent">#3949AB</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+                  <item name="android:statusBarColor">#FFFFFF</item>
+                  <item name="android:windowLightStatusBar">true</item>
+              </style>
+
+          </resources>
+          EOF
+
+          cat > app/src/main/java/br/com/miguellanches/funcionario/MainActivity.kt <<'EOF'
+          package br.com.miguellanches.funcionario
+
+          import android.app.Activity
+          import android.os.Bundle
+          import android.graphics.Color
+          import android.view.Gravity
+          import android.view.ViewGroup
+          import android.widget.Button
+          import android.widget.LinearLayout
+          import android.widget.TextView
+
+          class MainActivity : Activity() {
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+
+                  val root = LinearLayout(this)
+                  root.orientation = LinearLayout.VERTICAL
+                  root.setPadding(24, 24, 24, 24)
+                  root.setBackgroundColor(Color.WHITE)
+
+                  val titulo = TextView(this)
+                  titulo.text = "MIGUEL LANCHES"
+                  titulo.textSize = 26f
+                  titulo.setTextColor(Color.rgb(35, 55, 150))
+                  titulo.gravity = Gravity.CENTER
+                  titulo.setPadding(0, 20, 0, 30)
+
+                  root.addView(
+                      titulo,
+                      LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT
+                      )
+                  )
+
+                  val subtitulo = TextView(this)
+                  subtitulo.text = "COMANDA DO FUNCIONÁRIO"
+                  subtitulo.textSize = 18f
+                  subtitulo.gravity = Gravity.CENTER
+                  subtitulo.setPadding(0, 0, 0, 20)
+
+                  root.addView(subtitulo)
+
+                  val categorias = arrayOf(
+                      "🍕 PIZZAS",
+                      "🥟 PASTÉIS",
+                      "🍔 SANDUÍCHES",
+                      "🍟 PORÇÕES",
+                      "🍧 AÇAÍ",
+                      "🥤 BEBIDAS",
+                      "🥩 CHURRASCO"
+                  )
+
+                  for (categoria in categorias) {
+                      val botao = Button(this)
+                      botao.text = categoria
+                      botao.textSize = 17f
+
+                      root.addView(
+                          botao,
+                          LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,
+                              65
+                          ).apply {
+                              setMargins(0, 5, 0, 5)
+                          }
+                      )
+                  }
+
+                  val comanda = TextView(this)
+                  comanda.text = "COMANDA\n\nNenhum produto selecionado"
+                  comanda.textSize = 17f
+                  comanda.setPadding(20, 30, 20, 30)
+
+                  root.addView(
+                      comanda,
+                      LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT
+                      )
+                  )
+
+                  setContentView(root)
+              }
+          }
+          EOF
+
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -28,7 +226,7 @@ jobs:
 
       - name: Gerar APK
         working-directory: projeto
-        run: gradle assembleDebug --no-daemon -Dkotlin.jvm.target.validation.mode=ignore
+        run: gradle assembleDebug --no-daemon
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
