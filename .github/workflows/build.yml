@@ -22,11 +22,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extrair projeto v10
+      - name: Extrair projeto v11
         run: |
           rm -rf projeto
           mkdir projeto
-          unzip -q MiguelLanches-v10-Finalizar-Pedido.zip -d projeto
+          unzip -q MiguelLanches-v11-Pedidos-Visiveis.zip -d projeto
 
       - name: Localizar projeto Android
         run: |
@@ -55,7 +55,7 @@ jobs:
 
       - name: Localizar APK
         run: |
-          echo "===== APK ENCONTRADO ====="
+          echo "===== PROCURANDO APK ====="
 
           APK=$(find projeto -type f -name "*.apk" | head -1)
 
@@ -64,16 +64,16 @@ jobs:
             exit 1
           fi
 
-          echo "APK: $APK"
+          echo "APK encontrado: $APK"
 
           mkdir -p apk-final
-          cp "$APK" apk-final/MiguelLanches-v10-Finalizar-Pedido.apk
+          cp "$APK" apk-final/MiguelLanches-v11-Pedidos-Visiveis.apk
 
           ls -lh apk-final/
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-v10-Finalizar-Pedido
-          path: apk-final/MiguelLanches-v10-Finalizar-Pedido.apk
+          name: MiguelLanches-v11-Pedidos-Visiveis
+          path: apk-final/MiguelLanches-v11-Pedidos-Visiveis.apk
           if-no-files-found: error
