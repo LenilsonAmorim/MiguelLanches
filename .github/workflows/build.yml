@@ -19,3 +19,50 @@ jobs:
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extrair projeto v6
+        run: |
+          rm -rf projeto
+          mkdir projeto
+          unzip -q MiguelLanches-v6-Dinheiro-Troco.zip -d projeto
+
+      - name: Verificar projeto
+        run: |
+          echo "===== ESTRUTURA DO PROJETO ====="
+          find projeto -maxdepth 3 -type f | sort
+
+      - name: Gerar APK
+        working-directory: projeto
+        run: |
+          gradle assembleDebug --no-daemon
+
+      - name: Localizar APK
+        run: |
+          echo "===== PROCURANDO APK ====="
+
+          find projeto -type f -name "*.apk" -print
+
+          APK=$(find projeto -type f -name "*.apk" | head -1)
+
+          if [ -z "$APK" ]; then
+            echo "ERRO: Nenhum APK foi encontrado."
+            exit 1
+          fi
+
+          echo "APK encontrado:"
+          echo "$APK"
+
+          mkdir -p apk-final
+          cp "$APK" apk-final/MiguelLanches-v6-Dinheiro-Troco.apk
+
+          echo "===== APK PREPARADO ====="
+          ls -lh apk-final/
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiguelLanches-v6-Dinheiro-Troco-APK
+          path: apk-final/MiguelLanches-v6-Dinheiro-Troco.apk
+          if-no-files-found: error
