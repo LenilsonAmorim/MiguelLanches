@@ -22,11 +22,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extrair projeto Comanda v2
+      - name: Extrair projeto Comanda GitHub
         run: |
           rm -rf projeto
           mkdir projeto
-          unzip -q MiguelLanchesComanda_v2_Android.zip -d projeto
+          unzip -q MiguelLanchesComanda_GitHub.zip -d projeto
 
       - name: Gerar APK
         working-directory: projeto
@@ -35,6 +35,6 @@ jobs:
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-Comanda-v2-APK
+          name: MiguelLanches-Comanda-GitHub-APK
           path: projeto/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
