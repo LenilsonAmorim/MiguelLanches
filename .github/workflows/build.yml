@@ -22,7 +22,7 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Encontrar e extrair o ZIP do aplicativo
+      - name: Encontrar e extrair o ZIP
         run: |
           rm -rf projeto
           mkdir projeto
@@ -30,20 +30,53 @@ jobs:
           ZIP=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
 
           if [ -z "$ZIP" ]; then
-            echo "Nenhum ZIP do aplicativo foi encontrado na raiz do repositorio."
+            echo "ERRO: Nenhum arquivo ZIP encontrado."
             exit 1
           fi
 
-          echo "Usando: $ZIP"
+          echo "ZIP encontrado: $ZIP"
+
           unzip -q "$ZIP" -d projeto
+
+          echo "Conteúdo extraído:"
+          find projeto -maxdepth 2 -type f | head -50
+
+      - name: Localizar projeto Android
+        run: |
+          if [ -f "projeto/settings.gradle" ] || [ -f "projeto/settings.gradle.kts" ]; then
+            echo "Projeto encontrado na raiz."
+          elif [ -f "projeto/app/build.gradle" ] || [ -f "projeto/app/build.gradle.kts" ]; then
+            echo "Projeto Android encontrado."
+          else
+            SETTINGS=$(find projeto -name settings.gradle -o -name settings.gradle.kts | head -n 1)
+
+            if [ -n "$SETTINGS" ]; then
+              DIR=$(dirname "$SETTINGS")
+              echo "Projeto encontrado em: $DIR"
+              mv "$DIR"/* projeto/ 2>/dev/null || true
+              mv "$DIR"/.* projeto/ 2>/dev/null || true
+            fi
+          fi
 
       - name: Gerar APK
         working-directory: projeto
-        run: gradle assembleDebug --no-daemon
+        run: |
+          chmod +x gradlew 2>/dev/null || true
+
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --no-daemon
+          else
+            gradle assembleDebug --no-daemon
+          fi
+
+      - name: Encontrar APK
+        run: |
+          echo "APKs encontrados:"
+          find projeto -type f -name "*.apk"
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-58mm-APK
-          path: projeto/app/build/outputs/apk/debug/app-debug.apk
+          name: MiguelLanches-Corrigido-58mm-v2
+          path: projeto/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
