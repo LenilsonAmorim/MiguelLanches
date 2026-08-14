@@ -30,7 +30,7 @@ jobs:
           ZIP=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
 
           if [ -z "$ZIP" ]; then
-            echo "ERRO: Nenhum arquivo ZIP encontrado."
+            echo "ERRO: Nenhum arquivo ZIP encontrado na raiz."
             exit 1
           fi
 
@@ -38,45 +38,49 @@ jobs:
 
           unzip -q "$ZIP" -d projeto
 
-          echo "Conteúdo extraído:"
-          find projeto -maxdepth 2 -type f | head -50
+          echo "Arquivos encontrados:"
+          find projeto -maxdepth 3 -type f | head -100
 
       - name: Localizar projeto Android
         run: |
           if [ -f "projeto/settings.gradle" ] || [ -f "projeto/settings.gradle.kts" ]; then
             echo "Projeto encontrado na raiz."
-          elif [ -f "projeto/app/build.gradle" ] || [ -f "projeto/app/build.gradle.kts" ]; then
-            echo "Projeto Android encontrado."
           else
-            SETTINGS=$(find projeto -name settings.gradle -o -name settings.gradle.kts | head -n 1)
+            SETTINGS=$(find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1)
 
             if [ -n "$SETTINGS" ]; then
               DIR=$(dirname "$SETTINGS")
               echo "Projeto encontrado em: $DIR"
-              mv "$DIR"/* projeto/ 2>/dev/null || true
-              mv "$DIR"/.* projeto/ 2>/dev/null || true
+
+              if [ "$DIR" != "projeto" ]; then
+                cp -r "$DIR"/. projeto/
+              fi
+            else
+              echo "ERRO: Projeto Gradle não encontrado."
+              exit 1
             fi
           fi
 
       - name: Gerar APK
         working-directory: projeto
         run: |
-          chmod +x gradlew 2>/dev/null || true
-
           if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
             ./gradlew assembleDebug --no-daemon
           else
             gradle assembleDebug --no-daemon
           fi
 
-      - name: Encontrar APK
+      - name: Mostrar APK gerado
         run: |
+          echo "================================"
           echo "APKs encontrados:"
+          echo "================================"
           find projeto -type f -name "*.apk"
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-Corrigido-58mm-v2
+          name: MiguelLanches-Adicionais-v3
           path: projeto/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
