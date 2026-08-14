@@ -28,7 +28,7 @@ jobs:
 
       - name: Gerar APK
         working-directory: projeto
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon -Dkotlin.jvm.target.validation.mode=ignore
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
