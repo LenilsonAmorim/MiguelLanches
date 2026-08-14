@@ -8,104 +8,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Baixar projeto
         uses: actions/checkout@v4
 
-      - name: Descompactar projeto
-        run: |
-          rm -rf projeto
-          mkdir projeto
-          unzip -q MiguelLanchesFuncionario_Android.zip -d projeto
-
-      - name: Configurar Java
+      - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Corrigir projeto Android
-        working-directory: projeto
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extrair projeto Comanda v2
         run: |
-          cat > settings.gradle.kts <<'EOF'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
+          rm -rf projeto
+          mkdir projeto
+          unzip -q MiguelLanchesComanda_v2_Android.zip -d projeto
 
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+      - name: Gerar APK
+        working-directory: projeto
+        run: gradle assembleDebug --no-daemon
 
-          rootProject.name = "MiguelLanchesFuncionario"
-          include(":app")
-          EOF
-
-          cat > build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application") version "8.7.3" apply false
-              id("org.jetbrains.kotlin.android") version "2.0.21" apply false
-          }
-          EOF
-
-          mkdir -p app/src/main/java/br/com/miguellanches/funcionario
-
-          cat > app/build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application")
-              id("org.jetbrains.kotlin.android")
-          }
-
-          android {
-              namespace = "br.com.miguellanches.funcionario"
-              compileSdk = 35
-
-              defaultConfig {
-                  applicationId = "br.com.miguellanches.funcionario"
-                  minSdk = 23
-                  targetSdk = 35
-                  versionCode = 1
-                  versionName = "1.0"
-              }
-
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-          }
-
-          dependencies {
-          }
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <application
-                  android:theme="@style/AppTheme"
-                  android:label="Miguel Lanches"
-                  android:allowBackup="true"
-                  android:supportsRtl="true">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
-
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiguelLanches-Comanda-v2-APK
+          path: projeto/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error                      </intent-filter>
 
                   </activity>
 
