@@ -22,11 +22,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extrair projeto
+      - name: Extrair projeto v4
         run: |
           rm -rf projeto
           mkdir projeto
-          unzip -q MiguelLanches-Adicionais-v3-CORRIGIDO.zip -d projeto
+          unzip -q MiguelLanches-Adicionais-v4-Precos.zip -d projeto
 
       - name: Localizar projeto Android
         run: |
@@ -65,6 +65,6 @@ jobs:
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-Adicionais-v3-APK
+          name: MiguelLanches-Adicionais-v4-APK
           path: projeto/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
