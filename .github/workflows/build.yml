@@ -22,27 +22,40 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extrair projeto v6
+      - name: Extrair projeto v7
         run: |
           rm -rf projeto
           mkdir projeto
-          unzip -q MiguelLanches-v6-Dinheiro-Troco.zip -d projeto
+          unzip -q MiguelLanches-v7-Dinheiro-Troco-Corrigido.zip -d projeto
 
-      - name: Verificar projeto
+      - name: Localizar projeto Android
         run: |
-          echo "===== ESTRUTURA DO PROJETO ====="
-          find projeto -maxdepth 3 -type f | sort
+          SETTINGS=$(find projeto -type f \( -name settings.gradle -o -name settings.gradle.kts \) | head -1)
+
+          if [ -z "$SETTINGS" ]; then
+            echo "ERRO: Projeto Gradle não encontrado."
+            exit 1
+          fi
+
+          DIR=$(dirname "$SETTINGS")
+
+          if [ "$DIR" != "projeto" ]; then
+            cp -r "$DIR"/. projeto/
+          fi
 
       - name: Gerar APK
         working-directory: projeto
         run: |
-          gradle assembleDebug --no-daemon
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --no-daemon
+          else
+            gradle assembleDebug --no-daemon
+          fi
 
       - name: Localizar APK
         run: |
-          echo "===== PROCURANDO APK ====="
-
-          find projeto -type f -name "*.apk" -print
+          echo "===== APK ENCONTRADO ====="
 
           APK=$(find projeto -type f -name "*.apk" | head -1)
 
@@ -51,18 +64,16 @@ jobs:
             exit 1
           fi
 
-          echo "APK encontrado:"
-          echo "$APK"
+          echo "APK: $APK"
 
           mkdir -p apk-final
-          cp "$APK" apk-final/MiguelLanches-v6-Dinheiro-Troco.apk
+          cp "$APK" apk-final/MiguelLanches-v7-Dinheiro-Troco.apk
 
-          echo "===== APK PREPARADO ====="
           ls -lh apk-final/
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-v6-Dinheiro-Troco-APK
-          path: apk-final/MiguelLanches-v6-Dinheiro-Troco.apk
+          name: MiguelLanches-v7-Dinheiro-Troco-APK
+          path: apk-final/MiguelLanches-v7-Dinheiro-Troco.apk
           if-no-files-found: error
