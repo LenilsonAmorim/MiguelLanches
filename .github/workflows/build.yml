@@ -22,35 +22,21 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Encontrar e extrair o ZIP
+      - name: Extrair projeto
         run: |
           rm -rf projeto
           mkdir projeto
-
-          ZIP=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
-
-          if [ -z "$ZIP" ]; then
-            echo "ERRO: Nenhum arquivo ZIP encontrado na raiz."
-            exit 1
-          fi
-
-          echo "ZIP encontrado: $ZIP"
-
-          unzip -q "$ZIP" -d projeto
-
-          echo "Arquivos encontrados:"
-          find projeto -maxdepth 3 -type f | head -100
+          unzip -q MiguelLanches-Adicionais-v3-CORRIGIDO.zip -d projeto
 
       - name: Localizar projeto Android
         run: |
-          if [ -f "projeto/settings.gradle" ] || [ -f "projeto/settings.gradle.kts" ]; then
+          if [ -f "projeto/gradlew" ]; then
             echo "Projeto encontrado na raiz."
           else
-            SETTINGS=$(find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1)
+            SETTINGS=$(find projeto -type f \( -name settings.gradle -o -name settings.gradle.kts \) | head -1)
 
             if [ -n "$SETTINGS" ]; then
               DIR=$(dirname "$SETTINGS")
-              echo "Projeto encontrado em: $DIR"
 
               if [ "$DIR" != "projeto" ]; then
                 cp -r "$DIR"/. projeto/
@@ -73,14 +59,12 @@ jobs:
 
       - name: Mostrar APK gerado
         run: |
-          echo "================================"
-          echo "APKs encontrados:"
-          echo "================================"
+          echo "===== APKs encontrados ====="
           find projeto -type f -name "*.apk"
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-Adicionais-v3
+          name: MiguelLanches-Adicionais-v3-APK
           path: projeto/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
