@@ -22,11 +22,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extrair projeto v7
+      - name: Extrair projeto v9
         run: |
           rm -rf projeto
           mkdir projeto
-          unzip -q MiguelLanches-v7-Dinheiro-Troco-Corrigido.zip -d projeto
+          unzip -q MiguelLanches-v9-Clientes-Automaticos.zip -d projeto
 
       - name: Localizar projeto Android
         run: |
@@ -67,13 +67,13 @@ jobs:
           echo "APK: $APK"
 
           mkdir -p apk-final
-          cp "$APK" apk-final/MiguelLanches-v7-Dinheiro-Troco.apk
+          cp "$APK" apk-final/MiguelLanches-v9-Clientes-Automaticos.apk
 
           ls -lh apk-final/
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-v7-Dinheiro-Troco-APK
-          path: apk-final/MiguelLanches-v7-Dinheiro-Troco.apk
+          name: MiguelLanches-v9-Clientes-Automaticos
+          path: apk-final/MiguelLanches-v9-Clientes-Automaticos.apk
           if-no-files-found: error
