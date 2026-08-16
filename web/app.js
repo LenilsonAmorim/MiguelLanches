@@ -6,20 +6,14 @@ const SUPABASE_KEY =
 
 let supabaseClient = null;
 
-let produtos = [];
-
 let carrinho = [];
 
 let pedidos = [];
 
-let categoriaAtual = "todos";
-
 let pedidoSelecionado = null;
 
+let categoriaAtual = "todos";
 
-/* =========================
-   AUXILIARES
-========================= */
 
 function $(id) {
   return document.getElementById(id);
@@ -43,50 +37,82 @@ function dinheiro(valor) {
    PRODUTOS
 ========================= */
 
-produtos = [
+const produtos = [
 
   {
     id: 1,
     nome: "X-Burger",
-    categoria: "lanches",
-    preco: 15,
-    emoji: "🍔"
-  },
-
-  {
-    id: 2,
-    nome: "X-Salada",
     categoria: "lanches",
     preco: 18,
     emoji: "🍔"
   },
 
   {
-    id: 3,
-    nome: "X-Tudo",
+    id: 2,
+    nome: "X-Egg Bacon",
     categoria: "lanches",
-    preco: 25,
+    preco: 20,
+    emoji: "🍔"
+  },
+
+  {
+    id: 3,
+    nome: "X-Salada",
+    categoria: "lanches",
+    preco: 19,
     emoji: "🍔"
   },
 
   {
     id: 4,
-    nome: "Miguel Burguer",
+    nome: "X-Frango",
+    categoria: "lanches",
+    preco: 17,
+    emoji: "🍔"
+  },
+
+  {
+    id: 5,
+    nome: "Cachorro Quente",
+    categoria: "lanches",
+    preco: 13,
+    emoji: "🌭"
+  },
+
+  {
+    id: 6,
+    nome: "X-Calabresa",
+    categoria: "lanches",
+    preco: 19,
+    emoji: "🍔"
+  },
+
+  {
+    id: 7,
+    nome: "X-Tudo",
+    categoria: "lanches",
+    preco: 24,
+    emoji: "🍔"
+  },
+
+  {
+    id: 8,
+    nome: "Duplo Burger",
     categoria: "lanches",
     preco: 22,
     emoji: "🍔"
   },
 
   {
-    id: 5,
+    id: 9,
     nome: "Batata Frita",
     categoria: "porcoes",
-    preco: 12,
+    preco: 15,
     emoji: "🍟"
   },
 
   {
-    id: 6,
+    id: 10,
     nome: "Calabresa",
     categoria: "porcoes",
     preco: 20,
@@ -94,7 +120,7 @@ produtos = [
   },
 
   {
-    id: 7,
+    id: 11,
     nome: "Frango",
     categoria: "porcoes",
     preco: 22,
@@ -102,23 +128,23 @@ produtos = [
   },
 
   {
-    id: 8,
-    nome: "Coca-Cola",
+    id: 12,
+    nome: "Coca-Cola Lata",
     categoria: "bebidas",
-    preco: 6,
+    preco: 5,
     emoji: "🥤"
   },
 
   {
-    id: 9,
+    id: 13,
     nome: "Guaraná",
     categoria: "bebidas",
-    preco: 6,
+    preco: 5,
     emoji: "🥤"
   },
 
   {
-    id: 10,
+    id: 14,
     nome: "Suco",
     categoria: "bebidas",
     preco: 7,
@@ -126,7 +152,7 @@ produtos = [
   },
 
   {
-    id: 11,
+    id: 15,
     nome: "Açaí",
     categoria: "sobremesas",
     preco: 12,
@@ -134,7 +160,7 @@ produtos = [
   },
 
   {
-    id: 12,
+    id: 16,
     nome: "Pudim",
     categoria: "sobremesas",
     preco: 8,
@@ -145,83 +171,425 @@ produtos = [
 
 
 /* =========================
-   SUPABASE
+   PRODUTOS NA TELA
 ========================= */
 
-function conectarSupabase() {
+function mostrarProdutos() {
 
-  return new Promise(function(resolve, reject) {
+  const grid = $("productsGrid");
 
-    if (window.supabase) {
+  if (!grid) {
+    return;
+  }
 
-      try {
+  const campo = $("productSearch");
 
-        supabaseClient =
-          window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-          );
+  const busca =
+    campo
+      ? campo.value.trim().toLowerCase()
+      : "";
 
-        resolve();
+  const filtrados =
+    produtos.filter(function(produto) {
 
-      } catch (erro) {
+      const categoria =
+        String(produto.categoria)
+          .toLowerCase();
 
-        reject(erro);
+      const nome =
+        String(produto.nome)
+          .toLowerCase();
 
-      }
+      const categoriaOK =
+        categoriaAtual === "todos" ||
+        categoria === categoriaAtual;
 
-      return;
-    }
+      const buscaOK =
+        !busca ||
+        nome.includes(busca);
 
+      return categoriaOK && buscaOK;
 
-    const script =
-      document.createElement("script");
-
-    script.src =
-      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-
-
-    script.onload = function() {
-
-      try {
-
-        supabaseClient =
-          window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-          );
-
-        resolve();
-
-      } catch (erro) {
-
-        reject(erro);
-
-      }
-
-    };
+    });
 
 
-    script.onerror = function() {
+  if (filtrados.length === 0) {
 
-      reject(
-        new Error(
-          "Não foi possível carregar o Supabase."
-        )
-      );
+    grid.innerHTML = `
+      <div class="empty-state">
+        Nenhum produto encontrado.
+      </div>
+    `;
 
-    };
+    return;
+  }
 
 
-    document.head.appendChild(script);
+  grid.innerHTML =
+    filtrados.map(function(produto) {
 
-  });
+      return `
+
+        <article class="product-card">
+
+          <div class="product-image">
+            ${produto.emoji}
+          </div>
+
+          <div class="product-info">
+
+            <div class="product-name">
+              ${produto.nome}
+            </div>
+
+            <div class="product-bottom">
+
+              <span class="product-price">
+                ${dinheiro(produto.preco)}
+              </span>
+
+              <button
+                class="add-product"
+                type="button"
+                onclick="adicionarProduto(${produto.id})">
+                +
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      `;
+
+    }).join("");
 
 }
 
 
 /* =========================
-   MENU
+   CATEGORIAS
+========================= */
+
+function selecionarCategoria(categoria) {
+
+  categoriaAtual = categoria;
+
+  document
+    .querySelectorAll(".category")
+    .forEach(function(botao) {
+
+      botao.classList.remove("active");
+
+      if (
+        botao.dataset.category === categoria
+      ) {
+
+        botao.classList.add("active");
+
+      }
+
+    });
+
+  mostrarProdutos();
+
+}
+
+
+/* =========================
+   CARRINHO
+========================= */
+
+function adicionarProduto(id) {
+
+  const produto =
+    produtos.find(function(item) {
+
+      return item.id === id;
+
+    });
+
+
+  if (!produto) {
+    return;
+  }
+
+
+  const existente =
+    carrinho.find(function(item) {
+
+      return item.id === id;
+
+    });
+
+
+  if (existente) {
+
+    existente.quantidade++;
+
+  } else {
+
+    carrinho.push({
+
+      id: produto.id,
+
+      nome: produto.nome,
+
+      preco: produto.preco,
+
+      quantidade: 1
+
+    });
+
+  }
+
+
+  renderCarrinho();
+
+}
+
+
+function alterarQuantidade(id, valor) {
+
+  const item =
+    carrinho.find(function(produto) {
+
+      return produto.id === id;
+
+    });
+
+
+  if (!item) {
+    return;
+  }
+
+
+  item.quantidade += valor;
+
+
+  if (item.quantidade <= 0) {
+
+    carrinho =
+      carrinho.filter(function(produto) {
+
+        return produto.id !== id;
+
+      });
+
+  }
+
+
+  renderCarrinho();
+
+}
+
+
+function removerProduto(id) {
+
+  carrinho =
+    carrinho.filter(function(item) {
+
+      return item.id !== id;
+
+    });
+
+  renderCarrinho();
+
+}
+
+
+function limparCarrinho() {
+
+  carrinho = [];
+
+  renderCarrinho();
+
+}
+
+
+function renderCarrinho() {
+
+  const area = $("cartItems");
+
+  if (!area) {
+    return;
+  }
+
+
+  if (carrinho.length === 0) {
+
+    area.innerHTML = `
+
+      <div class="cart-empty">
+
+        🛒
+
+        <strong>
+          Sua comanda está vazia
+        </strong>
+
+        <span>
+          Toque no + de um produto
+          para adicionar.
+        </span>
+
+      </div>
+
+    `;
+
+    atualizarTotais();
+
+    return;
+  }
+
+
+  area.innerHTML =
+    carrinho.map(function(item) {
+
+      const subtotal =
+        item.preco * item.quantidade;
+
+      return `
+
+        <div class="cart-item">
+
+          <div>
+
+            <div class="cart-item-name">
+              ${item.nome}
+            </div>
+
+            <div class="cart-item-controls">
+
+              <button
+                class="quantity-btn"
+                type="button"
+                onclick="alterarQuantidade(${item.id}, -1)">
+                −
+              </button>
+
+              <span class="quantity-value">
+                ${item.quantidade}
+              </span>
+
+              <button
+                class="quantity-btn"
+                type="button"
+                onclick="alterarQuantidade(${item.id}, 1)">
+                +
+              </button>
+
+              <button
+                class="remove-item"
+                type="button"
+                onclick="removerProduto(${item.id})">
+                🗑
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="cart-item-price">
+            ${dinheiro(subtotal)}
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+
+  atualizarTotais();
+
+}
+
+
+/* =========================
+   TOTAIS
+========================= */
+
+function calcularSubtotal() {
+
+  return carrinho.reduce(
+    function(total, item) {
+
+      return total +
+        item.preco *
+        item.quantidade;
+
+    },
+    0
+  );
+
+}
+
+
+function atualizarTotais() {
+
+  const subtotal =
+    calcularSubtotal();
+
+  const taxa = 0;
+
+  const total =
+    subtotal + taxa;
+
+
+  if ($("subtotal")) {
+
+    $("subtotal").textContent =
+      dinheiro(subtotal);
+
+  }
+
+
+  if ($("deliveryFee")) {
+
+    $("deliveryFee").textContent =
+      dinheiro(taxa);
+
+  }
+
+
+  if ($("cartTotal")) {
+
+    $("cartTotal").textContent =
+      dinheiro(total);
+
+  }
+
+
+  if ($("cartCount")) {
+
+    const quantidade =
+      carrinho.reduce(
+        function(total, item) {
+
+          return total +
+            item.quantidade;
+
+        },
+        0
+      );
+
+    $("cartCount").textContent =
+      quantidade +
+      (
+        quantidade === 1
+          ? " item"
+          : " itens"
+      );
+
+  }
+
+}
+
+
+/* =========================
+   PÁGINAS
 ========================= */
 
 const nomesPaginas = {
@@ -275,7 +643,6 @@ function abrirPagina(nome) {
         "active"
       );
 
-
       if (
         botao.dataset.page === nome
       ) {
@@ -294,15 +661,6 @@ function abrirPagina(nome) {
     $("pageTitle").textContent =
       nomesPaginas[nome] ||
       "Miguel Lanches";
-
-  }
-
-
-  if ($("sidebar")) {
-
-    $("sidebar").classList.remove(
-      "open"
-    );
 
   }
 
@@ -327,566 +685,238 @@ function abrirPagina(nome) {
 
   }
 
-}
 
+  if ($("sidebar")) {
 
-/* =========================
-   MOSTRAR PRODUTOS
-========================= */
-
-function mostrarProdutos() {
-
-  const grid =
-    $("productsGrid");
-
-
-  if (!grid) {
-    return;
-  }
-
-
-  const busca =
-    $("productSearch")
-      ? $("productSearch")
-          .value
-          .trim()
-          .toLowerCase()
-      : "";
-
-
-  const categoriaSelecionada =
-    String(
-      categoriaAtual || "todos"
-    )
-    .trim()
-    .toLowerCase();
-
-
-  const filtrados =
-    produtos.filter(
-      function(produto) {
-
-        const categoriaProduto =
-          String(
-            produto.categoria || ""
-          )
-          .trim()
-          .toLowerCase();
-
-
-        const categoriaOK =
-          categoriaSelecionada === "todos" ||
-          categoriaProduto === categoriaSelecionada;
-
-
-        const nomeProduto =
-          String(
-            produto.nome || ""
-          )
-          .trim()
-          .toLowerCase();
-
-
-        const buscaOK =
-          !busca ||
-          nomeProduto.includes(busca);
-
-
-        return categoriaOK && buscaOK;
-
-      }
+    $("sidebar").classList.remove(
+      "open"
     );
 
-
-  if (filtrados.length === 0) {
-
-    grid.innerHTML =
-      `
-      <div class="empty-state">
-
-        Nenhum produto encontrado
-        nesta categoria.
-
-      </div>
-      `;
-
-    return;
-
   }
-
-
-  grid.innerHTML =
-    filtrados
-      .map(
-        function(produto) {
-
-          return `
-
-            <article
-              class="product-card"
-            >
-
-              <div
-                class="product-image"
-              >
-
-                ${
-                  produto.emoji ||
-                  "🍔"
-                }
-
-              </div>
-
-
-              <div
-                class="product-info"
-              >
-
-                <div
-                  class="product-name"
-                >
-
-                  ${
-                    produto.nome
-                  }
-
-                </div>
-
-
-                <div
-                  class="product-bottom"
-                >
-
-                  <span
-                    class="product-price"
-                  >
-
-                    ${
-                      dinheiro(
-                        produto.preco
-                      )
-                    }
-
-                  </span>
-
-
-                  <button
-                    class="add-product"
-                    type="button"
-                    onclick="adicionarProduto(${produto.id})"
-                  >
-
-                    +
-
-                  </button>
-
-                </div>
-
-              </div>
-
-            </article>
-
-          `;
-
-        }
-      )
-      .join("");
 
 }
 
 
 /* =========================
-   ADICIONAR PRODUTO
+   SUPABASE
 ========================= */
 
-function adicionarProduto(id) {
+function conectarSupabase() {
 
-  const produto =
-    produtos.find(
-      function(item) {
+  return new Promise(function(resolve) {
 
-        return item.id === id;
+    if (window.supabase) {
 
-      }
+      supabaseClient =
+        window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_KEY
+        );
+
+      resolve();
+
+      return;
+    }
+
+
+    const script =
+      document.createElement("script");
+
+    script.src =
+      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+
+    script.onload =
+      function() {
+
+        supabaseClient =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+          );
+
+        resolve();
+
+      };
+
+
+    script.onerror =
+      function() {
+
+        resolve();
+
+      };
+
+
+    document.head.appendChild(
+      script
     );
 
-
-  if (!produto) {
-    return;
-  }
-
-
-  const existente =
-    carrinho.find(
-      function(item) {
-
-        return item.id === id;
-
-      }
-    );
-
-
-  if (existente) {
-
-    existente.quantidade += 1;
-
-  } else {
-
-    carrinho.push({
-
-      id:
-        produto.id,
-
-      nome:
-        produto.nome,
-
-      preco:
-        produto.preco,
-
-      quantidade:
-        1
-
-    });
-
-  }
-
-
-  renderCarrinho();
+  });
 
 }
 
 
 /* =========================
-   CARRINHO
+   SALVAR PEDIDO
 ========================= */
 
-function renderCarrinho() {
-
-  const container =
-    $("cartItems");
-
-
-  if (!container) {
-    return;
-  }
-
+async function enviarPedido() {
 
   if (carrinho.length === 0) {
 
-    container.innerHTML =
-      `
-      <div class="cart-empty">
-
-        🛒
-
-        <strong>
-          Sua comanda está vazia
-        </strong>
-
-        <span>
-          Toque no + de um produto
-          para adicionar.
-        </span>
-
-      </div>
-      `;
-
-    atualizarTotais();
+    alert(
+      "Adicione pelo menos um produto."
+    );
 
     return;
-
   }
 
 
-  container.innerHTML =
-    carrinho
-      .map(
-        function(item) {
+  const cliente =
+    $("cliente")
+      ? $("cliente").value.trim()
+      : "";
 
-          const subtotal =
+
+  if (!cliente) {
+
+    alert(
+      "Informe o nome do cliente."
+    );
+
+    return;
+  }
+
+
+  if (!supabaseClient) {
+
+    alert(
+      "Banco ainda não conectado."
+    );
+
+    return;
+  }
+
+
+  const dados = {
+
+    Cliente: cliente,
+
+    telefone:
+      $("telefone")
+        ? $("telefone").value.trim()
+        : "",
+
+    endereco:
+      $("endereco")
+        ? $("endereco").value.trim()
+        : "",
+
+    referencia:
+      $("referencia")
+        ? $("referencia").value.trim()
+        : "",
+
+    observacoes:
+      $("observacoes")
+        ? $("observacoes").value.trim()
+        : "",
+
+    total:
+      calcularSubtotal()
+
+  };
+
+
+  try {
+
+    const resposta =
+      await supabaseClient
+        .from("pedidos")
+        .insert(dados)
+        .select()
+        .single();
+
+
+    if (resposta.error) {
+
+      throw resposta.error;
+
+    }
+
+
+    const pedido =
+      resposta.data;
+
+
+    const itens =
+      carrinho.map(function(item) {
+
+        return {
+
+          pedido_id:
+            pedido.id,
+
+          produto:
+            item.nome,
+
+          quantidade:
+            item.quantidade,
+
+          preco_unitario:
+            item.preco,
+
+          subtotal:
             item.preco *
-            item.quantidade;
+            item.quantidade
+
+        };
+
+      });
 
 
-          return `
-
-            <div
-              class="cart-item"
-            >
-
-              <div>
-
-                <div
-                  class="cart-item-name"
-                >
-
-                  ${
-                    item.nome
-                  }
-
-                </div>
+    const respostaItens =
+      await supabaseClient
+        .from("itens_pedido")
+        .insert(itens);
 
 
-                <div
-                  class="cart-item-controls"
-                >
+    if (respostaItens.error) {
 
-                  <button
-                    class="quantity-btn"
-                    type="button"
-                    onclick="alterarQuantidade(${item.id}, -1)"
-                  >
-                    −
-                  </button>
+      throw respostaItens.error;
+
+    }
 
 
-                  <span
-                    class="quantity-value"
-                  >
-
-                    ${
-                      item.quantidade
-                    }
-
-                  </span>
+    pedidoSelecionado =
+      pedido;
 
 
-                  <button
-                    class="quantity-btn"
-                    type="button"
-                    onclick="alterarQuantidade(${item.id}, 1)"
-                  >
-                    +
-                  </button>
-
-
-                  <button
-                    class="remove-item"
-                    type="button"
-                    onclick="removerProduto(${item.id})"
-                  >
-
-                    🗑
-
-                  </button>
-
-                </div>
-
-              </div>
-
-
-              <div
-                class="cart-item-price"
-              >
-
-                ${
-                  dinheiro(
-                    subtotal
-                  )
-                }
-
-              </div>
-
-            </div>
-
-          `;
-
-        }
-      )
-      .join("");
-
-
-  atualizarTotais();
-
-}
-
-
-/* =========================
-   QUANTIDADE
-========================= */
-
-function alterarQuantidade(
-  id,
-  quantidade
-) {
-
-  const item =
-    carrinho.find(
-      function(produto) {
-
-        return produto.id === id;
-
-      }
+    alert(
+      "Pedido #" +
+      String(pedido.id)
+        .padStart(3, "0") +
+      " salvo com sucesso!"
     );
 
 
-  if (!item) {
-    return;
-  }
+    carrinho = [];
 
+    renderCarrinho();
 
-  item.quantidade +=
-    quantidade;
+    limparFormulario();
 
-
-  if (
-    item.quantidade <= 0
-  ) {
-
-    carrinho =
-      carrinho.filter(
-        function(produto) {
-
-          return produto.id !== id;
-
-        }
-      );
+    carregarPedidos();
 
   }
+  catch (erro) {
 
+    console.error(erro);
 
-  renderCarrinho();
-
-}
-
-
-/* =========================
-   REMOVER PRODUTO
-========================= */
-
-function removerProduto(id) {
-
-  carrinho =
-    carrinho.filter(
-      function(item) {
-
-        return item.id !== id;
-
-      }
+    alert(
+      "Não foi possível salvar o pedido."
     );
-
-
-  renderCarrinho();
-
-}
-
-
-/* =========================
-   LIMPAR COMANDA
-========================= */
-
-function limparCarrinho() {
-
-  if (
-    carrinho.length === 0
-  ) {
-
-    return;
-
-  }
-
-
-  const confirmar =
-    confirm(
-      "Deseja limpar toda a comanda?"
-    );
-
-
-  if (!confirmar) {
-    return;
-  }
-
-
-  carrinho = [];
-
-  renderCarrinho();
-
-}
-
-
-/* =========================
-   TOTAIS
-========================= */
-
-function calcularSubtotal() {
-
-  return carrinho.reduce(
-    function(total, item) {
-
-      return total +
-        (
-          Number(item.preco) *
-          Number(item.quantidade)
-        );
-
-    },
-    0
-  );
-
-}
-
-
-function atualizarTotais() {
-
-  const subtotal =
-    calcularSubtotal();
-
-
-  const taxa =
-    0;
-
-
-  const total =
-    subtotal + taxa;
-
-
-  if ($("subtotal")) {
-
-    $("subtotal").textContent =
-      dinheiro(subtotal);
-
-  }
-
-
-  if ($("deliveryFee")) {
-
-    $("deliveryFee").textContent =
-      dinheiro(taxa);
-
-  }
-
-
-  if ($("cartTotal")) {
-
-    $("cartTotal").textContent =
-      dinheiro(total);
-
-  }
-
-
-  if ($("cartCount")) {
-
-    const quantidade =
-      carrinho.reduce(
-        function(total, item) {
-
-          return total +
-            Number(
-              item.quantidade
-            );
-
-        },
-        0
-      );
-
-
-    $("cartCount").textContent =
-      quantidade +
-      (
-        quantidade === 1
-          ? " item"
-          : " itens"
-      );
 
   }
 
@@ -918,219 +948,7 @@ function limparFormulario() {
 
 
 /* =========================
-   ENVIAR PEDIDO
-========================= */
-
-async function enviarPedido() {
-
-  if (
-    carrinho.length === 0
-  ) {
-
-    alert(
-      "Adicione pelo menos um produto à comanda."
-    );
-
-    return;
-
-  }
-
-
-  if (!supabaseClient) {
-
-    alert(
-      "O banco ainda está conectando. Aguarde alguns segundos."
-    );
-
-    return;
-
-  }
-
-
-  const cliente =
-    $("cliente")
-      ? $("cliente")
-          .value
-          .trim()
-      : "";
-
-
-  const telefone =
-    $("telefone")
-      ? $("telefone")
-          .value
-          .trim()
-      : "";
-
-
-  const endereco =
-    $("endereco")
-      ? $("endereco")
-          .value
-          .trim()
-      : "";
-
-
-  const referencia =
-    $("referencia")
-      ? $("referencia")
-          .value
-          .trim()
-      : "";
-
-
-  const observacoes =
-    $("observacoes")
-      ? $("observacoes")
-          .value
-          .trim()
-      : "";
-
-
-  if (!cliente) {
-
-    alert(
-      "Informe o nome do cliente."
-    );
-
-    return;
-
-  }
-
-
-  const total =
-    calcularSubtotal();
-
-
-  try {
-
-    const resposta =
-      await supabaseClient
-        .from("pedidos")
-        .insert({
-
-          Cliente:
-            cliente,
-
-          telefone:
-            telefone,
-
-          endereco:
-            endereco,
-
-          referencia:
-            referencia,
-
-          observacoes:
-            observacoes,
-
-          total:
-            total
-
-        })
-        .select()
-        .single();
-
-
-    if (resposta.error) {
-
-      throw resposta.error;
-
-    }
-
-
-    const pedido =
-      resposta.data;
-
-
-    const itens =
-      carrinho.map(
-        function(item) {
-
-          return {
-
-            pedido_id:
-              pedido.id,
-
-            produto:
-              item.nome,
-
-            quantidade:
-              item.quantidade,
-
-            preco_unitario:
-              item.preco,
-
-            subtotal:
-              item.preco *
-              item.quantidade
-
-          };
-
-        }
-      );
-
-
-    const respostaItens =
-      await supabaseClient
-        .from("itens_pedido")
-        .insert(itens);
-
-
-    if (
-      respostaItens.error
-    ) {
-
-      throw respostaItens.error;
-
-    }
-
-
-    alert(
-      "Pedido #" +
-      String(
-        pedido.id
-      ).padStart(
-        3,
-        "0"
-      ) +
-      " salvo com sucesso!"
-    );
-
-
-    pedidoSelecionado =
-      pedido;
-
-
-    carrinho = [];
-
-
-    limparFormulario();
-
-    renderCarrinho();
-
-    carregarPedidos();
-
-
-  } catch (erro) {
-
-    console.error(
-      "Erro ao salvar pedido:",
-      erro
-    );
-
-
-    alert(
-      "Não foi possível salvar o pedido."
-    );
-
-  }
-
-}
-
-
-/* =========================
-   CARREGAR PEDIDOS
+   PEDIDOS
 ========================= */
 
 async function carregarPedidos() {
@@ -1149,22 +967,13 @@ async function carregarPedidos() {
         .order(
           "id",
           {
-            ascending:
-              false
+            ascending: false
           }
         );
 
 
-    if (
-      resposta.error
-    ) {
-
-      console.error(
-        resposta.error
-      );
-
+    if (resposta.error) {
       return;
-
     }
 
 
@@ -1176,276 +985,170 @@ async function carregarPedidos() {
 
     mostrarHistorico();
 
+  }
+  catch (erro) {
 
-  } catch (erro) {
-
-    console.error(
-      erro
-    );
+    console.error(erro);
 
   }
 
 }
 
-
-/* =========================
-   COMANDAS
-========================= */
 
 function mostrarComandas() {
 
-  const container =
+  const area =
     $("openOrders");
 
-
-  if (!container) {
+  if (!area) {
     return;
   }
 
 
-  if (
-    pedidos.length === 0
-  ) {
+  if (pedidos.length === 0) {
 
-    container.innerHTML =
-      `
-      <div class="empty-state">
-        Nenhuma comanda aberta.
-      </div>
+    area.innerHTML =
+      `<div class="empty-state">
+        Nenhuma comanda encontrada.
+      </div>`;
+
+    return;
+  }
+
+
+  area.innerHTML =
+    pedidos.map(function(pedido) {
+
+      return `
+
+        <div class="order-card">
+
+          <strong>
+            Comanda #${String(pedido.id)
+              .padStart(3, "0")}
+          </strong>
+
+          <p>
+            Cliente:
+            ${pedido.Cliente || "-"}
+          </p>
+
+          <strong>
+            ${dinheiro(pedido.total)}
+          </strong>
+
+          <br><br>
+
+          <button
+            class="secondary-btn"
+            type="button"
+            onclick="selecionarPedido(${pedido.id})">
+            Ver / Imprimir
+          </button>
+
+        </div>
+
       `;
 
-    return;
-
-  }
-
-
-  container.innerHTML =
-    pedidos
-      .map(
-        function(pedido) {
-
-          return `
-
-            <div
-              class="order-card"
-            >
-
-              <strong>
-
-                Comanda #${
-                  String(
-                    pedido.id
-                  ).padStart(
-                    3,
-                    "0"
-                  )
-                }
-
-              </strong>
-
-
-              <p>
-
-                Cliente:
-                ${
-                  pedido.Cliente ||
-                  "-"
-                }
-
-              </p>
-
-
-              <strong>
-
-                ${
-                  dinheiro(
-                    pedido.total
-                  )
-                }
-
-              </strong>
-
-
-              <br><br>
-
-
-              <button
-                class="secondary-btn"
-                type="button"
-                onclick="selecionarPedido(${pedido.id})"
-              >
-
-                Ver / Imprimir
-
-              </button>
-
-            </div>
-
-          `;
-
-        }
-      )
-      .join("");
+    }).join("");
 
 }
 
-
-/* =========================
-   HISTÓRICO
-========================= */
 
 function mostrarHistorico() {
 
   const tabela =
     $("historyTable");
 
-
   if (!tabela) {
     return;
   }
 
 
-  if (
-    pedidos.length === 0
-  ) {
+  if (pedidos.length === 0) {
 
-    tabela.innerHTML =
-      `
+    tabela.innerHTML = `
       <tr>
-
-        <td
-          colspan="5"
+        <td colspan="5"
           class="empty-cell">
-
           Nenhum pedido encontrado.
-
         </td>
-
       </tr>
-      `;
+    `;
 
     return;
-
   }
 
 
   tabela.innerHTML =
-    pedidos
-      .map(
-        function(pedido) {
+    pedidos.map(function(pedido) {
 
-          const data =
-            pedido.created_at
-              ? new Date(
-                  pedido.created_at
-                ).toLocaleString(
-                  "pt-BR"
-                )
-              : "-";
+      const data =
+        pedido.created_at
+          ? new Date(
+              pedido.created_at
+            ).toLocaleString("pt-BR")
+          : "-";
 
 
-          return `
+      return `
 
-            <tr>
+        <tr>
 
-              <td>
+          <td>
+            #${String(pedido.id)
+              .padStart(3, "0")}
+          </td>
 
-                #${
-                  String(
-                    pedido.id
-                  ).padStart(
-                    3,
-                    "0"
-                  )
-                }
+          <td>
+            ${pedido.Cliente || "-"}
+          </td>
 
-              </td>
+          <td>
+            ${data}
+          </td>
 
+          <td>
+            ${dinheiro(pedido.total)}
+          </td>
 
-              <td>
+          <td>
 
-                ${
-                  pedido.Cliente ||
-                  "-"
-                }
+            <button
+              class="secondary-btn"
+              type="button"
+              onclick="selecionarPedido(${pedido.id})">
+              Ver
+            </button>
 
-              </td>
+          </td>
 
+        </tr>
 
-              <td>
+      `;
 
-                ${data}
-
-              </td>
-
-
-              <td>
-
-                ${
-                  dinheiro(
-                    pedido.total
-                  )
-                }
-
-              </td>
-
-
-              <td>
-
-                <button
-                  class="secondary-btn"
-                  type="button"
-                  onclick="selecionarPedido(${pedido.id})"
-                >
-
-                  Ver
-
-                </button>
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("");
+    }).join("");
 
 }
 
 
-/* =========================
-   SELECIONAR PEDIDO
-========================= */
-
 function selecionarPedido(id) {
 
   pedidoSelecionado =
-    pedidos.find(
-      function(pedido) {
+    pedidos.find(function(pedido) {
 
-        return Number(
-          pedido.id
-        ) === Number(id);
+      return Number(pedido.id) ===
+        Number(id);
 
-      }
-    );
+    });
 
 
-  if (
-    !pedidoSelecionado
-  ) {
-
+  if (!pedidoSelecionado) {
     return;
-
   }
 
 
-  abrirPagina(
-    "impressao"
-  );
-
+  abrirPagina("impressao");
 
   mostrarPreVisualizacao();
 
@@ -1453,7 +1156,7 @@ function selecionarPedido(id) {
 
 
 /* =========================
-   PRÉ-VISUALIZAÇÃO
+   IMPRESSÃO
 ========================= */
 
 function mostrarPreVisualizacao() {
@@ -1461,115 +1164,251 @@ function mostrarPreVisualizacao() {
   const area =
     $("printPreview");
 
-
   if (!area) {
     return;
   }
 
 
-  if (
-    !pedidoSelecionado
-  ) {
+  if (!pedidoSelecionado) {
 
-    area.innerHTML =
-      `
+    area.innerHTML = `
       <div class="receipt-empty">
-
-        Selecione um pedido
-        para visualizar.
-
+        Selecione um pedido para visualizar.
       </div>
-      `;
+    `;
 
     return;
-
   }
 
 
   area.innerHTML = `
 
-    <div
-      style="
-        text-align:center;
-        font-size:20px;
-        font-weight:bold;
-      "
-    >
+    <div style="
+      text-align:center;
+      font-size:20px;
+      font-weight:bold;
+    ">
 
       MIGUEL LANCHES
 
     </div>
 
-
     <hr>
 
-
     PEDIDO:
-
-    #${
-      String(
-        pedidoSelecionado.id
-      ).padStart(
-        3,
-        "0"
-      )
-    }
-
+    #${String(pedidoSelecionado.id)
+      .padStart(3, "0")}
 
     <br><br>
 
-
     CLIENTE:
-
-    ${
-      pedidoSelecionado.Cliente ||
-      ""
-    }
-
+    ${pedidoSelecionado.Cliente || ""}
 
     <br>
-
 
     TELEFONE:
-
-    ${
-      pedidoSelecionado.telefone ||
-      ""
-    }
-
+    ${pedidoSelecionado.telefone || ""}
 
     <br>
-
 
     ENDEREÇO:
-
-    ${
-      pedidoSelecionado.endereco ||
-      ""
-    }
-
+    ${pedidoSelecionado.endereco || ""}
 
     <br>
 
-
     REF:
-
-    ${
-      pedidoSelecionado.referencia ||
-      ""
-    }
-
+    ${pedidoSelecionado.referencia || ""}
 
     <hr>
 
-
     TOTAL:
+    ${dinheiro(pedidoSelecionado.total)}
 
-    ${
-      dinheiro(
-        pedidoSelecionado.total
-      )
+    <hr>
+
+    <strong>
+      Obrigado pela preferência!
+    </strong>
+
+  `;
+
+}
+
+
+/* =========================
+   INICIALIZAÇÃO
+========================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async function() {
+
+    mostrarProdutos();
+
+    renderCarrinho();
+
+
+    document
+      .querySelectorAll(".category")
+      .forEach(function(botao) {
+
+        botao.addEventListener(
+          "click",
+          function() {
+
+            selecionarCategoria(
+              botao.dataset.category
+            );
+
+          }
+        );
+
+      });
+
+
+    if ($("productSearch")) {
+
+      $("productSearch")
+        .addEventListener(
+          "input",
+          mostrarProdutos
+        );
+
     }
 
 
-    <hr
+    document
+      .querySelectorAll(".menu-item")
+      .forEach(function(botao) {
+
+        botao.addEventListener(
+          "click",
+          function() {
+
+            abrirPagina(
+              botao.dataset.page
+            );
+
+          }
+        );
+
+      });
+
+
+    if ($("menuToggle")) {
+
+      $("menuToggle")
+        .addEventListener(
+          "click",
+          function() {
+
+            $("sidebar")
+              .classList.toggle("open");
+
+          }
+        );
+
+    }
+
+
+    if ($("clearCart")) {
+
+      $("clearCart")
+        .addEventListener(
+          "click",
+          limparCarrinho
+        );
+
+    }
+
+
+    if ($("finishBtn")) {
+
+      $("finishBtn")
+        .addEventListener(
+          "click",
+          enviarPedido
+        );
+
+    }
+
+
+    if ($("printBtn")) {
+
+      $("printBtn")
+        .addEventListener(
+          "click",
+          function() {
+
+            if (carrinho.length === 0) {
+
+              alert(
+                "Adicione produtos à comanda."
+              );
+
+              return;
+
+            }
+
+            pedidoSelecionado = {
+
+              id: "NOVO",
+
+              Cliente:
+                $("cliente")
+                  ? $("cliente").value
+                  : "",
+
+              telefone:
+                $("telefone")
+                  ? $("telefone").value
+                  : "",
+
+              endereco:
+                $("endereco")
+                  ? $("endereco").value
+                  : "",
+
+              referencia:
+                $("referencia")
+                  ? $("referencia").value
+                  : "",
+
+              total:
+                calcularSubtotal()
+
+            };
+
+            abrirPagina(
+              "impressao"
+            );
+
+            mostrarPreVisualizacao();
+
+          }
+        );
+
+    }
+
+
+    if ($("doPrintBtn")) {
+
+      $("doPrintBtn")
+        .addEventListener(
+          "click",
+          function() {
+
+            window.print();
+
+          }
+        );
+
+    }
+
+
+    await conectarSupabase();
+
+    await carregarPedidos();
+
+  }
+);
