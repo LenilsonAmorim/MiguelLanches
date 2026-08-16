@@ -3,87 +3,115 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Miguel Lanches — Pedidos</title>
+  <title>Miguel Lanches</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<main class="app">
+<div id="app">
 
-  <!-- LOGIN -->
-  <section id="login" class="card login-card">
+  <!-- =========================
+       MENU LATERAL
+  ========================== -->
 
-    <div class="brand">
-      MIGUEL LANCHES
+  <aside id="sidebar">
+
+    <div class="logo">
+      <div class="logo-title">MIGUEL</div>
+      <div class="logo-subtitle">LANCHES</div>
     </div>
 
-    <p class="muted">
-      Sistema de pedidos
-    </p>
+    <nav>
 
-    <label>
-      Usuário
-
-      <input
-        id="username"
-        type="text"
-        placeholder="Usuário"
+      <button
+        class="menu-item active"
+        data-page="dashboard"
+        type="button"
       >
-    </label>
+        🏠
+        <span>Painel Inicial</span>
+      </button>
 
-    <label>
-      Senha
-
-      <input
-        id="password"
-        type="password"
-        placeholder="Senha"
+      <button
+        class="menu-item"
+        data-page="novo-pedido"
+        type="button"
       >
-    </label>
+        📝
+        <span>Novo Pedido</span>
+      </button>
 
-    <button
-      id="loginBtn"
-      class="primary"
-      type="button"
-      onclick="
-        document.getElementById('login').classList.add('hidden');
-        document.getElementById('orders').classList.remove('hidden');
-      "
-    >
-      Entrar
-    </button>
+      <button
+        class="menu-item"
+        data-page="comandas"
+        type="button"
+      >
+        📋
+        <span>Comandas Abertas</span>
+      </button>
 
-    <p id="loginMsg" class="error"></p>
+      <button
+        class="menu-item"
+        data-page="historico"
+        type="button"
+      >
+        📚
+        <span>Histórico</span>
+      </button>
 
-    <p class="hint">
-      Protótipo inicial.
-    </p>
+      <button
+        class="menu-item"
+        data-page="impressao"
+        type="button"
+      >
+        🖨️
+        <span>Impressão</span>
+      </button>
 
-  </section>
+    </nav>
+
+    <div class="sidebar-footer">
+      Miguel Lanches
+      <small>Sistema de Pedidos</small>
+    </div>
+
+  </aside>
 
 
-  <!-- PEDIDOS -->
-  <section id="orders" class="hidden">
+  <!-- =========================
+       CONTEÚDO
+  ========================== -->
 
-    <header class="topbar">
+  <main id="content">
+
+    <!-- TOPO -->
+
+    <header id="topbar">
+
+      <button
+        id="menuToggle"
+        type="button"
+      >
+        ☰
+      </button>
 
       <div>
-        <strong>MIGUEL LANCHES</strong>
-        <span>Pedidos</span>
+        <strong id="pageTitle">
+          Painel Inicial
+        </strong>
+
+        <small>
+          Sistema de pedidos
+        </small>
       </div>
 
       <button
         id="logoutBtn"
-        class="ghost"
         type="button"
-        onclick="
-          document.getElementById('orders').classList.add('hidden');
-          document.getElementById('login').classList.remove('hidden');
-        "
       >
         Sair
       </button>
@@ -91,97 +119,117 @@
     </header>
 
 
-    <div class="grid">
+    <!-- =========================
+         PAINEL INICIAL
+    ========================== -->
 
-      <!-- NOVO PEDIDO -->
-      <section class="card">
+    <section
+      id="page-dashboard"
+      class="page active-page"
+    >
 
-        <h2>
-          Novo pedido
-        </h2>
+      <div class="page-header">
+
+        <div>
+          <h1>Painel Inicial</h1>
+
+          <p>
+            Bem-vindo ao sistema de pedidos.
+          </p>
+        </div>
+
+        <button
+          class="primary-btn"
+          data-go="novo-pedido"
+          type="button"
+        >
+          + Novo Pedido
+        </button>
+
+      </div>
 
 
-        <div class="row">
+      <div class="stats-grid">
 
-          <label>
-            Cliente
+        <div class="stat-card">
 
-            <input
-              id="cliente"
-              type="text"
-              placeholder="Nome do cliente"
-            >
-          </label>
+          <span>Pedidos Hoje</span>
 
-
-          <label>
-            Telefone
-
-            <input
-              id="telefone"
-              type="text"
-              placeholder="Telefone"
-            >
-          </label>
+          <strong id="statPedidos">
+            0
+          </strong>
 
         </div>
 
 
-        <label>
-          Endereço
+        <div class="stat-card">
 
-          <input
-            id="endereco"
-            type="text"
-            placeholder="Rua, número, bairro"
-          >
-        </label>
+          <span>Comandas Abertas</span>
 
+          <strong id="statComandas">
+            0
+          </strong>
 
-        <label>
-          Referência
-
-          <input
-            id="referencia"
-            type="text"
-            placeholder="Ponto de referência"
-          >
-        </label>
+        </div>
 
 
-        <h3>
-          Itens
-        </h3>
+        <div class="stat-card">
+
+          <span>Total Hoje</span>
+
+          <strong id="statTotal">
+            R$ 0,00
+          </strong>
+
+        </div>
+
+      </div>
 
 
-        <div id="items">
+      <div class="dashboard-grid">
 
-          <div class="item">
+        <div class="panel">
 
-            <input
-              type="text"
-              placeholder="Produto"
-            >
+          <div class="panel-header">
 
-            <input
-              type="number"
-              min="1"
-              value="1"
-              placeholder="Qtd"
-            >
+            <h2>
+              Acesso rápido
+            </h2>
 
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Preço"
-            >
+          </div>
+
+          <div class="quick-actions">
 
             <button
+              data-go="novo-pedido"
               type="button"
-              class="secondary"
             >
-              ×
+              📝
+              <span>Novo Pedido</span>
+            </button>
+
+            <button
+              data-go="comandas"
+              type="button"
+            >
+              📋
+              <span>Comandas</span>
+            </button>
+
+            <button
+              data-go="historico"
+              type="button"
+            >
+              📚
+              <span>Histórico</span>
+            </button>
+
+            <button
+              data-go="impressao"
+              type="button"
+            >
+              🖨️
+              <span>Impressão</span>
             </button>
 
           </div>
@@ -189,5 +237,370 @@
         </div>
 
 
-        <button
-          id="addItem
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <h2>
+              Últimos pedidos
+            </h2>
+
+          </div>
+
+          <div id="recentOrders">
+
+            <div class="empty-state">
+              Nenhum pedido registrado.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         NOVO PEDIDO
+    ========================== -->
+
+    <section
+      id="page-novo-pedido"
+      class="page"
+    >
+
+      <div class="page-header">
+
+        <div>
+
+          <h1>Novo Pedido</h1>
+
+          <p>
+            Registre um novo pedido.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="order-layout">
+
+        <div class="panel">
+
+          <h2>Dados do Cliente</h2>
+
+          <div class="form-grid">
+
+            <label>
+              Cliente
+
+              <input
+                id="cliente"
+                type="text"
+                placeholder="Nome do cliente"
+              >
+            </label>
+
+
+            <label>
+              Telefone
+
+              <input
+                id="telefone"
+                type="text"
+                placeholder="Telefone"
+              >
+            </label>
+
+
+            <label class="full">
+
+              Endereço
+
+              <input
+                id="endereco"
+                type="text"
+                placeholder="Rua, número, bairro"
+              >
+
+            </label>
+
+
+            <label class="full">
+
+              Referência
+
+              <input
+                id="referencia"
+                type="text"
+                placeholder="Ponto de referência"
+              >
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <h2>
+              Itens do Pedido
+            </h2>
+
+            <button
+              id="addItemBtn"
+              class="secondary-btn"
+              type="button"
+            >
+              + Adicionar Item
+            </button>
+
+          </div>
+
+
+          <div class="items-head">
+
+            <span>Produto</span>
+            <span>Qtd.</span>
+            <span>Preço</span>
+            <span></span>
+
+          </div>
+
+
+          <div id="items">
+
+          </div>
+
+
+          <div class="order-total">
+
+            <span>Total</span>
+
+            <strong id="total">
+              R$ 0,00
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <h2>Observações</h2>
+
+          <textarea
+            id="observacoes"
+            placeholder="Observações do pedido..."
+          ></textarea>
+
+
+          <button
+            id="sendBtn"
+            class="primary-btn large-btn"
+            type="button"
+          >
+            Enviar Pedido
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         COMANDAS
+    ========================== -->
+
+    <section
+      id="page-comandas"
+      class="page"
+    >
+
+      <div class="page-header">
+
+        <div>
+
+          <h1>Comandas Abertas</h1>
+
+          <p>
+            Pedidos aguardando fechamento.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel">
+
+        <div
+          id="openOrders"
+          class="orders-list"
+        >
+
+          <div class="empty-state">
+            Nenhuma comanda aberta.
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         HISTÓRICO
+    ========================== -->
+
+    <section
+      id="page-historico"
+      class="page"
+    >
+
+      <div class="page-header">
+
+        <div>
+
+          <h1>Histórico de Pedidos</h1>
+
+          <p>
+            Consulte os pedidos realizados.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel">
+
+        <div class="table-container">
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>Pedido</th>
+
+                <th>Cliente</th>
+
+                <th>Data</th>
+
+                <th>Total</th>
+
+                <th>Ação</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="historyTable">
+
+              <tr>
+
+                <td
+                  colspan="5"
+                  class="empty-cell"
+                >
+                  Nenhum pedido encontrado.
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         IMPRESSÃO
+    ========================== -->
+
+    <section
+      id="page-impressao"
+      class="page"
+    >
+
+      <div class="page-header">
+
+        <div>
+
+          <h1>Impressão</h1>
+
+          <p>
+            Visualize e imprima o pedido.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="print-layout">
+
+        <div class="panel">
+
+          <h2>
+            Pré-visualização
+          </h2>
+
+
+          <div
+            id="printPreview"
+            class="receipt"
+          >
+
+            <div class="receipt-empty">
+              Selecione um pedido para visualizar.
+            </div>
+
+          </div>
+
+
+          <button
+            id="printBtn"
+            class="primary-btn large-btn"
+            type="button"
+          >
+            🖨️ Imprimir Pedido
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =========================
+     APP
+========================= -->
+
+<script src="app.js?v=3000"></script>
+
+</body>
+</html>
