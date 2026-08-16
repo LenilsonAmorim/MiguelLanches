@@ -6,9 +6,13 @@ const SUPABASE_KEY =
 
 let supabaseClient = null;
 
-let items = [];
+let produtos = [];
+
+let carrinho = [];
 
 let pedidos = [];
+
+let categoriaAtual = "todos";
 
 let pedidoSelecionado = null;
 
@@ -33,6 +37,111 @@ function dinheiro(valor) {
   );
 
 }
+
+
+/* =========================
+   PRODUTOS
+========================= */
+
+produtos = [
+
+  {
+    id: 1,
+    nome: "X-Burger",
+    categoria: "lanches",
+    preco: 15,
+    emoji: "🍔"
+  },
+
+  {
+    id: 2,
+    nome: "X-Salada",
+    categoria: "lanches",
+    preco: 18,
+    emoji: "🍔"
+  },
+
+  {
+    id: 3,
+    nome: "X-Tudo",
+    categoria: "lanches",
+    preco: 25,
+    emoji: "🍔"
+  },
+
+  {
+    id: 4,
+    nome: "Miguel Burguer",
+    categoria: "lanches",
+    preco: 22,
+    emoji: "🍔"
+  },
+
+  {
+    id: 5,
+    nome: "Batata Frita",
+    categoria: "porcoes",
+    preco: 12,
+    emoji: "🍟"
+  },
+
+  {
+    id: 6,
+    nome: "Calabresa",
+    categoria: "porcoes",
+    preco: 20,
+    emoji: "🍟"
+  },
+
+  {
+    id: 7,
+    nome: "Frango",
+    categoria: "porcoes",
+    preco: 22,
+    emoji: "🍗"
+  },
+
+  {
+    id: 8,
+    nome: "Coca-Cola",
+    categoria: "bebidas",
+    preco: 6,
+    emoji: "🥤"
+  },
+
+  {
+    id: 9,
+    nome: "Guaraná",
+    categoria: "bebidas",
+    preco: 6,
+    emoji: "🥤"
+  },
+
+  {
+    id: 10,
+    nome: "Suco",
+    categoria: "bebidas",
+    preco: 7,
+    emoji: "🧃"
+  },
+
+  {
+    id: 11,
+    nome: "Açaí",
+    categoria: "sobremesas",
+    preco: 12,
+    emoji: "🍧"
+  },
+
+  {
+    id: 12,
+    nome: "Pudim",
+    categoria: "sobremesas",
+    preco: 8,
+    emoji: "🍮"
+  }
+
+];
 
 
 /* =========================
@@ -117,19 +226,16 @@ function conectarSupabase() {
 
 const nomesPaginas = {
 
-  "dashboard":
-    "Painel Inicial",
+  dashboard:
+    "Fazer Pedido",
 
-  "novo-pedido":
-    "Novo Pedido",
-
-  "comandas":
+  comandas:
     "Comandas Abertas",
 
-  "historico":
+  historico:
     "Histórico de Pedidos",
 
-  "impressao":
+  impressao:
     "Impressão"
 
 };
@@ -169,6 +275,7 @@ function abrirPagina(nome) {
         "active"
       );
 
+
       if (
         botao.dataset.page === nome
       ) {
@@ -182,53 +289,32 @@ function abrirPagina(nome) {
     });
 
 
-  const titulo =
-    $("pageTitle");
+  if ($("pageTitle")) {
 
-
-  if (titulo) {
-
-    titulo.textContent =
+    $("pageTitle").textContent =
       nomesPaginas[nome] ||
       "Miguel Lanches";
 
   }
 
 
-  const sidebar =
-    $("sidebar");
+  if ($("sidebar")) {
 
-
-  if (sidebar) {
-
-    sidebar.classList.remove(
+    $("sidebar").classList.remove(
       "open"
     );
 
   }
 
 
-  if (
-    nome === "dashboard"
-  ) {
-
-    atualizarDashboard();
-
-  }
-
-
-  if (
-    nome === "comandas"
-  ) {
+  if (nome === "comandas") {
 
     mostrarComandas();
 
   }
 
 
-  if (
-    nome === "historico"
-  ) {
+  if (nome === "historico") {
 
     mostrarHistorico();
 
@@ -238,28 +324,199 @@ function abrirPagina(nome) {
 
 
 /* =========================
-   ITENS DO PEDIDO
+   MOSTRAR PRODUTOS
 ========================= */
 
-function criarItemInicial() {
+function mostrarProdutos() {
 
-  items = [
+  const grid =
+    $("productsGrid");
 
-    {
-      name: "",
-      quantity: 1,
-      price: 0
-    }
 
-  ];
+  if (!grid) {
+    return;
+  }
+
+
+  const busca =
+    $("productSearch")
+      ? $("productSearch")
+          .value
+          .trim()
+          .toLowerCase()
+      : "";
+
+
+  const filtrados =
+    produtos.filter(
+      function(produto) {
+
+        const categoriaOK =
+          categoriaAtual === "todos" ||
+          produto.categoria ===
+            categoriaAtual;
+
+
+        const buscaOK =
+          !busca ||
+          produto.nome
+            .toLowerCase()
+            .includes(busca);
+
+
+        return categoriaOK &&
+          buscaOK;
+
+      }
+    );
+
+
+  if (filtrados.length === 0) {
+
+    grid.innerHTML =
+      `
+      <div class="empty-state">
+        Nenhum produto encontrado.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  grid.innerHTML =
+    filtrados.map(
+      function(produto) {
+
+        return `
+
+          <article
+            class="product-card"
+          >
+
+            <div
+              class="product-image"
+            >
+              ${produto.emoji}
+            </div>
+
+
+            <div
+              class="product-info"
+            >
+
+              <div
+                class="product-name"
+              >
+                ${produto.nome}
+              </div>
+
+
+              <div
+                class="product-bottom"
+              >
+
+                <span
+                  class="product-price"
+                >
+                  ${dinheiro(
+                    produto.preco
+                  )}
+                </span>
+
+
+                <button
+                  class="add-product"
+                  type="button"
+                  onclick="adicionarProduto(${produto.id})"
+                >
+                  +
+                </button>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        `;
+
+      }
+    ).join("");
 
 }
 
 
-function renderItems() {
+/* =========================
+   ADICIONAR PRODUTO
+========================= */
+
+function adicionarProduto(id) {
+
+  const produto =
+    produtos.find(
+      function(item) {
+
+        return item.id === id;
+
+      }
+    );
+
+
+  if (!produto) {
+    return;
+  }
+
+
+  const existente =
+    carrinho.find(
+      function(item) {
+
+        return item.id === id;
+
+      }
+    );
+
+
+  if (existente) {
+
+    existente.quantidade += 1;
+
+  } else {
+
+    carrinho.push({
+
+      id:
+        produto.id,
+
+      nome:
+        produto.nome,
+
+      preco:
+        produto.preco,
+
+      quantidade:
+        1
+
+    });
+
+  }
+
+
+  renderCarrinho();
+
+}
+
+
+/* =========================
+   CARRINHO
+========================= */
+
+function renderCarrinho() {
 
   const container =
-    $("items");
+    $("cartItems");
 
 
   if (!container) {
@@ -267,243 +524,311 @@ function renderItems() {
   }
 
 
-  container.innerHTML =
-    items.map(function(item, index) {
+  if (carrinho.length === 0) {
 
-      return `
+    container.innerHTML =
+      `
+      <div class="cart-empty">
 
-        <div class="item">
+        🛒
 
-          <input
-            type="text"
-            data-name="${index}"
-            placeholder="Produto"
-            value="${item.name || ""}"
-          >
+        <strong>
+          Sua comanda está vazia
+        </strong>
 
-          <input
-            type="number"
-            data-quantity="${index}"
-            min="1"
-            value="${item.quantity || 1}"
-          >
+        <span>
+          Toque no + de um produto para adicionar.
+        </span>
 
-          <input
-            type="number"
-            data-price="${index}"
-            min="0"
-            step="0.01"
-            placeholder="0,00"
-            value="${item.price || ""}"
-          >
-
-          <button
-            type="button"
-            data-delete="${index}"
-          >
-            ×
-          </button>
-
-        </div>
-
+      </div>
       `;
 
-    }).join("");
+    atualizarTotais();
+
+    return;
+
+  }
 
 
-  container
-    .querySelectorAll(
-      "[data-name]"
-    )
-    .forEach(function(input) {
+  container.innerHTML =
+    carrinho.map(
+      function(item) {
 
-      input.addEventListener(
-        "input",
-        function() {
-
-          const index =
-            Number(
-              this.dataset.name
-            );
-
-          items[index].name =
-            this.value;
-
-        }
-      );
-
-    });
+        const subtotal =
+          item.preco *
+          item.quantidade;
 
 
-  container
-    .querySelectorAll(
-      "[data-quantity]"
-    )
-    .forEach(function(input) {
+        return `
 
-      input.addEventListener(
-        "input",
-        function() {
+          <div
+            class="cart-item"
+          >
 
-          const index =
-            Number(
-              this.dataset.quantity
-            );
+            <div>
 
-          items[index].quantity =
-            Number(this.value) || 1;
-
-          calcularTotal();
-
-        }
-      );
-
-    });
+              <div
+                class="cart-item-name"
+              >
+                ${item.nome}
+              </div>
 
 
-  container
-    .querySelectorAll(
-      "[data-price]"
-    )
-    .forEach(function(input) {
+              <div
+                class="cart-item-controls"
+              >
 
-      input.addEventListener(
-        "input",
-        function() {
-
-          const index =
-            Number(
-              this.dataset.price
-            );
-
-          items[index].price =
-            Number(this.value) || 0;
-
-          calcularTotal();
-
-        }
-      );
-
-    });
+                <button
+                  class="quantity-btn"
+                  type="button"
+                  onclick="alterarQuantidade(${item.id}, -1)"
+                >
+                  −
+                </button>
 
 
-  container
-    .querySelectorAll(
-      "[data-delete]"
-    )
-    .forEach(function(botao) {
-
-      botao.addEventListener(
-        "click",
-        function() {
-
-          const index =
-            Number(
-              this.dataset.delete
-            );
-
-          items.splice(
-            index,
-            1
-          );
+                <span
+                  class="quantity-value"
+                >
+                  ${item.quantidade}
+                </span>
 
 
-          if (
-            items.length === 0
-          ) {
+                <button
+                  class="quantity-btn"
+                  type="button"
+                  onclick="alterarQuantidade(${item.id}, 1)"
+                >
+                  +
+                </button>
 
-            criarItemInicial();
 
-          }
+                <button
+                  class="remove-item"
+                  type="button"
+                  onclick="removerProduto(${item.id})"
+                >
+                  🗑
+                </button>
+
+              </div>
+
+            </div>
 
 
-          renderItems();
+            <div
+              class="cart-item-price"
+            >
+              ${dinheiro(subtotal)}
+            </div>
 
-          calcularTotal();
+          </div>
 
-        }
-      );
+        `;
 
-    });
+      }
+    ).join("");
+
+
+  atualizarTotais();
 
 }
 
 
 /* =========================
-   ADICIONAR ITEM
+   ALTERAR QUANTIDADE
 ========================= */
 
-function adicionarItem() {
+function alterarQuantidade(
+  id,
+  quantidade
+) {
 
-  items.push({
+  const item =
+    carrinho.find(
+      function(produto) {
 
-    name: "",
+        return produto.id === id;
 
-    quantity: 1,
-
-    price: 0
-
-  });
-
-
-  renderItems();
-
-  calcularTotal();
-
-}
-
-
-/* =========================
-   TOTAL
-========================= */
-
-function calcularTotal() {
-
-  const total =
-    items.reduce(
-      function(soma, item) {
-
-        const quantidade =
-          Number(
-            item.quantity
-          ) || 1;
-
-        const preco =
-          Number(
-            item.price
-          ) || 0;
-
-
-        return soma +
-          quantidade * preco;
-
-      },
-      0
+      }
     );
 
 
-  const elemento =
-    $("total");
+  if (!item) {
+    return;
+  }
 
 
-  if (elemento) {
+  item.quantidade +=
+    quantidade;
 
-    elemento.textContent =
+
+  if (
+    item.quantidade <= 0
+  ) {
+
+    carrinho =
+      carrinho.filter(
+        function(produto) {
+
+          return produto.id !== id;
+
+        }
+      );
+
+  }
+
+
+  renderCarrinho();
+
+}
+
+
+/* =========================
+   REMOVER
+========================= */
+
+function removerProduto(id) {
+
+  carrinho =
+    carrinho.filter(
+      function(item) {
+
+        return item.id !== id;
+
+      }
+    );
+
+
+  renderCarrinho();
+
+}
+
+
+/* =========================
+   LIMPAR COMANDA
+========================= */
+
+function limparCarrinho() {
+
+  if (
+    carrinho.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  const confirmar =
+    confirm(
+      "Deseja limpar toda a comanda?"
+    );
+
+
+  if (!confirmar) {
+    return;
+  }
+
+
+  carrinho = [];
+
+  renderCarrinho();
+
+}
+
+
+/* =========================
+   TOTAIS
+========================= */
+
+function calcularSubtotal() {
+
+  return carrinho.reduce(
+    function(total, item) {
+
+      return total +
+        (
+          item.preco *
+          item.quantidade
+        );
+
+    },
+    0
+  );
+
+}
+
+
+function atualizarTotais() {
+
+  const subtotal =
+    calcularSubtotal();
+
+
+  const taxa = 0;
+
+
+  const total =
+    subtotal + taxa;
+
+
+  if ($("subtotal")) {
+
+    $("subtotal").textContent =
+      dinheiro(subtotal);
+
+  }
+
+
+  if ($("deliveryFee")) {
+
+    $("deliveryFee").textContent =
+      dinheiro(taxa);
+
+  }
+
+
+  if ($("cartTotal")) {
+
+    $("cartTotal").textContent =
       dinheiro(total);
 
   }
 
 
-  return total;
+  if ($("cartCount")) {
+
+    const quantidade =
+      carrinho.reduce(
+        function(total, item) {
+
+          return total +
+            item.quantidade;
+
+        },
+        0
+      );
+
+
+    $("cartCount").textContent =
+      quantidade +
+      (
+        quantidade === 1
+          ? " item"
+          : " itens"
+      );
+
+  }
 
 }
 
 
 /* =========================
-   NOVO PEDIDO
+   LIMPAR FORMULÁRIO
 ========================= */
 
-function limparPedido() {
+function limparFormulario() {
 
   if ($("cliente"))
     $("cliente").value = "";
@@ -520,17 +845,27 @@ function limparPedido() {
   if ($("observacoes"))
     $("observacoes").value = "";
 
-
-  criarItemInicial();
-
-  renderItems();
-
-  calcularTotal();
-
 }
 
 
+/* =========================
+   ENVIAR PEDIDO
+========================= */
+
 async function enviarPedido() {
+
+  if (
+    carrinho.length === 0
+  ) {
+
+    alert(
+      "Adicione pelo menos um produto à comanda."
+    );
+
+    return;
+
+  }
+
 
   if (!supabaseClient) {
 
@@ -544,30 +879,43 @@ async function enviarPedido() {
 
 
   const cliente =
-    $("cliente").value.trim();
+    $("cliente")
+      ? $("cliente")
+          .value
+          .trim()
+      : "";
+
 
   const telefone =
-    $("telefone").value.trim();
+    $("telefone")
+      ? $("telefone")
+          .value
+          .trim()
+      : "";
+
 
   const endereco =
-    $("endereco").value.trim();
+    $("endereco")
+      ? $("endereco")
+          .value
+          .trim()
+      : "";
+
 
   const referencia =
-    $("referencia").value.trim();
+    $("referencia")
+      ? $("referencia")
+          .value
+          .trim()
+      : "";
+
 
   const observacoes =
-    $("observacoes").value.trim();
-
-
-  const itensValidos =
-    items.filter(function(item) {
-
-      return (
-        item.name &&
-        item.name.trim()
-      );
-
-    });
+    $("observacoes")
+      ? $("observacoes")
+          .value
+          .trim()
+      : "";
 
 
   if (!cliente) {
@@ -581,21 +929,8 @@ async function enviarPedido() {
   }
 
 
-  if (
-    itensValidos.length === 0
-  ) {
-
-    alert(
-      "Adicione pelo menos um item."
-    );
-
-    return;
-
-  }
-
-
   const total =
-    calcularTotal();
+    calcularSubtotal();
 
 
   try {
@@ -639,20 +974,9 @@ async function enviarPedido() {
       resposta.data;
 
 
-    const dadosItens =
-      itensValidos.map(
+    const itens =
+      carrinho.map(
         function(item) {
-
-          const quantidade =
-            Number(
-              item.quantity
-            ) || 1;
-
-          const preco =
-            Number(
-              item.price
-            ) || 0;
-
 
           return {
 
@@ -660,16 +984,17 @@ async function enviarPedido() {
               pedido.id,
 
             produto:
-              item.name.trim(),
+              item.nome,
 
             quantidade:
-              quantidade,
+              item.quantidade,
 
             preco_unitario:
-              preco,
+              item.preco,
 
             subtotal:
-              quantidade * preco
+              item.preco *
+              item.quantidade
 
           };
 
@@ -680,9 +1005,7 @@ async function enviarPedido() {
     const respostaItens =
       await supabaseClient
         .from("itens_pedido")
-        .insert(
-          dadosItens
-        );
+        .insert(itens);
 
 
     if (
@@ -706,25 +1029,30 @@ async function enviarPedido() {
     );
 
 
-    limparPedido();
+    pedidoSelecionado =
+      pedido;
+
+
+    carrinho = [];
+
+
+    limparFormulario();
+
+    renderCarrinho();
 
     carregarPedidos();
-
-    abrirPagina(
-      "historico"
-    );
 
 
   } catch (erro) {
 
     console.error(
+      "Erro ao salvar pedido:",
       erro
     );
 
 
     alert(
-      "Erro ao salvar o pedido.\n\n" +
-      "Verifique a conexão com o banco."
+      "Não foi possível salvar o pedido."
     );
 
   }
@@ -775,8 +1103,6 @@ async function carregarPedidos() {
       resposta.data || [];
 
 
-    atualizarDashboard();
-
     mostrarComandas();
 
     mostrarHistorico();
@@ -789,162 +1115,6 @@ async function carregarPedidos() {
     );
 
   }
-
-}
-
-
-/* =========================
-   DASHBOARD
-========================= */
-
-function atualizarDashboard() {
-
-  const hoje =
-    new Date()
-      .toLocaleDateString(
-        "pt-BR"
-      );
-
-
-  const pedidosHoje =
-    pedidos.filter(
-      function(pedido) {
-
-        if (
-          !pedido.created_at
-        ) {
-
-          return false;
-
-        }
-
-
-        return (
-          new Date(
-            pedido.created_at
-          ).toLocaleDateString(
-            "pt-BR"
-          ) === hoje
-        );
-
-      }
-    );
-
-
-  const totalHoje =
-    pedidosHoje.reduce(
-      function(total, pedido) {
-
-        return total +
-          Number(
-            pedido.total
-          ) || 0;
-
-      },
-      0
-    );
-
-
-  if ($("statPedidos")) {
-
-    $("statPedidos")
-      .textContent =
-      pedidosHoje.length;
-
-  }
-
-
-  if ($("statComandas")) {
-
-    $("statComandas")
-      .textContent =
-      pedidos.length;
-
-  }
-
-
-  if ($("statTotal")) {
-
-    $("statTotal")
-      .textContent =
-      dinheiro(
-        totalHoje
-      );
-
-  }
-
-
-  const recentes =
-    $("recentOrders");
-
-
-  if (!recentes) {
-    return;
-  }
-
-
-  if (
-    pedidos.length === 0
-  ) {
-
-    recentes.innerHTML =
-      `
-      <div class="empty-state">
-        Nenhum pedido registrado.
-      </div>
-      `;
-
-    return;
-
-  }
-
-
-  recentes.innerHTML =
-    pedidos
-      .slice(
-        0,
-        5
-      )
-      .map(
-        function(pedido) {
-
-          return `
-
-            <div class="order-card">
-
-              <strong>
-                Pedido #${
-                  String(
-                    pedido.id
-                  ).padStart(
-                    3,
-                    "0"
-                  )
-                }
-              </strong>
-
-              <div>
-                ${
-                  pedido.Cliente ||
-                  "Sem cliente"
-                }
-              </div>
-
-              <small>
-                ${
-                  dinheiro(
-                    pedido.total
-                  )
-                }
-              </small>
-
-            </div>
-
-          `;
-
-        }
-      )
-      .join("");
 
 }
 
@@ -981,56 +1151,58 @@ function mostrarComandas() {
 
 
   container.innerHTML =
-    pedidos
-      .map(
-        function(pedido) {
+    pedidos.map(
+      function(pedido) {
 
-          return `
+        return `
 
-            <div class="order-card">
+          <div
+            class="order-card"
+          >
 
-              <strong>
-                Comanda #${
-                  String(
-                    pedido.id
-                  ).padStart(
-                    3,
-                    "0"
-                  )
-                }
-              </strong>
+            <strong>
+              Comanda #${
+                String(
+                  pedido.id
+                ).padStart(
+                  3,
+                  "0"
+                )
+              }
+            </strong>
 
-              <p>
-                Cliente:
-                ${
-                  pedido.Cliente ||
-                  "-"
-                }
-              </p>
+            <p>
+              Cliente:
+              ${
+                pedido.Cliente ||
+                "-"
+              }
+            </p>
 
-              <strong>
-                ${
-                  dinheiro(
-                    pedido.total
-                  )
-                }
-              </strong>
+            <strong>
+              ${
+                dinheiro(
+                  pedido.total
+                )
+              }
+            </strong>
 
-              <button
-                class="secondary-btn"
-                type="button"
-                onclick="selecionarImpressao(${pedido.id})"
-              >
-                🖨️ Imprimir
-              </button>
+            <br><br>
 
-            </div>
+            <button
+              class="secondary-btn"
+              type="button"
+              onclick="selecionarPedido(${pedido.id})"
+            >
+              Ver / Imprimir
+            </button>
 
-          `;
+          </div>
 
-        }
-      )
-      .join("");
+        `;
+
+      }
+    ).join("");
 
 }
 
@@ -1057,12 +1229,15 @@ function mostrarHistorico() {
     tabela.innerHTML =
       `
       <tr>
+
         <td
           colspan="5"
-          class="empty-cell"
-        >
+          class="empty-cell">
+
           Nenhum pedido encontrado.
+
         </td>
+
       </tr>
       `;
 
@@ -1072,92 +1247,88 @@ function mostrarHistorico() {
 
 
   tabela.innerHTML =
-    pedidos
-      .map(
-        function(pedido) {
+    pedidos.map(
+      function(pedido) {
 
-          const data =
-            pedido.created_at
-              ? new Date(
-                  pedido.created_at
-                ).toLocaleString(
-                  "pt-BR"
+        const data =
+          pedido.created_at
+            ? new Date(
+                pedido.created_at
+              ).toLocaleString(
+                "pt-BR"
+              )
+            : "-";
+
+
+        return `
+
+          <tr>
+
+            <td>
+              #${
+                String(
+                  pedido.id
+                ).padStart(
+                  3,
+                  "0"
                 )
-              : "-";
+              }
+            </td>
 
+            <td>
+              ${
+                pedido.Cliente ||
+                "-"
+              }
+            </td>
 
-          return `
+            <td>
+              ${data}
+            </td>
 
-            <tr>
+            <td>
+              ${
+                dinheiro(
+                  pedido.total
+                )
+              }
+            </td>
 
-              <td>
-                #${
-                  String(
-                    pedido.id
-                  ).padStart(
-                    3,
-                    "0"
-                  )
-                }
-              </td>
+            <td>
 
-              <td>
-                ${
-                  pedido.Cliente ||
-                  "-"
-                }
-              </td>
+              <button
+                class="secondary-btn"
+                type="button"
+                onclick="selecionarPedido(${pedido.id})"
+              >
+                Ver
+              </button>
 
-              <td>
-                ${data}
-              </td>
+            </td>
 
-              <td>
-                ${
-                  dinheiro(
-                    pedido.total
-                  )
-                }
-              </td>
+          </tr>
 
-              <td>
+        `;
 
-                <button
-                  class="secondary-btn"
-                  type="button"
-                  onclick="selecionarImpressao(${pedido.id})"
-                >
-                  Ver
-                </button>
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("");
+      }
+    ).join("");
 
 }
 
 
 /* =========================
-   IMPRESSÃO
+   SELECIONAR PEDIDO
 ========================= */
 
-function selecionarImpressao(id) {
+function selecionarPedido(id) {
 
   pedidoSelecionado =
     pedidos.find(
       function(pedido) {
 
-        return (
-          Number(
-            pedido.id
-          ) === Number(id)
-        );
+        return Number(
+          pedido.id
+        ) === Number(id);
 
       }
     );
@@ -1181,6 +1352,10 @@ function selecionarImpressao(id) {
 
 }
 
+
+/* =========================
+   PRÉ-VISUALIZAÇÃO
+========================= */
 
 function mostrarPreVisualizacao() {
 
@@ -1209,278 +1384,172 @@ function mostrarPreVisualizacao() {
   }
 
 
-  area.innerHTML =
-    `
+  area.innerHTML = `
 
-      <div
-        style="
-          text-align:center;
-          font-weight:bold;
-          font-size:20px;
-        "
-      >
-        MIGUEL LANCHES
-      </div>
+    <div
+      style="
+        text-align:center;
+        font-size:20px;
+        font-weight:bold;
+      "
+    >
+      MIGUEL LANCHES
+    </div>
 
-      <hr>
+    <hr>
 
-      <strong>
-        PEDIDO:
-      </strong>
+    PEDIDO:
+    #${
+      String(
+        pedidoSelecionado.id
+      ).padStart(
+        3,
+        "0"
+      )
+    }
 
-      #${
-        String(
-          pedidoSelecionado.id
-        ).padStart(
-          3,
-          "0"
-        )
-      }
+    <br><br>
 
-      <br><br>
+    CLIENTE:
+    ${
+      pedidoSelecionado.Cliente ||
+      ""
+    }
 
-      <strong>
-        CLIENTE:
-      </strong>
+    <br>
 
-      ${
-        pedidoSelecionado.Cliente ||
-        ""
-      }
+    TELEFONE:
+    ${
+      pedidoSelecionado.telefone ||
+      ""
+    }
 
-      <br>
+    <br>
 
-      <strong>
-        TELEFONE:
-      </strong>
+    ENDEREÇO:
+    ${
+      pedidoSelecionado.endereco ||
+      ""
+    }
 
-      ${
-        pedidoSelecionado.telefone ||
-        ""
-      }
+    <br>
 
-      <br>
+    REF:
+    ${
+      pedidoSelecionado.referencia ||
+      ""
+    }
 
-      <strong>
-        ENDEREÇO:
-      </strong>
+    <hr>
 
-      ${
-        pedidoSelecionado.endereco ||
-        ""
-      }
+    TOTAL:
+    ${
+      dinheiro(
+        pedidoSelecionado.total
+      )
+    }
 
-      <br>
+    <hr>
 
-      <strong>
-        REF:
-      </strong>
+    <div
+      style="
+        text-align:center;
+      "
+    >
+      Obrigado pela preferência!
+    </div>
 
-      ${
-        pedidoSelecionado.referencia ||
-        ""
-      }
-
-      <hr>
-
-      <strong>
-        TOTAL:
-      </strong>
-
-      ${
-        dinheiro(
-          pedidoSelecionado.total
-        )
-      }
-
-      <hr>
-
-      <div
-        style="
-          text-align:center;
-        "
-      >
-        Obrigado pela preferência!
-      </div>
-
-    `;
+  `;
 
 }
 
 
 /* =========================
-   INICIALIZAÇÃO
+   IMPRIMIR
 ========================= */
 
-function iniciarAplicacao() {
+function imprimirComandaAtual() {
 
-  criarItemInicial();
+  if (
+    pedidoSelecionado
+  ) {
 
-  renderItems();
-
-  calcularTotal();
-
-
-  /* MENU */
-
-  document
-    .querySelectorAll(
-      ".menu-item"
-    )
-    .forEach(
-      function(botao) {
-
-        botao.addEventListener(
-          "click",
-          function() {
-
-            abrirPagina(
-              this.dataset.page
-            );
-
-          }
-        );
-
-      }
+    abrirPagina(
+      "impressao"
     );
 
+    mostrarPreVisualizacao();
 
-  /* BOTÕES data-go */
-
-  document
-    .querySelectorAll(
-      "[data-go]"
-    )
-    .forEach(
-      function(botao) {
-
-        botao.addEventListener(
-          "click",
-          function() {
-
-            abrirPagina(
-              this.dataset.go
-            );
-
-          }
-        );
-
-      }
-    );
-
-
-  /* ADICIONAR ITEM */
-
-  $("addItemBtn")
-    ?.addEventListener(
-      "click",
-      adicionarItem
-    );
-
-
-  /* ENVIAR */
-
-  $("sendBtn")
-    ?.addEventListener(
-      "click",
-      enviarPedido
-    );
-
-
-  /* MENU MOBILE */
-
-  $("menuToggle")
-    ?.addEventListener(
-      "click",
+    setTimeout(
       function() {
-
-        $("sidebar")
-          ?.classList.toggle(
-            "open"
-          );
-
-      }
-    );
-
-
-  /* LOGOUT */
-
-  $("logoutBtn")
-    ?.addEventListener(
-      "click",
-      function() {
-
-        location.reload();
-
-      }
-    );
-
-
-  /* IMPRIMIR */
-
-  $("printBtn")
-    ?.addEventListener(
-      "click",
-      function() {
-
-        if (
-          !pedidoSelecionado
-        ) {
-
-          alert(
-            "Selecione um pedido primeiro."
-          );
-
-          return;
-
-        }
-
 
         window.print();
 
-      }
+      },
+      300
     );
 
+    return;
 
-  /* PRIMEIRA PÁGINA */
+  }
 
-  abrirPagina(
-    "dashboard"
+
+  if (
+    carrinho.length === 0
+  ) {
+
+    alert(
+      "A comanda está vazia."
+    );
+
+    return;
+
+  }
+
+
+  alert(
+    "Finalize o pedido primeiro para gerar a comanda."
   );
 
 }
 
 
 /* =========================
-   INICIA
+   CATEGORIAS
 ========================= */
 
-iniciarAplicacao();
+function configurarCategorias() {
+
+  document
+    .querySelectorAll(
+      ".category"
+    )
+    .forEach(
+      function(botao) {
+
+        botao.addEventListener(
+          "click",
+          function() {
+
+            document
+              .querySelectorAll(
+                ".category"
+              )
+              .forEach(
+                function(item) {
+
+                  item.classList.remove(
+                    "active"
+                  );
+
+                }
+              );
 
 
-/* =========================
-   CONECTA AO SUPABASE
-========================= */
+            this.classList.add(
+              "active"
+            );
 
-conectarSupabase()
-  .then(
-    function() {
 
-      console.log(
-        "Supabase conectado."
-      );
-
-      carregarPedidos();
-
-    }
-  )
-  .catch(
-    function(erro) {
-
-      console.error(
-        "Erro Supabase:",
-        erro
-      );
-
-    }
-  );
+            categoriaAtual =
+              this.da
