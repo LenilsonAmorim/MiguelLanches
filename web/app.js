@@ -1,15 +1,20 @@
-const SUPABASE_URL = "https://lifsxhyeqwppfvajvhpn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
+const SUPABASE_URL =
+  "https://lifsxhyeqwppfvajvhpn.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 
 let supabaseClient = null;
 
 let items = [];
 
-let sent = [];
+let pedidos = [];
+
+let pedidoSelecionado = null;
 
 
 /* =========================
-   FUNÇÕES AUXILIARES
+   AUXILIARES
 ========================= */
 
 function $(id) {
@@ -17,12 +22,15 @@ function $(id) {
 }
 
 
-function money(value) {
+function dinheiro(valor) {
 
-  return Number(value || 0).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
+  return Number(valor || 0).toLocaleString(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL"
+    }
+  );
 
 }
 
@@ -47,9 +55,9 @@ function conectarSupabase() {
 
         resolve();
 
-      } catch (error) {
+      } catch (erro) {
 
-        reject(error);
+        reject(erro);
 
       }
 
@@ -76,9 +84,9 @@ function conectarSupabase() {
 
         resolve();
 
-      } catch (error) {
+      } catch (erro) {
 
-        reject(error);
+        reject(erro);
 
       }
 
@@ -104,77 +112,149 @@ function conectarSupabase() {
 
 
 /* =========================
-   LOGIN
+   MENU
 ========================= */
 
-function fazerLogin() {
+const nomesPaginas = {
 
-  const usuario =
-    $("username").value.trim();
+  "dashboard":
+    "Painel Inicial",
 
-  const senha =
-    $("password").value;
+  "novo-pedido":
+    "Novo Pedido",
+
+  "comandas":
+    "Comandas Abertas",
+
+  "historico":
+    "Histórico de Pedidos",
+
+  "impressao":
+    "Impressão"
+
+};
 
 
-  if (!usuario || !senha) {
+function abrirPagina(nome) {
 
-    $("loginMsg").textContent =
-      "Informe usuário e senha.";
+  document
+    .querySelectorAll(".page")
+    .forEach(function(pagina) {
 
-    return;
+      pagina.classList.remove(
+        "active-page"
+      );
+
+    });
+
+
+  const pagina =
+    $("page-" + nome);
+
+
+  if (pagina) {
+
+    pagina.classList.add(
+      "active-page"
+    );
 
   }
 
 
-  $("loginMsg").textContent = "";
+  document
+    .querySelectorAll(".menu-item")
+    .forEach(function(botao) {
+
+      botao.classList.remove(
+        "active"
+      );
+
+      if (
+        botao.dataset.page === nome
+      ) {
+
+        botao.classList.add(
+          "active"
+        );
+
+      }
+
+    });
 
 
-  $("login").classList.add("hidden");
+  const titulo =
+    $("pageTitle");
 
-  $("orders").classList.remove("hidden");
+
+  if (titulo) {
+
+    titulo.textContent =
+      nomesPaginas[nome] ||
+      "Miguel Lanches";
+
+  }
 
 
-  if (items.length === 0) {
+  const sidebar =
+    $("sidebar");
 
-    items.push({
+
+  if (sidebar) {
+
+    sidebar.classList.remove(
+      "open"
+    );
+
+  }
+
+
+  if (
+    nome === "dashboard"
+  ) {
+
+    atualizarDashboard();
+
+  }
+
+
+  if (
+    nome === "comandas"
+  ) {
+
+    mostrarComandas();
+
+  }
+
+
+  if (
+    nome === "historico"
+  ) {
+
+    mostrarHistorico();
+
+  }
+
+}
+
+
+/* =========================
+   ITENS DO PEDIDO
+========================= */
+
+function criarItemInicial() {
+
+  items = [
+
+    {
       name: "",
       quantity: 1,
       price: 0
-    });
+    }
 
-  }
-
-
-  renderItems();
-
-  calcularTotal();
-
-
-  if (supabaseClient) {
-
-    carregarPedidos();
-
-  }
+  ];
 
 }
 
-
-/* =========================
-   SAIR
-========================= */
-
-function fazerLogout() {
-
-  $("orders").classList.add("hidden");
-
-  $("login").classList.remove("hidden");
-
-}
-
-
-/* =========================
-   ITENS
-========================= */
 
 function renderItems() {
 
@@ -191,6 +271,7 @@ function renderItems() {
     items.map(function(item, index) {
 
       return `
+
         <div class="item">
 
           <input
@@ -204,8 +285,6 @@ function renderItems() {
             type="number"
             data-quantity="${index}"
             min="1"
-            step="1"
-            placeholder="Qtd"
             value="${item.quantity || 1}"
           >
 
@@ -214,26 +293,28 @@ function renderItems() {
             data-price="${index}"
             min="0"
             step="0.01"
-            placeholder="Preço"
+            placeholder="0,00"
             value="${item.price || ""}"
           >
 
           <button
             type="button"
-            class="secondary"
             data-delete="${index}"
           >
             ×
           </button>
 
         </div>
+
       `;
 
     }).join("");
 
 
   container
-    .querySelectorAll("[data-name]")
+    .querySelectorAll(
+      "[data-name]"
+    )
     .forEach(function(input) {
 
       input.addEventListener(
@@ -241,7 +322,9 @@ function renderItems() {
         function() {
 
           const index =
-            Number(this.dataset.name);
+            Number(
+              this.dataset.name
+            );
 
           items[index].name =
             this.value;
@@ -253,7 +336,9 @@ function renderItems() {
 
 
   container
-    .querySelectorAll("[data-quantity]")
+    .querySelectorAll(
+      "[data-quantity]"
+    )
     .forEach(function(input) {
 
       input.addEventListener(
@@ -261,7 +346,9 @@ function renderItems() {
         function() {
 
           const index =
-            Number(this.dataset.quantity);
+            Number(
+              this.dataset.quantity
+            );
 
           items[index].quantity =
             Number(this.value) || 1;
@@ -275,7 +362,9 @@ function renderItems() {
 
 
   container
-    .querySelectorAll("[data-price]")
+    .querySelectorAll(
+      "[data-price]"
+    )
     .forEach(function(input) {
 
       input.addEventListener(
@@ -283,7 +372,9 @@ function renderItems() {
         function() {
 
           const index =
-            Number(this.dataset.price);
+            Number(
+              this.dataset.price
+            );
 
           items[index].price =
             Number(this.value) || 0;
@@ -297,26 +388,31 @@ function renderItems() {
 
 
   container
-    .querySelectorAll("[data-delete]")
-    .forEach(function(button) {
+    .querySelectorAll(
+      "[data-delete]"
+    )
+    .forEach(function(botao) {
 
-      button.addEventListener(
+      botao.addEventListener(
         "click",
         function() {
 
           const index =
-            Number(this.dataset.delete);
+            Number(
+              this.dataset.delete
+            );
 
-          items.splice(index, 1);
+          items.splice(
+            index,
+            1
+          );
 
 
-          if (items.length === 0) {
+          if (
+            items.length === 0
+          ) {
 
-            items.push({
-              name: "",
-              quantity: 1,
-              price: 0
-            });
+            criarItemInicial();
 
           }
 
@@ -340,9 +436,13 @@ function renderItems() {
 function adicionarItem() {
 
   items.push({
+
     name: "",
+
     quantity: 1,
+
     price: 0
+
   });
 
 
@@ -364,10 +464,15 @@ function calcularTotal() {
       function(soma, item) {
 
         const quantidade =
-          Number(item.quantity) || 1;
+          Number(
+            item.quantity
+          ) || 1;
 
         const preco =
-          Number(item.price) || 0;
+          Number(
+            item.price
+          ) || 0;
+
 
         return soma +
           quantidade * preco;
@@ -384,7 +489,7 @@ function calcularTotal() {
   if (elemento) {
 
     elemento.textContent =
-      money(total);
+      dinheiro(total);
 
   }
 
@@ -395,15 +500,42 @@ function calcularTotal() {
 
 
 /* =========================
-   ENVIAR PEDIDO
+   NOVO PEDIDO
 ========================= */
+
+function limparPedido() {
+
+  if ($("cliente"))
+    $("cliente").value = "";
+
+  if ($("telefone"))
+    $("telefone").value = "";
+
+  if ($("endereco"))
+    $("endereco").value = "";
+
+  if ($("referencia"))
+    $("referencia").value = "";
+
+  if ($("observacoes"))
+    $("observacoes").value = "";
+
+
+  criarItemInicial();
+
+  renderItems();
+
+  calcularTotal();
+
+}
+
 
 async function enviarPedido() {
 
   if (!supabaseClient) {
 
     alert(
-      "A conexão com o banco ainda não foi estabelecida. Aguarde alguns segundos e tente novamente."
+      "O banco ainda está conectando. Aguarde alguns segundos."
     );
 
     return;
@@ -430,8 +562,10 @@ async function enviarPedido() {
   const itensValidos =
     items.filter(function(item) {
 
-      return item.name &&
-        item.name.trim();
+      return (
+        item.name &&
+        item.name.trim()
+      );
 
     });
 
@@ -447,7 +581,9 @@ async function enviarPedido() {
   }
 
 
-  if (itensValidos.length === 0) {
+  if (
+    itensValidos.length === 0
+  ) {
 
     alert(
       "Adicione pelo menos um item."
@@ -464,132 +600,131 @@ async function enviarPedido() {
 
   try {
 
-    const resultadoPedido =
+    const resposta =
       await supabaseClient
         .from("pedidos")
         .insert({
 
-          Cliente: cliente,
+          Cliente:
+            cliente,
 
-          telefone: telefone,
+          telefone:
+            telefone,
 
-          endereco: endereco,
+          endereco:
+            endereco,
 
-          referencia: referencia,
+          referencia:
+            referencia,
 
-          observacoes: observacoes,
+          observacoes:
+            observacoes,
 
-          total: total
+          total:
+            total
 
         })
         .select()
         .single();
 
 
-    if (resultadoPedido.error) {
+    if (resposta.error) {
 
-      console.error(
-        resultadoPedido.error
-      );
-
-      throw resultadoPedido.error;
+      throw resposta.error;
 
     }
 
 
     const pedido =
-      resultadoPedido.data;
+      resposta.data;
 
 
     const dadosItens =
-      itensValidos.map(function(item) {
+      itensValidos.map(
+        function(item) {
 
-        const quantidade =
-          Number(item.quantity) || 1;
+          const quantidade =
+            Number(
+              item.quantity
+            ) || 1;
 
-        const preco =
-          Number(item.price) || 0;
-
-
-        return {
-
-          pedido_id: pedido.id,
-
-          produto: item.name.trim(),
-
-          quantidade: quantidade,
-
-          preco_unitario: preco,
-
-          subtotal:
-            quantidade * preco
-
-        };
-
-      });
+          const preco =
+            Number(
+              item.price
+            ) || 0;
 
 
-    const resultadoItens =
-      await supabaseClient
-        .from("itens_pedido")
-        .insert(dadosItens);
+          return {
 
+            pedido_id:
+              pedido.id,
 
-    if (resultadoItens.error) {
+            produto:
+              item.name.trim(),
 
-      console.error(
-        resultadoItens.error
+            quantidade:
+              quantidade,
+
+            preco_unitario:
+              preco,
+
+            subtotal:
+              quantidade * preco
+
+          };
+
+        }
       );
 
-      throw resultadoItens.error;
+
+    const respostaItens =
+      await supabaseClient
+        .from("itens_pedido")
+        .insert(
+          dadosItens
+        );
+
+
+    if (
+      respostaItens.error
+    ) {
+
+      throw respostaItens.error;
 
     }
 
 
     alert(
       "Pedido #" +
-      String(pedido.id).padStart(3, "0") +
+      String(
+        pedido.id
+      ).padStart(
+        3,
+        "0"
+      ) +
       " salvo com sucesso!"
     );
 
 
-    $("cliente").value = "";
-
-    $("telefone").value = "";
-
-    $("endereco").value = "";
-
-    $("referencia").value = "";
-
-    $("observacoes").value = "";
-
-
-    items = [
-      {
-        name: "",
-        quantity: 1,
-        price: 0
-      }
-    ];
-
-
-    renderItems();
-
-    calcularTotal();
+    limparPedido();
 
     carregarPedidos();
 
+    abrirPagina(
+      "historico"
+    );
 
-  } catch (error) {
+
+  } catch (erro) {
 
     console.error(
-      "Erro ao salvar pedido:",
-      error
+      erro
     );
 
 
     alert(
-      "Não foi possível salvar o pedido."
+      "Erro ao salvar o pedido.\n\n" +
+      "Verifique a conexão com o banco."
     );
 
   }
@@ -608,33 +743,27 @@ async function carregarPedidos() {
   }
 
 
-  const lista =
-    $("ordersList");
-
-
-  if (!lista) {
-    return;
-  }
-
-
   try {
 
-    const resultado =
+    const resposta =
       await supabaseClient
         .from("pedidos")
         .select("*")
         .order(
           "id",
           {
-            ascending: false
+            ascending:
+              false
           }
         );
 
 
-    if (resultado.error) {
+    if (
+      resposta.error
+    ) {
 
       console.error(
-        resultado.error
+        resposta.error
       );
 
       return;
@@ -642,60 +771,21 @@ async function carregarPedidos() {
     }
 
 
-    sent =
-      resultado.data || [];
+    pedidos =
+      resposta.data || [];
 
 
-    if (sent.length === 0) {
+    atualizarDashboard();
 
-      lista.innerHTML =
-        '<p class="muted">Nenhum pedido enviado.</p>';
+    mostrarComandas();
 
-      return;
-
-    }
+    mostrarHistorico();
 
 
-    lista.innerHTML =
-      sent.map(function(pedido) {
-
-        const numero =
-          String(pedido.id)
-            .padStart(3, "0");
-
-
-        const data =
-          pedido.created_at
-            ? new Date(
-                pedido.created_at
-              ).toLocaleString("pt-BR")
-            : "";
-
-
-        return `
-          <div class="order">
-
-            <strong>
-              #${numero} —
-              ${pedido.Cliente || ""}
-            </strong>
-
-            <small>
-              ${data} ·
-              ${money(pedido.total)}
-            </small>
-
-          </div>
-        `;
-
-      }).join("");
-
-
-  } catch (error) {
+  } catch (erro) {
 
     console.error(
-      "Erro ao carregar pedidos:",
-      error
+      erro
     );
 
   }
@@ -704,33 +794,585 @@ async function carregarPedidos() {
 
 
 /* =========================
-   INICIALIZAÇÃO
+   DASHBOARD
 ========================= */
 
-function iniciar() {
+function atualizarDashboard() {
 
-  /* LOGIN */
+  const hoje =
+    new Date()
+      .toLocaleDateString(
+        "pt-BR"
+      );
 
-  $("loginBtn")
-    .addEventListener(
-      "click",
-      fazerLogin
+
+  const pedidosHoje =
+    pedidos.filter(
+      function(pedido) {
+
+        if (
+          !pedido.created_at
+        ) {
+
+          return false;
+
+        }
+
+
+        return (
+          new Date(
+            pedido.created_at
+          ).toLocaleDateString(
+            "pt-BR"
+          ) === hoje
+        );
+
+      }
     );
 
 
-  /* SAIR */
+  const totalHoje =
+    pedidosHoje.reduce(
+      function(total, pedido) {
 
-  $("logoutBtn")
-    .addEventListener(
-      "click",
-      fazerLogout
+        return total +
+          Number(
+            pedido.total
+          ) || 0;
+
+      },
+      0
+    );
+
+
+  if ($("statPedidos")) {
+
+    $("statPedidos")
+      .textContent =
+      pedidosHoje.length;
+
+  }
+
+
+  if ($("statComandas")) {
+
+    $("statComandas")
+      .textContent =
+      pedidos.length;
+
+  }
+
+
+  if ($("statTotal")) {
+
+    $("statTotal")
+      .textContent =
+      dinheiro(
+        totalHoje
+      );
+
+  }
+
+
+  const recentes =
+    $("recentOrders");
+
+
+  if (!recentes) {
+    return;
+  }
+
+
+  if (
+    pedidos.length === 0
+  ) {
+
+    recentes.innerHTML =
+      `
+      <div class="empty-state">
+        Nenhum pedido registrado.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  recentes.innerHTML =
+    pedidos
+      .slice(
+        0,
+        5
+      )
+      .map(
+        function(pedido) {
+
+          return `
+
+            <div class="order-card">
+
+              <strong>
+                Pedido #${
+                  String(
+                    pedido.id
+                  ).padStart(
+                    3,
+                    "0"
+                  )
+                }
+              </strong>
+
+              <div>
+                ${
+                  pedido.Cliente ||
+                  "Sem cliente"
+                }
+              </div>
+
+              <small>
+                ${
+                  dinheiro(
+                    pedido.total
+                  )
+                }
+              </small>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+/* =========================
+   COMANDAS
+========================= */
+
+function mostrarComandas() {
+
+  const container =
+    $("openOrders");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  if (
+    pedidos.length === 0
+  ) {
+
+    container.innerHTML =
+      `
+      <div class="empty-state">
+        Nenhuma comanda aberta.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    pedidos
+      .map(
+        function(pedido) {
+
+          return `
+
+            <div class="order-card">
+
+              <strong>
+                Comanda #${
+                  String(
+                    pedido.id
+                  ).padStart(
+                    3,
+                    "0"
+                  )
+                }
+              </strong>
+
+              <p>
+                Cliente:
+                ${
+                  pedido.Cliente ||
+                  "-"
+                }
+              </p>
+
+              <strong>
+                ${
+                  dinheiro(
+                    pedido.total
+                  )
+                }
+              </strong>
+
+              <button
+                class="secondary-btn"
+                type="button"
+                onclick="selecionarImpressao(${pedido.id})"
+              >
+                🖨️ Imprimir
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+/* =========================
+   HISTÓRICO
+========================= */
+
+function mostrarHistorico() {
+
+  const tabela =
+    $("historyTable");
+
+
+  if (!tabela) {
+    return;
+  }
+
+
+  if (
+    pedidos.length === 0
+  ) {
+
+    tabela.innerHTML =
+      `
+      <tr>
+        <td
+          colspan="5"
+          class="empty-cell"
+        >
+          Nenhum pedido encontrado.
+        </td>
+      </tr>
+      `;
+
+    return;
+
+  }
+
+
+  tabela.innerHTML =
+    pedidos
+      .map(
+        function(pedido) {
+
+          const data =
+            pedido.created_at
+              ? new Date(
+                  pedido.created_at
+                ).toLocaleString(
+                  "pt-BR"
+                )
+              : "-";
+
+
+          return `
+
+            <tr>
+
+              <td>
+                #${
+                  String(
+                    pedido.id
+                  ).padStart(
+                    3,
+                    "0"
+                  )
+                }
+              </td>
+
+              <td>
+                ${
+                  pedido.Cliente ||
+                  "-"
+                }
+              </td>
+
+              <td>
+                ${data}
+              </td>
+
+              <td>
+                ${
+                  dinheiro(
+                    pedido.total
+                  )
+                }
+              </td>
+
+              <td>
+
+                <button
+                  class="secondary-btn"
+                  type="button"
+                  onclick="selecionarImpressao(${pedido.id})"
+                >
+                  Ver
+                </button>
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+/* =========================
+   IMPRESSÃO
+========================= */
+
+function selecionarImpressao(id) {
+
+  pedidoSelecionado =
+    pedidos.find(
+      function(pedido) {
+
+        return (
+          Number(
+            pedido.id
+          ) === Number(id)
+        );
+
+      }
+    );
+
+
+  if (
+    !pedidoSelecionado
+  ) {
+
+    return;
+
+  }
+
+
+  abrirPagina(
+    "impressao"
+  );
+
+
+  mostrarPreVisualizacao();
+
+}
+
+
+function mostrarPreVisualizacao() {
+
+  const area =
+    $("printPreview");
+
+
+  if (!area) {
+    return;
+  }
+
+
+  if (
+    !pedidoSelecionado
+  ) {
+
+    area.innerHTML =
+      `
+      <div class="receipt-empty">
+        Selecione um pedido para visualizar.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  area.innerHTML =
+    `
+
+      <div
+        style="
+          text-align:center;
+          font-weight:bold;
+          font-size:20px;
+        "
+      >
+        MIGUEL LANCHES
+      </div>
+
+      <hr>
+
+      <strong>
+        PEDIDO:
+      </strong>
+
+      #${
+        String(
+          pedidoSelecionado.id
+        ).padStart(
+          3,
+          "0"
+        )
+      }
+
+      <br><br>
+
+      <strong>
+        CLIENTE:
+      </strong>
+
+      ${
+        pedidoSelecionado.Cliente ||
+        ""
+      }
+
+      <br>
+
+      <strong>
+        TELEFONE:
+      </strong>
+
+      ${
+        pedidoSelecionado.telefone ||
+        ""
+      }
+
+      <br>
+
+      <strong>
+        ENDEREÇO:
+      </strong>
+
+      ${
+        pedidoSelecionado.endereco ||
+        ""
+      }
+
+      <br>
+
+      <strong>
+        REF:
+      </strong>
+
+      ${
+        pedidoSelecionado.referencia ||
+        ""
+      }
+
+      <hr>
+
+      <strong>
+        TOTAL:
+      </strong>
+
+      ${
+        dinheiro(
+          pedidoSelecionado.total
+        )
+      }
+
+      <hr>
+
+      <div
+        style="
+          text-align:center;
+        "
+      >
+        Obrigado pela preferência!
+      </div>
+
+    `;
+
+}
+
+
+/* =========================
+   INICIALIZAÇÃO
+========================= */
+
+function iniciarAplicacao() {
+
+  criarItemInicial();
+
+  renderItems();
+
+  calcularTotal();
+
+
+  /* MENU */
+
+  document
+    .querySelectorAll(
+      ".menu-item"
+    )
+    .forEach(
+      function(botao) {
+
+        botao.addEventListener(
+          "click",
+          function() {
+
+            abrirPagina(
+              this.dataset.page
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  /* BOTÕES data-go */
+
+  document
+    .querySelectorAll(
+      "[data-go]"
+    )
+    .forEach(
+      function(botao) {
+
+        botao.addEventListener(
+          "click",
+          function() {
+
+            abrirPagina(
+              this.dataset.go
+            );
+
+          }
+        );
+
+      }
     );
 
 
   /* ADICIONAR ITEM */
 
   $("addItemBtn")
-    .addEventListener(
+    ?.addEventListener(
       "click",
       adicionarItem
     );
@@ -739,15 +1381,106 @@ function iniciar() {
   /* ENVIAR */
 
   $("sendBtn")
-    .addEventListener(
+    ?.addEventListener(
       "click",
       enviarPedido
     );
 
 
-  /* PRIMEIRO ITEM */
+  /* MENU MOBILE */
 
-  items = [
-    {
-      name: "",
-     
+  $("menuToggle")
+    ?.addEventListener(
+      "click",
+      function() {
+
+        $("sidebar")
+          ?.classList.toggle(
+            "open"
+          );
+
+      }
+    );
+
+
+  /* LOGOUT */
+
+  $("logoutBtn")
+    ?.addEventListener(
+      "click",
+      function() {
+
+        location.reload();
+
+      }
+    );
+
+
+  /* IMPRIMIR */
+
+  $("printBtn")
+    ?.addEventListener(
+      "click",
+      function() {
+
+        if (
+          !pedidoSelecionado
+        ) {
+
+          alert(
+            "Selecione um pedido primeiro."
+          );
+
+          return;
+
+        }
+
+
+        window.print();
+
+      }
+    );
+
+
+  /* PRIMEIRA PÁGINA */
+
+  abrirPagina(
+    "dashboard"
+  );
+
+}
+
+
+/* =========================
+   INICIA
+========================= */
+
+iniciarAplicacao();
+
+
+/* =========================
+   CONECTA AO SUPABASE
+========================= */
+
+conectarSupabase()
+  .then(
+    function() {
+
+      console.log(
+        "Supabase conectado."
+      );
+
+      carregarPedidos();
+
+    }
+  )
+  .catch(
+    function(erro) {
+
+      console.error(
+        "Erro Supabase:",
+        erro
+      );
+
+    }
+  );
