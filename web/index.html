@@ -1,9 +1,12 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+
   <title>Miguel Lanches — Pedidos</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,25 +17,51 @@
   <!-- LOGIN -->
   <section id="login" class="card login-card">
 
-    <div class="brand">MIGUEL LANCHES</div>
+    <div class="brand">
+      MIGUEL LANCHES
+    </div>
 
-    <p class="muted">Sistema de pedidos</p>
+    <p class="muted">
+      Sistema de pedidos
+    </p>
 
     <label>
       Usuário
-      <input id="username" type="text" placeholder="Usuário">
+
+      <input
+        id="username"
+        type="text"
+        placeholder="Usuário"
+      >
     </label>
 
     <label>
       Senha
-      <input id="password" type="password" placeholder="Senha">
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Senha"
+      >
     </label>
 
-    <button id="loginBtn" class="primary" type="button">
+    <button
+      id="loginBtn"
+      class="primary"
+      type="button"
+      onclick="
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('orders').classList.remove('hidden');
+      "
+    >
       Entrar
     </button>
 
     <p id="loginMsg" class="error"></p>
+
+    <p class="hint">
+      Protótipo inicial.
+    </p>
 
   </section>
 
@@ -47,7 +76,15 @@
         <span>Pedidos</span>
       </div>
 
-      <button id="logoutBtn" class="ghost" type="button">
+      <button
+        id="logoutBtn"
+        class="ghost"
+        type="button"
+        onclick="
+          document.getElementById('orders').classList.add('hidden');
+          document.getElementById('login').classList.remove('hidden');
+        "
+      >
         Sair
       </button>
 
@@ -59,13 +96,16 @@
       <!-- NOVO PEDIDO -->
       <section class="card">
 
-        <h2>Novo pedido</h2>
+        <h2>
+          Novo pedido
+        </h2>
 
 
         <div class="row">
 
           <label>
             Cliente
+
             <input
               id="cliente"
               type="text"
@@ -73,8 +113,10 @@
             >
           </label>
 
+
           <label>
             Telefone
+
             <input
               id="telefone"
               type="text"
@@ -87,6 +129,7 @@
 
         <label>
           Endereço
+
           <input
             id="endereco"
             type="text"
@@ -97,6 +140,7 @@
 
         <label>
           Referência
+
           <input
             id="referencia"
             type="text"
@@ -105,72 +149,45 @@
         </label>
 
 
-        <h3>Itens</h3>
-
-        <div id="items"></div>
-
-
-        <button
-          id="addItemBtn"
-          class="secondary"
-          type="button"
-        >
-          + Adicionar item
-        </button>
+        <h3>
+          Itens
+        </h3>
 
 
-        <label>
-          Observações
+        <div id="items">
 
-          <textarea
-            id="observacoes"
-            placeholder="Observações do pedido"
-          ></textarea>
+          <div class="item">
 
-        </label>
+            <input
+              type="text"
+              placeholder="Produto"
+            >
 
+            <input
+              type="number"
+              min="1"
+              value="1"
+              placeholder="Qtd"
+            >
 
-        <div class="total">
-          Total:
-          <span id="total">R$ 0,00</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Preço"
+            >
+
+            <button
+              type="button"
+              class="secondary"
+            >
+              ×
+            </button>
+
+          </div>
+
         </div>
 
 
         <button
-          id="sendBtn"
-          class="primary"
-          type="button"
-        >
-          Enviar pedido
-        </button>
-
-      </section>
-
-
-      <!-- PEDIDOS ENVIADOS -->
-      <aside class="card">
-
-        <h2>Pedidos enviados</h2>
-
-        <div id="ordersList">
-          <p class="muted">
-            Nenhum pedido enviado.
-          </p>
-        </div>
-
-      </aside>
-
-    </div>
-
-  </section>
-
-</main>
-
-
-<!-- IMPORTANTE:
-     O app.js será carregado depois que a página inteira existir.
--->
-<script src="app.js?v=1000"></script>
-
-</body>
-</html>
+          id="addItem
