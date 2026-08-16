@@ -1,31 +1,139 @@
-const $=id=>document.getElementById(id);
-let items=[]; let sent=[];
+const SUPABASE_URL = "https://lifsxhyeqwppfvajvhpn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 
-function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
-function renderItems(){
-  $('items').innerHTML=items.map((x,i)=>`<div class="item">
-  <input data-name="${i}" placeholder="Produto" value="${x.name||''}">
-  <input data-price="${i}" type="number" step="0.01" placeholder="Preço" value="${x.price||''}">
-  <button data-del="${i}" class="secondary">×</button></div>`).join('');
-  $('items').querySelectorAll('[data-name]').forEach(e=>e.oninput=()=>{items[e.dataset.name].name=e.value});
-  $('items').querySelectorAll('[data-price]').forEach(e=>e.oninput=()=>{items[e.dataset.price].price=Number(e.value);calc()});
-  $('items').querySelectorAll('[data-del]').forEach(e=>e.onclick=()=>{items.splice(e.dataset.del,1);renderItems();calc()});
+let supabaseClient;
+let items = [];
+let sent = [];
+
+function money(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 }
-function calc(){$('total').textContent=money(items.reduce((s,x)=>s+(Number(x.price)||0),0))}
-$('loginBtn').onclick=()=>{
-  const u=$('username').value.trim(),p=$('password').value;
-  if(u && p){$('login').classList.add('hidden');$('orders').classList.remove('hidden'); if(!items.length){items=[{name:'',price:0}] ;renderItems()}}
-  else $('loginMsg').textContent='Informe usuário e senha.';
-};
-$('logoutBtn').onclick=()=>{$('orders').classList.add('hidden');$('login').classList.remove('hidden')};
-$('addItemBtn').onclick=()=>{items.push({name:'',price:0});renderItems()};
-$('sendBtn').onclick=()=>{
-  const order={cliente:$('cliente').value.trim(),telefone:$('telefone').value.trim(),endereco:$('endereco').value.trim(),referencia:$('referencia').value.trim(),observacoes:$('observacoes').value.trim(),items:items.filter(x=>x.name),total:items.reduce((s,x)=>s+(Number(x.price)||0),0),time:new Date().toLocaleString('pt-BR')};
-  if(!order.cliente || !order.items.length){alert('Informe o cliente e pelo menos um item.');return}
-  sent.unshift(order);
-  $('ordersList').innerHTML=sent.map((o,i)=>`<div class="order"><strong>#${String(sent.length-i).padStart(3,'0')} — ${o.cliente}</strong><small>${o.time} · ${money(o.total)}</small></div>`).join('');
-  alert('Pedido registrado nesta versão de teste.');
-  $('cliente').value=$('telefone').value=$('endereco').value=$('referencia').value=$('observacoes').value='';
-  items=[{name:'',price:0}];renderItems();calc();
-};
-items=[{name:'',price:0}];renderItems();calc();
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+/* Carrega a biblioteca do Supabase */
+function carregarSupabase() {
+  return new Promise((resolve, reject) => {
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+    script.onload = () => {
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+      resolve();
+    };
+
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+/* Produtos do pedido */
+function renderItems() {
+  const container = $("items");
+
+  if (!container) return;
+
+  container.innerHTML = items.map((item, index) => `
+    <div class="item">
+
+      <input
+        data-name="${index}"
+        placeholder="Produto"
+        value="${item.name || ""}"
+      >
+
+      <input
+        data-quantity="${index}"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="Qtd"
+        value="${item.quantity || 1}"
+      >
+
+      <input
+        data-price="${index}"
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="Preço"
+        value="${item.price || ""}"
+      >
+
+      <button
+        data-del="${index}"
+        class="secondary"
+        type="button"
+      >×</button>
+
+    </div>
+  `).join("");
+
+  container.querySelectorAll("[data-name]").forEach(input => {
+    input.oninput = () => {
+      items[input.dataset.name].name = input.value;
+    };
+  });
+
+  container.querySelectorAll("[data-quantity]").forEach(input => {
+    input.oninput = () => {
+      items[input.dataset.quantity].quantity =
+        Number(input.value) || 1;
+
+      calcularTotal();
+    };
+  });
+
+  container.querySelectorAll("[data-price]").forEach(input => {
+    input.oninput = () => {
+      items[input.dataset.price].price =
+        Number(input.value) || 0;
+
+      calcularTotal();
+    };
+  });
+
+  container.querySelectorAll("[data-del]").forEach(button => {
+    button.onclick = () => {
+      items.splice(Number(button.dataset.del), 1);
+
+      if (!items.length) {
+        items.push({
+          name: "",
+          quantity: 1,
+          price: 0
+        });
+      }
+
+      renderItems();
+      calcularTotal();
+    };
+  });
+}
+
+/* Calcula o total */
+function calcularTotal() {
+  const total = items.reduce((sum, item) => {
+    return sum +
+      ((Number(item.price) || 0) *
+       (Number(item.quantity) || 1));
+  }, 0);
+
+ 
