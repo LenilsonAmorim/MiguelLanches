@@ -1,230 +1,176 @@
 <!doctype html>
 <html lang="pt-BR">
-
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>Miguel Lanches — Pedidos</title>
-
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Miguel Lanches — Pedidos</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <main class="app">
 
-<section id="login" class="card login-card">
+  <!-- LOGIN -->
+  <section id="login" class="card login-card">
 
-<div class="brand">
-MIGUEL LANCHES
-</div>
+    <div class="brand">MIGUEL LANCHES</div>
 
-<p class="muted">
-Sistema de pedidos
-</p>
+    <p class="muted">Sistema de pedidos</p>
 
-<label>
-Usuário
-<input id="username" placeholder="Usuário">
-</label>
+    <label>
+      Usuário
+      <input id="username" type="text" placeholder="Usuário">
+    </label>
 
-<label>
-Senha
-<input id="password" type="password" placeholder="Senha">
-</label>
+    <label>
+      Senha
+      <input id="password" type="password" placeholder="Senha">
+    </label>
 
-<button
-id="loginBtn"
-class="primary"
-type="button"
-onclick="abrirPedidos()"
->
-Entrar
-</button>
+    <button id="loginBtn" class="primary" type="button">
+      Entrar
+    </button>
 
-<p id="loginMsg" class="error"></p>
+    <p id="loginMsg" class="error"></p>
 
-<p class="hint">
-Protótipo inicial.
-</p>
-
-</section>
+  </section>
 
 
-<section id="orders" class="hidden">
+  <!-- PEDIDOS -->
+  <section id="orders" class="hidden">
 
-<header class="topbar">
+    <header class="topbar">
 
-<div>
-<strong>MIGUEL LANCHES</strong>
-<span>Pedidos</span>
-</div>
+      <div>
+        <strong>MIGUEL LANCHES</strong>
+        <span>Pedidos</span>
+      </div>
 
-<button
-id="logoutBtn"
-class="ghost"
-type="button"
->
-Sair
-</button>
+      <button id="logoutBtn" class="ghost" type="button">
+        Sair
+      </button>
 
-</header>
+    </header>
 
 
-<div class="grid">
+    <div class="grid">
 
-<section class="card">
+      <!-- NOVO PEDIDO -->
+      <section class="card">
 
-<h2>
-Novo pedido
-</h2>
-
-
-<div class="row">
-
-<label>
-Cliente
-<input
-id="cliente"
-placeholder="Nome"
->
-</label>
-
-<label>
-Telefone
-<input
-id="telefone"
-placeholder="Telefone"
->
-</label>
-
-</div>
+        <h2>Novo pedido</h2>
 
 
-<label>
-Endereço
-<input
-id="endereco"
-placeholder="Rua, número, bairro"
->
-</label>
+        <div class="row">
+
+          <label>
+            Cliente
+            <input
+              id="cliente"
+              type="text"
+              placeholder="Nome do cliente"
+            >
+          </label>
+
+          <label>
+            Telefone
+            <input
+              id="telefone"
+              type="text"
+              placeholder="Telefone"
+            >
+          </label>
+
+        </div>
 
 
-<label>
-Referência
-<input
-id="referencia"
-placeholder="Ponto de referência"
->
-</label>
+        <label>
+          Endereço
+          <input
+            id="endereco"
+            type="text"
+            placeholder="Rua, número, bairro"
+          >
+        </label>
 
 
-<h3>
-Itens
-</h3>
+        <label>
+          Referência
+          <input
+            id="referencia"
+            type="text"
+            placeholder="Ponto de referência"
+          >
+        </label>
 
 
-<div id="items"></div>
+        <h3>Itens</h3>
+
+        <div id="items"></div>
 
 
-<button
-id="addItemBtn"
-class="secondary"
-type="button"
->
-+ Adicionar item
-</button>
+        <button
+          id="addItemBtn"
+          class="secondary"
+          type="button"
+        >
+          + Adicionar item
+        </button>
 
 
-<label>
-Observações
+        <label>
+          Observações
 
-<textarea
-id="observacoes"
-placeholder="Observações"
-></textarea>
+          <textarea
+            id="observacoes"
+            placeholder="Observações do pedido"
+          ></textarea>
 
-</label>
-
-
-<div class="total">
-
-Total:
-
-<span id="total">
-R$ 0,00
-</span>
-
-</div>
+        </label>
 
 
-<button
-id="sendBtn"
-class="primary"
-type="button"
->
-Enviar pedido
-</button>
-
-</section>
+        <div class="total">
+          Total:
+          <span id="total">R$ 0,00</span>
+        </div>
 
 
-<aside class="card">
+        <button
+          id="sendBtn"
+          class="primary"
+          type="button"
+        >
+          Enviar pedido
+        </button>
 
-<h2>
-Pedidos enviados
-</h2>
+      </section>
 
-<div id="ordersList">
 
-<p class="muted">
-Nenhum pedido enviado.
-</p>
+      <!-- PEDIDOS ENVIADOS -->
+      <aside class="card">
 
-</div>
+        <h2>Pedidos enviados</h2>
 
-</aside>
+        <div id="ordersList">
+          <p class="muted">
+            Nenhum pedido enviado.
+          </p>
+        </div>
 
-</div>
+      </aside>
 
-</section>
+    </div>
+
+  </section>
 
 </main>
 
 
-<script>
-
-function abrirPedidos() {
-
-const usuario =
-document.getElementById("username").value.trim();
-
-const senha =
-document.getElementById("password").value;
-
-if (!usuario || !senha) {
-
-document.getElementById("loginMsg").textContent =
-"Informe usuário e senha.";
-
-return;
-
-}
-
-document.getElementById("login")
-.classList.add("hidden");
-
-document.getElementById("orders")
-.classList.remove("hidden");
-
-}
-<script src="app.js?v=999"></script>
-</script>
-
-
-
+<!-- IMPORTANTE:
+     O app.js será carregado depois que a página inteira existir.
+-->
+<script src="app.js?v=1000"></script>
 
 </body>
-
 </html>
