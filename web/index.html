@@ -14,9 +14,7 @@
 
 <div id="app">
 
-  <!-- =========================
-       MENU LATERAL
-  ========================== -->
+  <!-- MENU LATERAL -->
 
   <aside id="sidebar">
 
@@ -30,26 +28,15 @@
       <button
         class="menu-item active"
         data-page="dashboard"
-        type="button"
-      >
-        🏠
-        <span>Painel Inicial</span>
-      </button>
-
-      <button
-        class="menu-item"
-        data-page="novo-pedido"
-        type="button"
-      >
-        📝
-        <span>Novo Pedido</span>
+        type="button">
+        🛒
+        <span>Fazer Pedido</span>
       </button>
 
       <button
         class="menu-item"
         data-page="comandas"
-        type="button"
-      >
+        type="button">
         📋
         <span>Comandas Abertas</span>
       </button>
@@ -57,8 +44,7 @@
       <button
         class="menu-item"
         data-page="historico"
-        type="button"
-      >
+        type="button">
         📚
         <span>Histórico</span>
       </button>
@@ -66,8 +52,7 @@
       <button
         class="menu-item"
         data-page="impressao"
-        type="button"
-      >
+        type="button">
         🖨️
         <span>Impressão</span>
       </button>
@@ -82,37 +67,33 @@
   </aside>
 
 
-  <!-- =========================
-       CONTEÚDO
-  ========================== -->
+  <!-- CONTEÚDO -->
 
   <main id="content">
-
-    <!-- TOPO -->
 
     <header id="topbar">
 
       <button
         id="menuToggle"
-        type="button"
-      >
+        type="button">
         ☰
       </button>
 
       <div>
+
         <strong id="pageTitle">
-          Painel Inicial
+          Fazer Pedido
         </strong>
 
         <small>
-          Sistema de pedidos
+          Monte a comanda do cliente
         </small>
+
       </div>
 
       <button
         id="logoutBtn"
-        type="button"
-      >
+        type="button">
         Sair
       </button>
 
@@ -120,179 +101,138 @@
 
 
     <!-- =========================
-         PAINEL INICIAL
+         PÁGINA PRINCIPAL
     ========================== -->
 
     <section
       id="page-dashboard"
-      class="page active-page"
-    >
+      class="page active-page">
 
       <div class="page-header">
 
         <div>
-          <h1>Painel Inicial</h1>
+
+          <h1>
+            Fazer Pedido
+          </h1>
 
           <p>
-            Bem-vindo ao sistema de pedidos.
+            Escolha os produtos para adicionar à comanda.
           </p>
+
         </div>
 
-        <button
-          class="primary-btn"
-          data-go="novo-pedido"
-          type="button"
+      </div>
+
+
+      <!-- BUSCA -->
+
+      <div class="search-box">
+
+        <input
+          id="productSearch"
+          type="search"
+          placeholder="🔎 Buscar produto..."
         >
-          + Novo Pedido
+
+      </div>
+
+
+      <!-- CATEGORIAS -->
+
+      <div
+        id="categories"
+        class="categories">
+
+        <button
+          class="category active"
+          data-category="todos"
+          type="button">
+          Todos
+        </button>
+
+        <button
+          class="category"
+          data-category="lanches"
+          type="button">
+          🍔 Lanches
+        </button>
+
+        <button
+          class="category"
+          data-category="porcoes"
+          type="button">
+          🍟 Porções
+        </button>
+
+        <button
+          class="category"
+          data-category="bebidas"
+          type="button">
+          🥤 Bebidas
+        </button>
+
+        <button
+          class="category"
+          data-category="sobremesas"
+          type="button">
+          🍰 Sobremesas
         </button>
 
       </div>
 
 
-      <div class="stats-grid">
+      <!-- ÁREA DE VENDA -->
 
-        <div class="stat-card">
-
-          <span>Pedidos Hoje</span>
-
-          <strong id="statPedidos">
-            0
-          </strong>
-
-        </div>
+      <div class="sales-layout">
 
 
-        <div class="stat-card">
+        <!-- PRODUTOS -->
 
-          <span>Comandas Abertas</span>
+        <div class="products-area">
 
-          <strong id="statComandas">
-            0
-          </strong>
+          <div
+            id="productsGrid"
+            class="products-grid">
 
-        </div>
-
-
-        <div class="stat-card">
-
-          <span>Total Hoje</span>
-
-          <strong id="statTotal">
-            R$ 0,00
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <div class="dashboard-grid">
-
-        <div class="panel">
-
-          <div class="panel-header">
-
-            <h2>
-              Acesso rápido
-            </h2>
-
-          </div>
-
-          <div class="quick-actions">
-
-            <button
-              data-go="novo-pedido"
-              type="button"
-            >
-              📝
-              <span>Novo Pedido</span>
-            </button>
-
-            <button
-              data-go="comandas"
-              type="button"
-            >
-              📋
-              <span>Comandas</span>
-            </button>
-
-            <button
-              data-go="historico"
-              type="button"
-            >
-              📚
-              <span>Histórico</span>
-            </button>
-
-            <button
-              data-go="impressao"
-              type="button"
-            >
-              🖨️
-              <span>Impressão</span>
-            </button>
+            <!-- Os produtos serão colocados pelo app.js -->
 
           </div>
 
         </div>
 
 
-        <div class="panel">
+        <!-- COMANDA -->
 
-          <div class="panel-header">
+        <aside class="cart-panel">
 
-            <h2>
-              Últimos pedidos
-            </h2>
+          <div class="cart-header">
 
-          </div>
+            <div>
 
-          <div id="recentOrders">
+              <h2>
+                Sua Comanda
+              </h2>
 
-            <div class="empty-state">
-              Nenhum pedido registrado.
+              <span id="cartCount">
+                0 itens
+              </span>
+
             </div>
 
+            <button
+              id="clearCartBtn"
+              class="clear-btn"
+              type="button">
+              Limpar
+            </button>
+
           </div>
 
-        </div>
 
-      </div>
+          <!-- CLIENTE -->
 
-    </section>
-
-
-    <!-- =========================
-         NOVO PEDIDO
-    ========================== -->
-
-    <section
-      id="page-novo-pedido"
-      class="page"
-    >
-
-      <div class="page-header">
-
-        <div>
-
-          <h1>Novo Pedido</h1>
-
-          <p>
-            Registre um novo pedido.
-          </p>
-
-        </div>
-
-      </div>
-
-
-      <div class="order-layout">
-
-        <div class="panel">
-
-          <h2>Dados do Cliente</h2>
-
-          <div class="form-grid">
+          <div class="customer-box">
 
             <label>
               Cliente
@@ -302,6 +242,7 @@
                 type="text"
                 placeholder="Nome do cliente"
               >
+
             </label>
 
 
@@ -313,24 +254,23 @@
                 type="text"
                 placeholder="Telefone"
               >
+
             </label>
 
 
-            <label class="full">
-
+            <label>
               Endereço
 
               <input
                 id="endereco"
                 type="text"
-                placeholder="Rua, número, bairro"
+                placeholder="Endereço"
               >
 
             </label>
 
 
-            <label class="full">
-
+            <label>
               Referência
 
               <input
@@ -343,75 +283,111 @@
 
           </div>
 
-        </div>
 
+          <!-- ITENS -->
 
-        <div class="panel">
+          <div
+            id="cartItems"
+            class="cart-items">
 
-          <div class="panel-header">
+            <div class="cart-empty">
 
-            <h2>
-              Itens do Pedido
-            </h2>
+              🛒
 
-            <button
-              id="addItemBtn"
-              class="secondary-btn"
-              type="button"
-            >
-              + Adicionar Item
-            </button>
+              <strong>
+                Sua comanda está vazia
+              </strong>
 
-          </div>
+              <span>
+                Toque no + de um produto para adicionar.
+              </span>
 
-
-          <div class="items-head">
-
-            <span>Produto</span>
-            <span>Qtd.</span>
-            <span>Preço</span>
-            <span></span>
+            </div>
 
           </div>
 
 
-          <div id="items">
+          <!-- OBSERVAÇÃO -->
+
+          <label class="observation">
+
+            Observações
+
+            <textarea
+              id="observacoes"
+              placeholder="Ex.: sem cebola, pouco sal..."
+            ></textarea>
+
+          </label>
+
+
+          <!-- TOTAIS -->
+
+          <div class="cart-summary">
+
+            <div>
+
+              <span>
+                Subtotal
+              </span>
+
+              <strong id="subtotal">
+                R$ 0,00
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Taxa de entrega
+              </span>
+
+              <strong id="deliveryFee">
+                R$ 0,00
+              </strong>
+
+            </div>
+
+
+            <div class="grand-total">
+
+              <span>
+                TOTAL
+              </span>
+
+              <strong id="cartTotal">
+                R$ 0,00
+              </strong>
+
+            </div>
 
           </div>
 
 
-          <div class="order-total">
-
-            <span>Total</span>
-
-            <strong id="total">
-              R$ 0,00
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <div class="panel">
-
-          <h2>Observações</h2>
-
-          <textarea
-            id="observacoes"
-            placeholder="Observações do pedido..."
-          ></textarea>
-
+          <!-- AÇÕES -->
 
           <button
             id="sendBtn"
-            class="primary-btn large-btn"
-            type="button"
-          >
-            Enviar Pedido
+            class="finish-btn"
+            type="button">
+
+            ✓ Finalizar Pedido
+
           </button>
 
-        </div>
+
+          <button
+            id="printCurrentBtn"
+            class="print-btn"
+            type="button">
+
+            🖨️ Imprimir Comanda
+
+          </button>
+
+        </aside>
 
       </div>
 
@@ -424,14 +400,15 @@
 
     <section
       id="page-comandas"
-      class="page"
-    >
+      class="page">
 
       <div class="page-header">
 
         <div>
 
-          <h1>Comandas Abertas</h1>
+          <h1>
+            Comandas Abertas
+          </h1>
 
           <p>
             Pedidos aguardando fechamento.
@@ -446,8 +423,7 @@
 
         <div
           id="openOrders"
-          class="orders-list"
-        >
+          class="orders-list">
 
           <div class="empty-state">
             Nenhuma comanda aberta.
@@ -466,14 +442,15 @@
 
     <section
       id="page-historico"
-      class="page"
-    >
+      class="page">
 
       <div class="page-header">
 
         <div>
 
-          <h1>Histórico de Pedidos</h1>
+          <h1>
+            Histórico de Pedidos
+          </h1>
 
           <p>
             Consulte os pedidos realizados.
@@ -494,15 +471,25 @@
 
               <tr>
 
-                <th>Pedido</th>
+                <th>
+                  Pedido
+                </th>
 
-                <th>Cliente</th>
+                <th>
+                  Cliente
+                </th>
 
-                <th>Data</th>
+                <th>
+                  Data
+                </th>
 
-                <th>Total</th>
+                <th>
+                  Total
+                </th>
 
-                <th>Ação</th>
+                <th>
+                  Ação
+                </th>
 
               </tr>
 
@@ -514,9 +501,10 @@
 
                 <td
                   colspan="5"
-                  class="empty-cell"
-                >
+                  class="empty-cell">
+
                   Nenhum pedido encontrado.
+
                 </td>
 
               </tr>
@@ -538,17 +526,18 @@
 
     <section
       id="page-impressao"
-      class="page"
-    >
+      class="page">
 
       <div class="page-header">
 
         <div>
 
-          <h1>Impressão</h1>
+          <h1>
+            Impressão
+          </h1>
 
           <p>
-            Visualize e imprima o pedido.
+            Visualize e imprima a comanda.
           </p>
 
         </div>
@@ -564,14 +553,14 @@
             Pré-visualização
           </h2>
 
-
           <div
             id="printPreview"
-            class="receipt"
-          >
+            class="receipt">
 
             <div class="receipt-empty">
+
               Selecione um pedido para visualizar.
+
             </div>
 
           </div>
@@ -580,9 +569,10 @@
           <button
             id="printBtn"
             class="primary-btn large-btn"
-            type="button"
-          >
+            type="button">
+
             🖨️ Imprimir Pedido
+
           </button>
 
         </div>
@@ -596,11 +586,7 @@
 </div>
 
 
-<!-- =========================
-     APP
-========================= -->
-
-<script src="app.js?v=3000"></script>
+<script src="app.js?v=4000"></script>
 
 </body>
 </html>
