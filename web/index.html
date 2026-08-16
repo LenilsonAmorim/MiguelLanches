@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miguel Lanches</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-title">MIGUEL</div>
+      <div class="logo-subtitle">LANCHES</div>
+    </div>
+    <nav>
+      <button class="menu-item active" data-page="dashboard" type="button">🛒 <span>Fazer Pedido</span></button>
+      <button class="menu-item" data-page="comandas" type="button">📋 <span>Comandas Abertas</span></button>
+      <button class="menu-item" data-page="historico" type="button">📚 <span>Histórico</span></button>
+      <button class="menu-item" data-page="impressao" type="button">🖨️ <span>Impressão</span></button>
+    </nav>
+    <div class="sidebar-footer">Miguel Lanches<small>Sistema de Pedidos</small></div>
+  </aside>
+
+  <main id="content">
+    <header id="topbar">
+      <button id="menuToggle" type="button">☰</button>
+      <div>
+        <strong id="pageTitle">Fazer Pedido</strong>
+        <small>Monte a comanda do cliente</small>
+      </div>
+      <button id="logoutBtn" type="button">Sair</button>
+    </header>
+
+    <section id="page-dashboard" class="page active-page">
+      <div class="page-header">
+        <div>
+          <h1>Fazer Pedido</h1>
+          <p>Escolha os produtos para adicionar à comanda.</p>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <input id="productSearch" type="search" placeholder="🔎 Buscar produto...">
+      </div>
+
+      <div id="categories" class="categories">
+        <button class="category active" data-category="todos" type="button">🍽️ Todos</button>
+        <button class="category" data-category="lanches" type="button">🍔 Lanches</button>
+        <button class="category" data-category="porcoes" type="button">🍟 Porções</button>
+        <button class="category" data-category="bebidas" type="button">🥤 Bebidas</button>
+        <button class="category" data-category="sobremesas" type="button">🍰 Sobremesas</button>
+      </div>
+
+      <div class="sales-layout">
+        <div class="products-area">
+          <div id="productsGrid" class="products-grid"></div>
+        </div>
+
+        <aside class="cart-panel">
+          <div class="cart-header">
+            <div>
+              <h2>Sua Comanda</h2>
+              <span id="cartCount">0 itens</span>
+            </div>
+            <button id="clearCart" class="clear-btn" type="button">Limpar</button>
+          </div>
+
+          <div class="customer-box">
+            <label>Cliente<input id="cliente" type="text" placeholder="Nome do cliente"></label>
+            <label>Telefone<input id="telefone" type="text" placeholder="Telefone"></label>
+            <label>Endereço<input id="endereco" type="text" placeholder="Endereço"></label>
+            <label>Referência<input id="referencia" type="text" placeholder="Ponto de referência"></label>
+          </div>
+
+          <div id="cartItems" class="cart-items"></div>
+
+          <label class="observation">
+            Observações
+            <textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea>
+          </label>
+
+          <div class="cart-summary">
+            <div><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
+            <div><span>Taxa de entrega</span><strong id="deliveryFee">R$ 0,00</strong></div>
+            <div class="grand-total"><span>TOTAL</span><strong id="cartTotal">R$ 0,00</strong></div>
+          </div>
+
+          <button id="finishBtn" class="finish-btn" type="button">✓ Finalizar Pedido</button>
+          <button id="printBtn" class="print-btn" type="button">🖨️ Imprimir Comanda</button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="page-comandas" class="page">
+      <div class="page-header"><div><h1>Comandas Abertas</h1><p>Pedidos registrados no sistema.</p></div></div>
+      <div class="panel"><h2>Comandas</h2><div id="openOrders" class="orders-list"></div></div>
+    </section>
+
+    <section id="page-historico" class="page">
+      <div class="page-header"><div><h1>Histórico de Pedidos</h1><p>Consulte os pedidos realizados.</p></div></div>
+      <div class="panel">
+        <h2>Pedidos</h2>
+        <div class="table-container">
+          <table>
+            <thead><tr><th>Nº</th><th>Cliente</th><th>Data/Hora</th><th>Total</th><th>Ação</th></tr></thead>
+            <tbody id="historyTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-impressao" class="page">
+      <div class="page-header"><div><h1>Impressão</h1><p>Visualização da comanda.</p></div></div>
+      <div class="panel print-layout">
+        <div id="printPreview" class="receipt"><div class="receipt-empty">Selecione um pedido para visualizar.</div></div>
+        <button id="doPrintBtn" class="primary-btn large-btn" type="button">🖨️ Imprimir</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="app.js?v=6001"></script>
+</body>
+</html>
