@@ -204,21 +204,27 @@ function extrairItens(obs){
 function observacaoVisivel(obs){
   return String(obs || "")
     .replace(/\n?\n?\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"")
-    .replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"")
+    .replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/g,"")
     .trim();
 }
 
 function codificarStatus(obs,status){
+  /* Remove TODOS os marcadores antigos antes de gravar o novo.
+     Isso evita que um "preparo" antigo fique antes de "cancelado". */
   const limpo = String(obs || "")
-    .replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"")
+    .replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/g,"")
     .trim();
 
   return limpo + "\n\n[ML_STATUS]" + status + "[/ML_STATUS]";
 }
 
 function extrairStatus(obs){
-  const m = String(obs || "").match(/\[ML_STATUS\](preparo|entrega|entregue|cancelado)\[\/ML_STATUS\]/);
-  return m ? m[1] : "preparo";
+  /* Se houver dados antigos com mais de um marcador, usa o ÚLTIMO. */
+  const matches = [...String(obs || "").matchAll(
+    /\[ML_STATUS\](preparo|entrega|entregue|cancelado)\[\/ML_STATUS\]/g
+  )];
+
+  return matches.length ? matches[matches.length - 1][1] : "preparo";
 }
 
 function nomeCliente(p){
@@ -622,7 +628,7 @@ async function alterarStatusPedido(id,status){
   mostrarHistorico();
 
   /* Recarrega depois para confirmar o estado salvo no Supabase. */
-  setTimeout(() => carregarPedidos(),500);
+  setTimeout(() => carregarPedidos(),2000);
 }
 
 async function finalizarPedido(){
