@@ -170,3 +170,27 @@
 .col-head.delivery{background:#159447}
 th{background:#0B0B0B}
 .badge{border:1px solid #E5E0D5}
+
+
+/* AJUSTE DESKTOP — CARDÁPIO GRANDE E ESPAÇOSO */
+@media(min-width:1101px){
+  .page{padding:30px 38px 55px;max-width:1800px}
+  .product-grid{
+    grid-template-columns:repeat(4,minmax(230px,1fr));
+    gap:24px;
+  }
+  .product-card{border-radius:17px}
+  .product-img{height:215px;font-size:82px}
+  .product-info{padding:18px}
+  .product-info h3{
+    font-size:17px;
+    line-height:1.35;
+    min-height:46px;
+  }
+  .price{font-size:19px}
+  .plus{width:46px;height:46px;font-size:26px}
+  .search{margin-bottom:20px}
+  .category-tabs{gap:12px;margin-bottom:22px}
+  .category-tabs button{padding:12px 19px;font-size:15px}
+  .view-cart{margin-bottom:24px;padding:15px 18px;font-size:15px}
+}
