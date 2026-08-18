@@ -283,81 +283,25 @@ function abrirWhatsAppMensagem(p,status){
   }
   return true;
 }
-async function alterarStatusPedido(i, status) {
-  const p = pedidos[i];
-  if (!p || !supabaseClient) return;
+async function alterarStatusPedido(i,status){
+  const p=pedidos[i];
+  if(!p)return;
+  p.observacoes=codificarStatus(p.observacoes,status);
+  p.status_pedido=status;
+  p.__entregue=(status==="entregue");
+  salvarStatusLocal(p.id,status);
 
-  const observacoesAtualizadas = codificarStatus(
-    p.observacoes,
-    status
-  );
+  if(supabaseClient&&p.id){
+    const {error}=await supabaseClient.from("pedidos").update({status_pedido:status,observacoes:p.observacoes}).eq("id",p.id);
+    if(error)console.error("Erro ao atualizar status no banco:",error);
+  }
 
-  // Atualiza imediatamente a tela.
-  p.status_pedido = status;
-  p.observacoes = observacoesAtualizadas;
-  p.__entregue = status === "entregue";
-
+  // Atualiza a tela somente depois de registrar o status.
   mostrarComandas();
   mostrarHistorico();
 
-  let salvo = false;
-
-  // Primeiro tenta salvar na coluna própria do Supabase.
-  const resultado = await supabaseClient
-    .from("pedidos")
-    .update({
-      status_pedido: status,
-      observacoes: observacoesAtualizadas
-    })
-    .eq("id", p.id);
-
-  if (!resultado.error) {
-    salvo = true;
-  } else {
-    console.warn(
-      "Não foi possível salvar status_pedido. Tentando alternativa...",
-      resultado.error
-    );
-
-    // Fallback: salva o status dentro de observacoes.
-    const alternativa = await supabaseClient
-      .from("pedidos")
-      .update({
-        observacoes: observacoesAtualizadas
-      })
-      .eq("id", p.id);
-
-    if (!alternativa.error) {
-      salvo = true;
-    } else {
-      console.error(
-        "Não foi possível salvar o pedido:",
-        alternativa.error
-      );
-    }
-  }
-
-  if (!salvo) {
-    await carregarPedidos();
-
-    alert(
-      "Não foi possível atualizar o pedido. Verifique a conexão com a internet."
-    );
-
-    return;
-  }
-
-  salvarStatusLocal(p.id, status);
-
-  // Confirma no banco antes de considerar a alteração concluída.
-  await carregarPedidos();
-
-  // WhatsApp somente depois que o status foi salvo.
-  if (
-    (status === "entrega" || status === "entregue") &&
-    normalizarTelefone(p.telefone)
-  ) {
-    abrirWhatsAppMensagem(p, status);
+  if((status==="entrega"||status==="entregue")&&normalizarTelefone(p.telefone)){
+    abrirWhatsAppMensagem(p,status);
   }
 }
 function acaoStatusComanda(i,p,status){
