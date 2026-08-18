@@ -133,10 +133,7 @@ function extrairItens(obs){
   try{return JSON.parse(decodeURIComponent(m[1]));}catch(e){return[];}
 }
 function observacaoVisivel(obs){
-  return String(obs||"")
-    .replace(/\n?\n?\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"")
-    .replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"")
-    .trim();
+  return String(obs||"").replace(/\n?\n?\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"").trim();
 }
 function nomeCliente(p){return p?.Cliente??p?.cliente??p?.nome??"Sem nome";}
 function totalPedido(p){return Number(p?.total??p?.Total??0);}
@@ -177,14 +174,6 @@ async function carregarPedidos(){
 function statusLabel(status){
   return ({preparo:"🍔 Em preparo",entrega:"🛵 Saiu para entrega",entregue:"✅ Entregue"})[status]||"🍔 Em preparo";
 }
-function statusMensagem(status,p){
-  const nome=nomeCliente(p);
-  return ({
-    preparo:`Olá, ${nome}! 😊 Seu pedido já está sendo preparado. 🍔`,
-    entrega:`Olá, ${nome}! 🛵 Seu pedido saiu para entrega e está a caminho.`,
-    entregue:`Olá, ${nome}! ❤️ Seu pedido foi entregue. Muito obrigado pela compra e pela preferência!`
-  })[status];
-}
 function codificarStatus(obs,status){
   const limpo=String(obs||"").replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"").trim();
   return limpo+`\n\n[ML_STATUS]${status}[/ML_STATUS]`;
@@ -193,31 +182,39 @@ function extrairStatus(obs){
   const m=String(obs||"").match(/\[ML_STATUS\](preparo|entrega|entregue)\[\/ML_STATUS\]/);
   return m?m[1]:"preparo";
 }
-function normalizarTelefone(telefone){
-  let n=String(telefone||"").replace(/\D/g,"");
+function normalizarTelefone(t){
+  let n=String(t||"").replace(/\D/g,"");
   if(n.startsWith("55"))n=n.slice(2);
   if(n.startsWith("0"))n=n.slice(1);
   return (n.length===10||n.length===11)?"55"+n:"";
 }
-function telefoneValido(telefone){
-  const n=String(telefone||"").replace(/\D/g,"");
+function telefoneValido(t){
+  const n=String(t||"").replace(/\D/g,"");
   if(!n)return true;
   let br=n.startsWith("55")?n.slice(2):n;
   if(br.startsWith("0"))br=br.slice(1);
   return br.length===10||br.length===11;
 }
+function statusMensagem(status,p){
+  const nome=nomeCliente(p);
+  return ({
+    preparo:`Olá, ${nome}! 😊 Seu pedido já está sendo preparado. 🍔`,
+    entrega:`Olá, ${nome}! 🛵 Seu pedido saiu para entrega e está a caminho.`,
+    entregue:`Olá, ${nome}! ❤️ Seu pedido foi entregue. Muito obrigado pela compra e pela preferência!`
+  })[status];
+}
 function abrirWhatsAppMensagem(p,status){
   const numero=normalizarTelefone(p?.telefone);
   if(!numero)return false;
   const texto=encodeURIComponent(statusMensagem(status,p));
-  const webUrl="https://web.whatsapp.com/send?phone="+numero+"&text="+texto;
-  const appUrl="whatsapp://send?phone="+numero+"&text="+texto;
+  const web="https://web.whatsapp.com/send?phone="+numero+"&text="+texto;
+  const app="whatsapp://send?phone="+numero+"&text="+texto;
   const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   if(mobile){
-    window.location.href=appUrl;
-    setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=webUrl;},1200);
+    window.location.href=app;
+    setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=web;},1200);
   }else{
-    window.location.href=webUrl;
+    window.location.href=web;
   }
   return true;
 }
@@ -226,16 +223,16 @@ async function alterarStatusPedido(i,status){
   if(!p)return;
   p.observacoes=codificarStatus(p.observacoes,status);
   p.status_pedido=status;
-  p.__entregue=status==="entregue";
-  salvarPedidosLocais();
+  p.__entregue=(status==="entregue");
+
+  // Atualiza a tela imediatamente. O pedido continua no array para o Histórico.
+  mostrarComandas();
+  mostrarHistorico();
 
   if(supabaseClient&&p.id){
     const {error}=await supabaseClient.from("pedidos").update({observacoes:p.observacoes}).eq("id",p.id);
     if(error)console.error("Erro ao atualizar status:",error);
   }
-
-  mostrarComandas();
-  mostrarHistorico();
 
   if((status==="entrega"||status==="entregue")&&normalizarTelefone(p.telefone)){
     abrirWhatsAppMensagem(p,status);
@@ -276,6 +273,7 @@ function mostrarComandas(){
     </div>`;
   }).join("");
 }
+
 function mostrarHistorico(){
   const area=pegar("historyTable");if(!area)return;
   if(!pedidos.length){
@@ -326,7 +324,7 @@ function mostrarImpressao(){
   </div>`;
 }
 
-async function finalizarPedido(){
+async async function finalizarPedido(){
   if(!carrinho.length){alert("Adicione pelo menos um produto.");return;}
   const cliente=pegar("cliente")?pegar("cliente").value.trim():"";
   if(!cliente){alert("Informe o nome do cliente.");return;}
@@ -354,20 +352,25 @@ async function finalizarPedido(){
   if(botao){botao.disabled=true;botao.textContent="Salvando...";}
 
   try{
-    const {data,error}=await supabaseClient.from("pedidos").insert(dados).select().single();
+    // Mantemos o INSERT simples porque ele já está salvando corretamente no Supabase.
+    const {error}=await supabaseClient.from("pedidos").insert(dados);
     if(error)throw error;
 
-    const pedidoLocal={...data,status_pedido:"preparo",__entregue:false,__localId:"local-"+Date.now()+"-"+Math.random().toString(36).slice(2)};
-    pedidos=mesclarPedidos(pedidos,[pedidoLocal]);
-    salvarPedidosLocais();
+    const pedidoLocal={...dados,status_pedido:"preparo",__entregue:false};
+    pedidos.unshift(pedidoLocal);
 
     carrinho=[];mostrarCarrinho();
-    ["cliente","telefone","endereco","referencia","observacoes"].forEach(id=>{if(pegar(id))pegar(id).value="";});
-    await carregarPedidos();
-    abrirPagina("comandas");
+    ["cliente","telefone","endereco","referencia","observacoes"].forEach(id=>{
+      if(pegar(id))pegar(id).value="";
+    });
 
-    // Com número: abre WhatsApp já em "Em preparo". Sem número: segue normalmente.
-    if(normalizarTelefone(pedidoLocal.telefone))abrirWhatsAppMensagem(pedidoLocal,"preparo");
+    mostrarComandas();
+    await carregarPedidos();
+
+    // Só depois de o banco confirmar o pedido, abre o WhatsApp.
+    if(normalizarTelefone(telefone)){
+      abrirWhatsAppMensagem(pedidoLocal,"preparo");
+    }
   }catch(e){
     console.error("Erro ao salvar pedido:",e);
     alert("Erro ao salvar o pedido: "+(e.message||"Verifique as permissões da tabela pedidos no Supabase."));
