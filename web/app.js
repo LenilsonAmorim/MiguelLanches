@@ -169,6 +169,27 @@ function statusLocal(id){
   }catch(e){return "";}
 }
 
+let canalPedidosRealtime=null;
+function iniciarRealtimePedidos(){
+  if(!supabaseClient)return;
+  if(canalPedidosRealtime){
+    try{supabaseClient.removeChannel(canalPedidosRealtime);}catch(e){}
+  }
+
+  canalPedidosRealtime=supabaseClient
+    .channel("miguel-lanches-pedidos")
+    .on(
+      "postgres_changes",
+      {event:"*",schema:"public",table:"pedidos"},
+      async ()=>{
+        await carregarPedidos();
+      }
+    )
+    .subscribe((status)=>{
+      console.log("Realtime pedidos:",status);
+    });
+}
+
 async function carregarPedidos(){
   if(!supabaseClient)return;
   const {data,error}=await supabaseClient.from("pedidos").select("*");
@@ -433,16 +454,6 @@ function imprimirComanda(){
   janela.document.close();janela.focus();setTimeout(()=>janela.print(),250);
 }
 
-let sincronizacaoPedidos=null;
-function iniciarSincronizacaoPedidos(){
-  if(sincronizacaoPedidos)clearInterval(sincronizacaoPedidos);
-  sincronizacaoPedidos=setInterval(async()=>{
-    if(document.hidden)return;
-    if(supabaseClient){
-      await carregarPedidos();
-    }
-  },3000);
-}
 
 function iniciarApp(){
   try{
@@ -478,7 +489,7 @@ function iniciarApp(){
     conectarBanco().then(async ok=>{
       if(ok){
         await carregarPedidos();
-        iniciarSincronizacaoPedidos();
+        iniciarRealtimePedidos();
       }
     });
   }catch(e){
