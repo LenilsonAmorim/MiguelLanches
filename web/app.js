@@ -283,6 +283,11 @@ function mostrarComandas(){
         <div>${resumo}</div>
         <strong>${moeda(totalPedido(p))}</strong>
         <div class="order-status">${statusLabel(st)}</div>
+        <div class="status-flow">
+          <span class="step ${st==="preparo"?"active":""}">🍔 Em preparo</span>
+          <span class="step ${st==="entrega"?"active":""}">🛵 Em entrega</span>
+          <span class="step ${st==="entregue"?"active":""}">✅ Entregue</span>
+        </div>
       </div>
       ${botoesStatus(i,st)}
     </div>`;
