@@ -50,14 +50,22 @@ function addConfigured(id){
   let p=state.products.find(x=>String(x.id)===String(id));let qty=Math.max(1,Number($("mQty").value||1));let adds=[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>({id:x.value,nome:x.dataset.name,preco:Number(x.dataset.price||0)}));let obs=$("mObs").value.trim();
   let unit=Number(p.preco)+adds.reduce((s,x)=>s+x.preco,0);state.cart.push({key:uid(),id:p.id,nome:p.nome,preco:unit,quantidade:qty,base:Number(p.preco),adicionais:adds,obs});closeModal();renderCart();
 }
+function openCart(){ $("cart").classList.add("open"); $("cartOverlay").classList.add("open"); document.body.style.overflow="hidden"; }
+function closeCart(){ $("cart").classList.remove("open"); $("cartOverlay").classList.remove("open"); document.body.style.overflow=""; }
 function renderCart(){
   let n=state.cart.reduce((s,x)=>s+x.quantidade,0);$("cartCount").textContent=`${n} ${n===1?"item":"itens"}`;
+  $("viewCartCount").textContent=`${n} ${n===1?"item":"itens"}`;
   $("cartItems").innerHTML=state.cart.length?state.cart.map(x=>`<div class="cart-item"><div class="cart-main"><span class="cart-name">${x.quantidade}x ${esc(x.nome)}</span><span class="cart-price">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<div class="cart-addons">+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</div>`:""}${x.obs?`<div class="cart-addons">${esc(x.obs)}</div>`:""}<div class="qty"><button onclick="changeQty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="changeQty('${x.key}',1)">+</button><button class="remove" onclick="removeCart('${x.key}')">🗑</button></div></div>`).join(""):`<div class="cart-empty">Sua comanda está vazia.<br>Toque no + de um produto.</div>`;
-  let sub=state.cart.reduce((s,x)=>s+x.preco*x.quantidade,0),fee=Number($("taxaEntrega").value||0);$("subtotal").textContent=money(sub);$("deliveryShow").textContent=money(fee);$("total").textContent=money(sub+fee);
+  let sub=state.cart.reduce((s,x)=>s+x.preco*x.quantidade,0),fee=Number($("taxaEntrega").value||0);$("subtotal").textContent=money(sub);$("deliveryShow").textContent=money(fee);$("total").textContent=money(sub+fee);$("viewCartTotal").textContent=money(sub+fee);
 }
 function changeQty(k,d){let x=state.cart.find(x=>x.key===k);if(!x)return;x.quantidade+=d;if(x.quantidade<1)state.cart=state.cart.filter(y=>y.key!==k);renderCart()}
 function removeCart(k){state.cart=state.cart.filter(x=>x.key!==k);renderCart()}
-$("search").oninput=renderProducts;$("taxaEntrega").oninput=renderCart;$("clearCart").onclick=()=>{state.cart=[];renderCart()};
+$("search").oninput=renderProducts;
+$("taxaEntrega").oninput=renderCart;
+$("clearCart").onclick=()=>{state.cart=[];renderCart()};
+$("viewCart").onclick=openCart;
+$("closeCart").onclick=closeCart;
+$("cartOverlay").onclick=closeCart;
 $("finish").onclick=finishOrder;
 async function finishOrder(){
   if(!state.cart.length)return alert("Adicione pelo menos um produto.");
@@ -68,7 +76,7 @@ async function finishOrder(){
   let {data,error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,endereco:addr,referencia:ref,observacoes:finalObs,total}).select().single();
   if(error)return alert("Erro ao salvar: "+error.message);
   if(phone&&!state.clients.some(c=>c.telefone===phone))await db.from("clientes").upsert({nome,telefone:phone,endereco:addr,referencia:ref},{onConflict:"telefone"});
-  state.cart=[];["cliente","telefone","endereco","referencia","observacoes"].forEach(id=>$(id).value="");$("taxaEntrega").value=0;await loadAll();go("comandas");alert("Pedido criado com sucesso!");
+  state.cart=[];closeCart();["cliente","telefone","endereco","referencia","observacoes"].forEach(id=>$(id).value="");$("taxaEntrega").value=0;await loadAll();go("comandas");alert("Pedido criado com sucesso!");
 }
 function orderCard(p){
   let s=statusOf(p.observacoes),it=itemsOf(p.observacoes),sum=it.map(x=>`${x.quantidade}x ${x.nome}`).join(", ");return `<div class="order-card"><h3>#${String(p.id).slice(-5)} — ${esc(p.Cliente||"Cliente")}</h3><div class="meta">${esc(sum||"Pedido")} · ${money(p.total)} · ${new Date(p.created_at).toLocaleString("pt-BR")}</div><span class="badge ${s==="entrega"?"green":""}">${s==="preparo"?"🍔 Em preparo":"🛵 Saiu para entrega"}</span><div class="order-actions">${s==="preparo"?`<button class="action green" onclick="changeStatus('${p.id}','entrega')">🛵 Saiu para entrega</button>`:`<button class="action green" onclick="changeStatus('${p.id}','entregue')">✓ Entregue</button>`}<button class="action red" onclick="cancelOrder('${p.id}')">Cancelar</button>${p.telefone?`<button class="action whats" onclick="wa('${p.id}')">WhatsApp</button>`:""}</div></div>`;
@@ -119,7 +127,7 @@ window.adminSave=async(t,id)=>{let row={};if(t==="categorias")row={nome:$("f1").
 window.adminDelete=async(t,id)=>{if(!confirm("Desativar este item?"))return;let table={produtos:"produtos",categorias:"categorias",adicionais:"ingredientes",tamanhos:"tamanhos",combos:"combos"}[t];let r=await db.from(table).update({ativo:false}).eq("id",id);if(r.error)return alert(r.error.message);loadAll()};
 async function saveDelivery(){let v=Number($("cfgFee").value||0);let r=await db.from("configuracoes").upsert({chave:"taxa_entrega",valor:String(v),updated_at:new Date().toISOString()},{onConflict:"chave"});if(r.error)return alert(r.error.message);state.delivery=v;alert("Taxa salva.");}
 async function loadConfig(){let r=await db.from("configuracoes").select("*").eq("chave","taxa_entrega").maybeSingle();state.delivery=Number(r.data?.valor||0);$("taxaEntrega").value=state.delivery}
-function go(page){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$("page-"+page).classList.add("active");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===page));let names={pedido:["Novo Pedido","Monte o pedido rapidamente"],comandas:["Comandas","Acompanhe os pedidos em tempo real"],historico:["Histórico","Vendas e pedidos cancelados"],clientes:["Clientes","Clientes salvos"],admin:["Administração","Gerencie seu cardápio"]};$("pageTitle").textContent=names[page][0];$("pageSubtitle").textContent=names[page][1];$("sidebar").classList.remove("open");if(page==="pedido")loadConfig()}
+function go(page){if(typeof closeCart==="function")closeCart();document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$("page-"+page).classList.add("active");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===page));let names={pedido:["Novo Pedido","Monte o pedido rapidamente"],comandas:["Comandas","Acompanhe os pedidos em tempo real"],historico:["Histórico","Vendas e pedidos cancelados"],clientes:["Clientes","Clientes salvos"],admin:["Administração","Gerencie seu cardápio"]};$("pageTitle").textContent=names[page][0];$("pageSubtitle").textContent=names[page][1];$("sidebar").classList.remove("open");if(page==="pedido")loadConfig()}
 document.querySelectorAll(".nav-item").forEach(b=>b.onclick=()=>go(b.dataset.page));$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");$("closeModal").onclick=closeModal;$("modal").onclick=e=>{if(e.target===$("modal"))closeModal()};function closeModal(){$("modal").classList.add("hidden")}
 $("findClient").onclick=()=>go("clientes");
 function realtime(){db.channel("ml-web").on("postgres_changes",{event:"*",schema:"public",table:"pedidos"},loadAll).subscribe();db.channel("ml-cardapio").on("postgres_changes",{event:"*",schema:"public",table:"produtos"},loadAll).subscribe()}

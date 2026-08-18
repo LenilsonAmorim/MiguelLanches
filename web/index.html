@@ -32,10 +32,15 @@
       <div class="page-head"><div><h1>Novo Pedido</h1><p>Escolha os produtos e monte a comanda.</p></div></div>
       <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
       <div class="category-tabs" id="categoryTabs"></div>
+      <button class="view-cart" id="viewCart">🛒 <span>Ver comanda</span> <b id="viewCartCount">0 itens</b> <strong id="viewCartTotal">R$ 0,00</strong></button>
+      <div class="cart-overlay" id="cartOverlay"></div>
       <div class="order-layout">
         <div class="catalog"><div class="product-grid" id="productGrid"></div></div>
-        <aside class="cart">
-          <div class="cart-title"><div><h2>Comanda</h2><small id="cartCount">0 itens</small></div><button class="link-danger" id="clearCart">Limpar</button></div>
+        <aside class="cart" id="cart">
+          <div class="cart-title">
+            <div><h2>Comanda</h2><small id="cartCount">0 itens</small></div>
+            <div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div>
+          </div>
           <div class="customer-mini">
             <div class="customer-row"><input id="cliente" placeholder="Nome do cliente"><button id="findClient" title="Buscar cliente">👤</button></div>
             <input id="telefone" placeholder="WhatsApp / telefone">
