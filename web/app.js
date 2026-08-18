@@ -280,7 +280,7 @@ async function carregarPedidos(){
   }
 
   pedidos = ordenarPedidos(data || []).map(p => {
-    const bancoStatus = p.status_pedido || extrairStatus(p.observacoes);
+    const bancoStatus = extrairStatus(p.observacoes) || p.status_pedido || "preparo";
     p.status_pedido = bancoStatus;
     p.__entregue = bancoStatus === "entregue";
     return p;
@@ -610,10 +610,19 @@ async function alterarStatusPedido(id,status){
   p.observacoes = novaObservacao;
   p.__entregue = status === "entregue";
 
+  if(status === "cancelado" || status === "entregue"){
+    /* Remove imediatamente da lista de abertas. */
+    pedidos = pedidos.filter(x => String(x.id) !== String(p.id));
+    if(String(pedidoSelecionado?.id) === String(p.id)){
+      pedidoSelecionado = null;
+    }
+  }
+
   mostrarComandas();
   mostrarHistorico();
 
-  setTimeout(() => carregarPedidos(),300);
+  /* Recarrega depois para confirmar o estado salvo no Supabase. */
+  setTimeout(() => carregarPedidos(),500);
 }
 
 async function finalizarPedido(){
