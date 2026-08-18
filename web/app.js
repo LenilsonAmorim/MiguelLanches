@@ -226,19 +226,25 @@ function extrairStatus(obs){
 }
 function prepararAvisoWhatsApp(status,p){
   /*
-    PONTO DE INTEGRAÇÃO:
-    Quando a API oficial estiver configurada no servidor, esta função
-    fará POST para /api/whatsapp/status.
-    Nunca coloque o token da Meta dentro deste app.js.
+    Sem API por enquanto:
+    abre o WhatsApp com o número e a mensagem já preenchidos.
+    O funcionário só precisa tocar em ENVIAR.
   */
-  const payload={status,telefone:p?.telefone||"",cliente:nomeCliente(p),mensagem:statusMensagem(status,p),pedido_id:p?.id||p?.__localId||null};
-  try{
-    return fetch("/api/whatsapp/status",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    }).then(r=>r.ok).catch(()=>false);
-  }catch(e){return Promise.resolve(false);}
+  const telefone=String(p?.telefone||"").replace(/\\D/g,"");
+  const mensagem=statusMensagem(status,p);
+  if(!telefone){
+    alert("Este cliente não tem um WhatsApp/telefone cadastrado.");
+    return Promise.resolve(false);
+  }
+
+  let numero=telefone;
+  if(numero.startsWith("0"))numero=numero.slice(1);
+  if(numero.length===10||numero.length===11)numero="55"+numero;
+
+  const url="https://wa.me/"+numero+"?text="+encodeURIComponent(mensagem);
+  const janela=window.open(url,"_blank");
+  if(!janela)window.location.href=url;
+  return Promise.resolve(true);
 }
 async function alterarStatusPedido(i,status){
   const p=ordenarPedidos(pedidos)[i];
@@ -258,9 +264,8 @@ async function alterarStatusPedido(i,status){
 
   mostrarComandas();mostrarHistorico();mostrarImpressao();
 
-  // Deixa o ponto de integração pronto para a API oficial.
-  const enviado=await prepararAvisoWhatsApp(status,p);
-  if(!enviado)console.log("API WhatsApp ainda não configurada:",statusMensagem(status,p));
+  // Abre o WhatsApp com a mensagem pronta para o funcionário enviar.
+  await prepararAvisoWhatsApp(status,p);
 }
 function botoesStatus(i,status){
   return `<div class="status-buttons">
