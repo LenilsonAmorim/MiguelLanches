@@ -155,6 +155,20 @@ function ordenarPedidos(a){
   });
 }
 
+function salvarStatusLocal(id,status){
+  try{
+    const mapa=JSON.parse(localStorage.getItem("miguel_lanches_status")||"{}");
+    mapa[String(id)]=status;
+    localStorage.setItem("miguel_lanches_status",JSON.stringify(mapa));
+  }catch(e){}
+}
+function statusLocal(id){
+  try{
+    const mapa=JSON.parse(localStorage.getItem("miguel_lanches_status")||"{}");
+    return mapa[String(id)]||"";
+  }catch(e){return "";}
+}
+
 async function carregarPedidos(){
   if(!supabaseClient)return;
   const {data,error}=await supabaseClient.from("pedidos").select("*");
@@ -162,7 +176,19 @@ async function carregarPedidos(){
     console.error("Erro ao carregar pedidos:",error);
     pedidos=[];mostrarComandas();mostrarHistorico();return;
   }
-  pedidos=ordenarPedidos(data||[]);
+  pedidos=ordenarPedidos(data||[]).map(p=>{
+    const s=extrairStatus(p.observacoes);
+    const local=statusLocal(p.id);
+    if(local && s!=="entregue" && local!==s){
+      p.observacoes=codificarStatus(p.observacoes,local);
+    }
+    if(local==="entregue"){
+      p.observacoes=codificarStatus(p.observacoes,"entregue");
+      p.status_pedido="entregue";
+      p.__entregue=true;
+    }
+    return p;
+  });
   mostrarComandas();mostrarHistorico();
   if(pedidoSelecionado){
     const p=pedidos.find(x=>String(x.id)===String(pedidoSelecionado.id));
@@ -203,6 +229,7 @@ function statusMensagem(status,p){
     entregue:`Olá, ${nome}! ❤️ Seu pedido foi entregue. Muito obrigado pela compra e pela preferência!`
   })[status];
 }
+let janelaWhatsApp=null;
 function abrirWhatsAppMensagem(p,status){
   const numero=normalizarTelefone(p?.telefone);
   if(!numero)return false;
@@ -210,11 +237,18 @@ function abrirWhatsAppMensagem(p,status){
   const web="https://web.whatsapp.com/send?phone="+numero+"&text="+texto;
   const app="whatsapp://send?phone="+numero+"&text="+texto;
   const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   if(mobile){
     window.location.href=app;
     setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=web;},1200);
   }else{
-    window.location.href=web;
+    // Reutiliza a mesma aba do WhatsApp criada pelo sistema.
+    if(!janelaWhatsApp || janelaWhatsApp.closed){
+      janelaWhatsApp=window.open(web,"miguelLanchesWhatsApp");
+    }else{
+      janelaWhatsApp.location.href=web;
+      janelaWhatsApp.focus();
+    }
   }
   return true;
 }
@@ -224,15 +258,16 @@ async function alterarStatusPedido(i,status){
   p.observacoes=codificarStatus(p.observacoes,status);
   p.status_pedido=status;
   p.__entregue=(status==="entregue");
-
-  // Atualiza a tela imediatamente. O pedido continua no array para o Histórico.
-  mostrarComandas();
-  mostrarHistorico();
+  salvarStatusLocal(p.id,status);
 
   if(supabaseClient&&p.id){
     const {error}=await supabaseClient.from("pedidos").update({observacoes:p.observacoes}).eq("id",p.id);
-    if(error)console.error("Erro ao atualizar status:",error);
+    if(error)console.error("Erro ao atualizar status no banco:",error);
   }
+
+  // Atualiza a tela somente depois de registrar o status.
+  mostrarComandas();
+  mostrarHistorico();
 
   if((status==="entrega"||status==="entregue")&&normalizarTelefone(p.telefone)){
     abrirWhatsAppMensagem(p,status);
@@ -399,18 +434,50 @@ function imprimirComanda(){
   janela.document.close();janela.focus();setTimeout(()=>janela.print(),250);
 }
 
-document.addEventListener("DOMContentLoaded",async()=>{
-  mostrarProdutos();mostrarCarrinho();
-  document.querySelectorAll(".category").forEach(b=>b.addEventListener("click",()=>selecionarCategoria(b.dataset.category)));
-  const busca=pegar("productSearch");if(busca)busca.addEventListener("input",mostrarProdutos);
-  const limpar=pegar("clearCart");if(limpar)limpar.addEventListener("click",limparCarrinho);
-  const finalizar=pegar("finishBtn");if(finalizar)finalizar.addEventListener("click",finalizarPedido);
-  const imprimir=pegar("doPrintBtn");if(imprimir)imprimir.addEventListener("click",imprimirComanda);
-  document.querySelectorAll(".menu-item").forEach(b=>b.addEventListener("click",()=>abrirPagina(b.dataset.page)));
-  const menu=pegar("menuToggle");
-  if(menu)menu.addEventListener("click",()=>{const s=pegar("sidebar");if(s)s.classList.toggle("open");});
-  if(await conectarBanco())await carregarPedidos();
-});
+function iniciarApp(){
+  try{
+    mostrarProdutos();
+    mostrarCarrinho();
+
+    document.querySelectorAll(".category").forEach(b=>{
+      b.onclick=()=>selecionarCategoria(b.dataset.category);
+    });
+
+    const busca=pegar("productSearch");
+    if(busca)busca.oninput=mostrarProdutos;
+
+    const limpar=pegar("clearCart");
+    if(limpar)limpar.onclick=limparCarrinho;
+
+    const finalizar=pegar("finishBtn");
+    if(finalizar)finalizar.onclick=finalizarPedido;
+
+    const imprimir=pegar("printBtn");
+    if(imprimir)imprimir.onclick=imprimirComanda;
+
+    document.querySelectorAll(".menu-item").forEach(b=>{
+      b.onclick=()=>abrirPagina(b.dataset.page);
+    });
+
+    const menu=pegar("menuToggle");
+    if(menu)menu.onclick=()=>{
+      const s=pegar("sidebar");
+      if(s)s.classList.toggle("open");
+    };
+
+    conectarBanco().then(ok=>{
+      if(ok)carregarPedidos();
+    });
+  }catch(e){
+    console.error("Falha ao iniciar Miguel Lanches:",e);
+  }
+}
+
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",iniciarApp,{once:true});
+}else{
+  iniciarApp();
+}
 
 window.adicionarProduto=adicionarProduto;
 window.aumentarQuantidade=aumentarQuantidade;
