@@ -324,7 +324,7 @@ function mostrarImpressao(){
   </div>`;
 }
 
-async async function finalizarPedido(){
+async function finalizarPedido(){
   if(!carrinho.length){alert("Adicione pelo menos um produto.");return;}
   const cliente=pegar("cliente")?pegar("cliente").value.trim():"";
   if(!cliente){alert("Informe o nome do cliente.");return;}
