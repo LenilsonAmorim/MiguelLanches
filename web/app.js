@@ -433,6 +433,17 @@ function imprimirComanda(){
   janela.document.close();janela.focus();setTimeout(()=>janela.print(),250);
 }
 
+let sincronizacaoPedidos=null;
+function iniciarSincronizacaoPedidos(){
+  if(sincronizacaoPedidos)clearInterval(sincronizacaoPedidos);
+  sincronizacaoPedidos=setInterval(async()=>{
+    if(document.hidden)return;
+    if(supabaseClient){
+      await carregarPedidos();
+    }
+  },3000);
+}
+
 function iniciarApp(){
   try{
     mostrarProdutos();
@@ -464,8 +475,11 @@ function iniciarApp(){
       if(s)s.classList.toggle("open");
     };
 
-    conectarBanco().then(ok=>{
-      if(ok)carregarPedidos();
+    conectarBanco().then(async ok=>{
+      if(ok){
+        await carregarPedidos();
+        iniciarSincronizacaoPedidos();
+      }
     });
   }catch(e){
     console.error("Falha ao iniciar Miguel Lanches:",e);
