@@ -595,7 +595,6 @@ async function alterarStatusPedido(id,status){
   const {error} = await supabaseClient
     .from("pedidos")
     .update({
-      status_pedido: status,
       observacoes: novaObservacao
     })
     .eq("id",p.id);
