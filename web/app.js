@@ -408,9 +408,10 @@ function editarCategoria(id){
 function limparFormCategoria(){["catNome","catEmoji","catOrdem"].forEach(id=>{if(pegar(id))pegar(id).value=id==="catEmoji"?"📦":"";});if(pegar("catSaveBtn"))pegar("catSaveBtn").textContent="Adicionar categoria";}
 
 async function adminSalvarProduto(){
-  const nome=pegar("prodNome")?.value.trim(),preco=Number(pegar("prodPreco")?.value||0),cat=pegar("prodCategoria")?.value,emoji=pegar("prodEmoji")?.value.trim()||"🍔";
+  const nome=pegar("prodNome")?.value.trim(),preco=Number(pegar("prodPreco")?.value||0),cat=pegar("prodCategoria")?.value,emoji=pegar("prodEmoji")?.value.trim()||"🍔",imagem_url=pegar("prodImagem")?.value.trim()||null;
   if(!nome||!cat||preco<0){alert("Preencha nome, categoria e preço.");return;}
-  const payload={nome,preco,categoria_id:cat,emoji,ativo:true,ordem:Number(pegar("prodOrdem")?.value||99)};
+  if(imagem_url && !/^https?:\/\//i.test(imagem_url)){alert("A URL da imagem deve começar com http:// ou https://");return;}
+  const payload={nome,preco,categoria_id:cat,emoji,imagem_url,ativo:true,ordem:Number(pegar("prodOrdem")?.value||99)};
   const q=produtoEmEdicao?supabaseClient.from("produtos").update(payload).eq("id",produtoEmEdicao):supabaseClient.from("produtos").insert(payload).select("*").single();
   const {data,error}=await q;if(error){alert("Erro: "+error.message);return;}
   const id=produtoEmEdicao||data?.id;
@@ -428,7 +429,7 @@ async function adminExcluirProduto(id){
 }
 async function editarProduto(id){
   const p=produtos.find(x=>String(x.id)===String(id));if(!p)return;
-  produtoEmEdicao=p.id;pegar("prodNome").value=p.nome||"";pegar("prodPreco").value=p.preco||0;pegar("prodCategoria").value=p.categoria_id||p.categoria||"";pegar("prodEmoji").value=p.emoji||"🍔";pegar("prodOrdem").value=p.ordem||99;
+  produtoEmEdicao=p.id;pegar("prodNome").value=p.nome||"";pegar("prodPreco").value=p.preco||0;pegar("prodCategoria").value=p.categoria_id||p.categoria||"";pegar("prodImagem").value=p.imagem_url||"";pegar("prodEmoji").value=p.emoji||"🍔";pegar("prodOrdem").value=p.ordem||99;
   if(!String(id).startsWith("local-")){
     const {data}=await supabaseClient.from("produto_ingredientes").select("ingrediente_id").eq("produto_id",id);
     const set=new Set((data||[]).map(x=>String(x.ingrediente_id)));document.querySelectorAll("#prodIngredientes input").forEach(x=>x.checked=set.has(String(x.value)));
@@ -479,7 +480,7 @@ function renderAdminCategorias(){
 }
 function renderAdminProdutos(){
   const t=pegar("adminProdutosTable");if(!t)return;
-  t.innerHTML=produtos.map(p=>`<tr><td>${escapar(p.emoji||"🍔")}</td><td>${escapar(p.nome)}</td><td>${moeda(p.preco)}</td><td>${escapar(categorias.find(c=>String(c.id)===String(p.categoria_id||p.categoria))?.nome||p.categoria_id||p.categoria||"")}</td><td><button class="table-action" onclick="editarProduto('${p.id}')">Editar</button><button class="table-action danger" onclick="adminExcluirProduto('${p.id}')">Excluir</button></td></tr>`).join("");
+  t.innerHTML=produtos.map(p=>`<tr><td>${p.imagem_url?`<img class="admin-product-thumb" src="${escapar(p.imagem_url)}" alt="${escapar(p.nome)}">`:escapar(p.emoji||"🍔")}</td><td>${escapar(p.nome)}</td><td>${moeda(p.preco)}</td><td>${escapar(categorias.find(c=>String(c.id)===String(p.categoria_id||p.categoria))?.nome||p.categoria_id||p.categoria||"")}</td><td><button class="table-action" onclick="editarProduto('${p.id}')">Editar</button><button class="table-action danger" onclick="adminExcluirProduto('${p.id}')">Excluir</button></td></tr>`).join("");
 }
 function renderAdminIngredientes(){
   const t=pegar("adminIngredientesTable");if(!t)return;
@@ -523,6 +524,16 @@ async function iniciarApp(){
   pegar("extrasClose")?.addEventListener("click",fecharExtras);
   pegar("catSaveBtn")?.addEventListener("click",adminSalvarCategoria);
   pegar("prodSaveBtn")?.addEventListener("click",adminSalvarProduto);
+  const imgInput=pegar("prodImagem");
+  if(imgInput){
+    imgInput.addEventListener("input",()=>{
+      const preview=pegar("prodImagemPreview");
+      if(preview){
+        const url=imgInput.value.trim();
+        preview.innerHTML=url?`<img src="${escapar(url)}" alt="Pré-visualização" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"> <span style="display:none">Não foi possível carregar esta imagem.</span>`:`<span>Pré-visualização da imagem</span>`;
+      }
+    });
+  }
   pegar("ingSaveBtn")?.addEventListener("click",adminSalvarIngrediente);
   pegar("cliSaveBtn")?.addEventListener("click",adminSalvarCliente);
   pegar("cfgSaveBtn")?.addEventListener("click",salvarConfiguracoes);

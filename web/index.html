@@ -66,10 +66,10 @@
 </div>
 
 <div class="panel admin-card"><h2>🍔 Produtos</h2>
-<div class="form-grid"><input id="prodNome" placeholder="Nome do produto"><input id="prodPreco" type="number" step="0.01" placeholder="Preço"><select id="prodCategoria"></select><input id="prodEmoji" placeholder="Emoji" value="🍔"><input id="prodOrdem" type="number" placeholder="Ordem"></div>
+<div class="form-grid"><input id="prodNome" placeholder="Nome do produto"><input id="prodPreco" type="number" step="0.01" placeholder="Preço"><select id="prodCategoria"></select><input id="prodImagem" placeholder="URL da imagem (https://...)" type="url"><div id="prodImagemPreview" class="image-preview"><span>Pré-visualização da imagem</span></div><input id="prodEmoji" placeholder="Emoji fallback" value="🍔"><input id="prodOrdem" type="number" placeholder="Ordem"></div>
 <h3>Ingredientes adicionais deste produto</h3><div id="prodIngredientes" class="check-grid"></div>
 <div class="button-row"><button id="prodSaveBtn" class="primary-btn">Adicionar produto</button><button id="prodCancelBtn" class="secondary-btn">Limpar</button></div>
-<div class="table-container"><table><thead><tr><th></th><th>Produto</th><th>Preço</th><th>Categoria</th><th>Ações</th></tr></thead><tbody id="adminProdutosTable"></tbody></table></div>
+<div class="table-container"><table><thead><tr><th>Imagem</th><th>Produto</th><th>Preço</th><th>Categoria</th><th>Ações</th></tr></thead><tbody id="adminProdutosTable"></tbody></table></div>
 </div>
 
 <div class="panel admin-card"><h2>🥓 Ingredientes adicionais</h2>
