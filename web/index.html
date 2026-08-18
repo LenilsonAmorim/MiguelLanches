@@ -24,6 +24,12 @@
 .status-action-row{margin-top:10px}
 .status-action{width:100%;border:0;border-radius:8px;padding:10px 12px;background:#e11d2e;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
 .status-action.delivered,.status-action.delivered-only{background:#16a34a}
+</style><style>
+.sales-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.sales-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:16px;box-shadow:0 3px 12px rgba(0,0,0,.05)}
+.sales-card small{display:block;color:#687080;margin-bottom:6px}.sales-card strong{font-size:24px}
+.sales-days{display:grid;gap:10px}.sales-day{border:1px solid #e7e7e7;border-radius:10px;padding:14px;background:#fff;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.sales-day .date{font-weight:800}.sales-day .details{color:#667085;font-size:13px;margin-top:4px}
 </style></head>
 <body>
 <div id="app">
@@ -114,6 +120,6 @@
     </section>
   </main>
 </div>
-<script src="app.js?v=26000"></script>
+<script src="app.js?v=29000"></script>
 </body>
 </html>

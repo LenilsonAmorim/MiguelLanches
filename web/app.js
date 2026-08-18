@@ -170,6 +170,16 @@ function statusLocal(id){
 }
 
 let canalPedidosRealtime=null;
+let fallbackSincronizacao=null;
+function iniciarFallbackSincronizacao(){
+  if(fallbackSincronizacao)clearInterval(fallbackSincronizacao);
+  fallbackSincronizacao=setInterval(async()=>{
+    if(!document.hidden && supabaseClient){
+      await carregarPedidos();
+    }
+  },1000);
+}
+
 function iniciarRealtimePedidos(){
   if(!supabaseClient)return;
   if(canalPedidosRealtime){
@@ -198,16 +208,9 @@ async function carregarPedidos(){
     pedidos=[];mostrarComandas();mostrarHistorico();return;
   }
   pedidos=ordenarPedidos(data||[]).map(p=>{
-    const s=extrairStatus(p.observacoes);
-    const local=statusLocal(p.id);
-    if(local && s!=="entregue" && local!==s){
-      p.observacoes=codificarStatus(p.observacoes,local);
-    }
-    if(local==="entregue"){
-      p.observacoes=codificarStatus(p.observacoes,"entregue");
-      p.status_pedido="entregue";
-      p.__entregue=true;
-    }
+    const bancoStatus=p.status_pedido||extrairStatus(p.observacoes);
+    p.status_pedido=bancoStatus;
+    p.__entregue=(bancoStatus==="entregue");
     return p;
   });
   mostrarComandas();mostrarHistorico();
@@ -281,7 +284,7 @@ async function alterarStatusPedido(i,status){
   salvarStatusLocal(p.id,status);
 
   if(supabaseClient&&p.id){
-    const {error}=await supabaseClient.from("pedidos").update({observacoes:p.observacoes}).eq("id",p.id);
+    const {error}=await supabaseClient.from("pedidos").update({status_pedido:status,observacoes:p.observacoes}).eq("id",p.id);
     if(error)console.error("Erro ao atualizar status no banco:",error);
   }
 
@@ -329,19 +332,47 @@ function mostrarComandas(){
   }).join("");
 }
 
-function mostrarHistorico(){
-  const area=pegar("historyTable");if(!area)return;
-  if(!pedidos.length){
-    area.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:20px">Nenhum pedido encontrado.</td></tr>`;return;
+function atualizarResumoHistorico(){
+  const hoje=new Date().toLocaleDateString("pt-BR");
+  const lista=pedidos.filter(p=>{
+    const d=dataPedido(p)?new Date(dataPedido(p)):new Date();
+    return d.toLocaleDateString("pt-BR")===hoje;
+  });
+  const total=lista.reduce((s,p)=>s+totalPedido(p),0);
+  const media=lista.length?total/lista.length:0;
+  const painel=pegar("historyTable")?.closest(".panel");
+  if(!painel)return;
+  let box=pegar("dailySalesSummary");
+  if(!box){
+    box=document.createElement("div");
+    box.id="dailySalesSummary";
+    box.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 16px";
+    painel.insertBefore(box,painel.querySelector(".table-container"));
   }
-  area.innerHTML=pedidos.map((p,i)=>`
-    <tr>
-      <td>#${numeroPedido(p,i)}</td>
-      <td>${escapar(nomeCliente(p))}</td>
-      <td>${formatarData(dataPedido(p))}</td>
-      <td>${moeda(totalPedido(p))}</td>
-      <td><button type="button" onclick="selecionarPedido(${i})">Ver / Imprimir</button></td>
-    </tr>`).join("");
+  box.innerHTML=`<div class="summary-card"><strong>💰 Vendas de hoje</strong><div style="font-size:24px;font-weight:800">${moeda(total)}</div></div>
+  <div class="summary-card"><strong>🧾 Pedidos</strong><div style="font-size:24px;font-weight:800">${lista.length}</div></div>
+  <div class="summary-card"><strong>🎟️ Ticket médio</strong><div style="font-size:24px;font-weight:800">${moeda(media)}</div></div>`;
+}
+
+function mostrarHistorico(){
+  const t=pegar("historyTable");if(!t)return;
+  const grupos={};
+  pedidos.forEach(p=>{
+    const d=dataPedido(p)?new Date(dataPedido(p)):new Date();
+    const k=d.toLocaleDateString("pt-BR");
+    (grupos[k]??=[]).push(p);
+  });
+  const dias=Object.entries(grupos).sort((a,b)=>{
+    const da=a[1][0],db=b[1][0];
+    return new Date(dataPedido(db)||0)-new Date(dataPedido(da)||0);
+  });
+  t.innerHTML=dias.map(([dia,lista])=>{
+    const total=lista.reduce((s,p)=>s+totalPedido(p),0);
+    const media=lista.length?total/lista.length:0;
+    return `<tr><td colspan="6"><strong>📅 ${dia}</strong> — 🧾 ${lista.length} pedidos — 💰 ${moeda(total)} — 🎟️ Média ${moeda(media)}</td></tr>`+
+      lista.map(p=>`<tr><td>#${numeroPedido(p,0)}</td><td>${escapar(nomeCliente(p))}</td><td>${formatarData(dataPedido(p))}</td><td>${statusLabel(p.status_pedido||extrairStatus(p.observacoes))}</td><td>${moeda(totalPedido(p))}</td><td>—</td></tr>`).join("");
+  }).join("");
+  atualizarResumoHistorico();
 }
 
 function selecionarPedido(i){
@@ -490,6 +521,7 @@ function iniciarApp(){
       if(ok){
         await carregarPedidos();
         iniciarRealtimePedidos();
+        iniciarFallbackSincronizacao();
       }
     });
   }catch(e){
