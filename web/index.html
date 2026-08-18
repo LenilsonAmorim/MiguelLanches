@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Miguel Lanches</title>
   <link rel="stylesheet" href="style.css">
+
+<style>
+.status-buttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.status-buttons button{border:1px solid #ddd;background:#fff;border-radius:8px;padding:7px 9px;font-size:12px;cursor:pointer}
+.status-buttons button.active{font-weight:700;border-color:#555}
+.order-status{display:inline-block;margin-top:8px;padding:5px 9px;border-radius:999px;background:#f3f4f6;font-size:12px}
+</style>
 </head>
 <body>
 <div id="app">
@@ -79,7 +86,7 @@
         <h2>Pedidos</h2>
         <div class="table-container">
           <table>
-            <thead><tr><th>Nº</th><th>Cliente</th><th>Data/Hora</th><th>Total</th><th>Ação</th></tr></thead>
+            <thead><tr><th>Nº</th><th>Cliente</th><th>Data/Hora</th><th>Status</th><th>Total</th><th>Ação</th></tr></thead>
             <tbody id="historyTable"></tbody>
           </table>
         </div>
@@ -95,6 +102,6 @@
     </section>
   </main>
 </div>
-<script src="app.js?v=8000"></script>
+<script src="app.js?v=9000"></script>
 </body>
 </html>
