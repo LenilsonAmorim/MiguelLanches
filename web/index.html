@@ -33,17 +33,8 @@
     </header>
 
     <section id="page-dashboard" class="page active-page">
-      <div class="page-header">
-        <div>
-          <h1>Fazer Pedido</h1>
-          <p>Escolha os produtos para adicionar à comanda.</p>
-        </div>
-      </div>
-
-      <div class="search-box">
-        <input id="productSearch" type="search" placeholder="🔎 Buscar produto...">
-      </div>
-
+      <div class="page-header"><div><h1>Fazer Pedido</h1><p>Escolha os produtos para adicionar à comanda.</p></div></div>
+      <div class="search-box"><input id="productSearch" type="search" placeholder="🔎 Buscar produto..."></div>
       <div id="categories" class="categories">
         <button class="category active" data-category="todos" type="button">🍽️ Todos</button>
         <button class="category" data-category="lanches" type="button">🍔 Lanches</button>
@@ -51,41 +42,26 @@
         <button class="category" data-category="bebidas" type="button">🥤 Bebidas</button>
         <button class="category" data-category="sobremesas" type="button">🍰 Sobremesas</button>
       </div>
-
       <div class="sales-layout">
-        <div class="products-area">
-          <div id="productsGrid" class="products-grid"></div>
-        </div>
-
+        <div class="products-area"><div id="productsGrid" class="products-grid"></div></div>
         <aside class="cart-panel">
           <div class="cart-header">
-            <div>
-              <h2>Sua Comanda</h2>
-              <span id="cartCount">0 itens</span>
-            </div>
+            <div><h2>Sua Comanda</h2><span id="cartCount">0 itens</span></div>
             <button id="clearCart" class="clear-btn" type="button">Limpar</button>
           </div>
-
           <div class="customer-box">
             <label>Cliente<input id="cliente" type="text" placeholder="Nome do cliente"></label>
             <label>Telefone<input id="telefone" type="text" placeholder="Telefone"></label>
             <label>Endereço<input id="endereco" type="text" placeholder="Endereço"></label>
             <label>Referência<input id="referencia" type="text" placeholder="Ponto de referência"></label>
           </div>
-
           <div id="cartItems" class="cart-items"></div>
-
-          <label class="observation">
-            Observações
-            <textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea>
-          </label>
-
+          <label class="observation">Observações<textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></label>
           <div class="cart-summary">
             <div><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
             <div><span>Taxa de entrega</span><strong id="deliveryFee">R$ 0,00</strong></div>
             <div class="grand-total"><span>TOTAL</span><strong id="cartTotal">R$ 0,00</strong></div>
           </div>
-
           <button id="finishBtn" class="finish-btn" type="button">✓ Finalizar Pedido</button>
           <button id="printBtn" class="print-btn" type="button">🖨️ Imprimir Comanda</button>
         </aside>
@@ -119,7 +95,6 @@
     </section>
   </main>
 </div>
-
-<script src="app.js?v=6001"></script>
+<script src="app.js?v=7000"></script>
 </body>
 </html>
