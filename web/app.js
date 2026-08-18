@@ -155,15 +155,47 @@ function ordenarPedidos(a){
   });
 }
 
+function salvarPedidosLocais(){
+  try{ localStorage.setItem("miguel_lanches_pedidos", JSON.stringify(pedidos)); }catch(e){ console.error(e); }
+}
+function carregarPedidosLocais(){
+  try{
+    const dados=JSON.parse(localStorage.getItem("miguel_lanches_pedidos")||"[]");
+    return Array.isArray(dados)?dados:[];
+  }catch(e){return[];}
+}
+function mesclarPedidos(remotos,locais){
+  const mapa=new Map();
+  [...remotos,...locais].forEach(p=>{
+    const chave=p?.id!==undefined&&p?.id!==null ? "id:"+p.id : "local:"+p.__localId;
+    if(!mapa.has(chave))mapa.set(chave,p);
+  });
+  return ordenarPedidos([...mapa.values()]);
+}
+
 async function carregarPedidos(){
-  if(!supabaseClient)return;
-  const {data,error}=await supabaseClient.from("pedidos").select("*");
-  if(error){
-    console.error("Erro ao carregar pedidos:",error);
-    pedidos=[];mostrarComandas();mostrarHistorico();return;
+  const locais=carregarPedidosLocais();
+
+  if(!supabaseClient){
+    pedidos=ordenarPedidos(locais);
+    mostrarComandas();mostrarHistorico();
+    return;
   }
-  pedidos=ordenarPedidos(data||[]);
+
+  const {data,error}=await supabaseClient.from("pedidos").select("*");
+
+  if(error){
+    console.error("Erro ao carregar pedidos do Supabase:",error);
+    // Se o RLS bloquear SELECT, ainda mostramos os pedidos salvos neste aparelho.
+    pedidos=ordenarPedidos(locais);
+    mostrarComandas();mostrarHistorico();
+    return;
+  }
+
+  pedidos=mesclarPedidos(data||[],locais);
+  salvarPedidosLocais();
   mostrarComandas();mostrarHistorico();
+
   if(pedidoSelecionado){
     const p=pedidos.find(x=>String(x.id)===String(pedidoSelecionado.id));
     if(p){pedidoSelecionado=p;mostrarImpressao();}
@@ -260,6 +292,14 @@ async function finalizarPedido(){
     */
     const {error}=await supabaseClient.from("pedidos").insert(dados);
     if(error)throw error;
+
+    const pedidoLocal={
+      ...dados,
+      __localId:"local-"+Date.now()+"-"+Math.random().toString(36).slice(2),
+      created_at:new Date().toISOString()
+    };
+    pedidos=mesclarPedidos(pedidos,[pedidoLocal]);
+    salvarPedidosLocais();
 
     alert("Pedido salvo com sucesso!");
     carrinho=[];mostrarCarrinho();
