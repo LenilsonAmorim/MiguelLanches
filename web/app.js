@@ -155,123 +155,73 @@ function ordenarPedidos(a){
   });
 }
 
-function salvarPedidosLocais(){
-  try{ localStorage.setItem("miguel_lanches_pedidos", JSON.stringify(pedidos)); }catch(e){ console.error(e); }
-}
-function carregarPedidosLocais(){
-  try{
-    const dados=JSON.parse(localStorage.getItem("miguel_lanches_pedidos")||"[]");
-    return Array.isArray(dados)?dados:[];
-  }catch(e){return[];}
-}
-function mesclarPedidos(remotos,locais){
-  const mapa=new Map();
-  [...remotos,...locais].forEach(p=>{
-    const chave=p?.id!==undefined&&p?.id!==null ? "id:"+p.id : "local:"+p.__localId;
-    if(!mapa.has(chave))mapa.set(chave,p);
-  });
-  return ordenarPedidos([...mapa.values()]);
-}
-
 async function carregarPedidos(){
-  const locais=carregarPedidosLocais();
-
-  if(!supabaseClient){
-    pedidos=ordenarPedidos(locais);
-    mostrarComandas();mostrarHistorico();
-    return;
-  }
-
+  if(!supabaseClient)return;
   const {data,error}=await supabaseClient.from("pedidos").select("*");
-
   if(error){
-    console.error("Erro ao carregar pedidos do Supabase:",error);
-    // Se o RLS bloquear SELECT, ainda mostramos os pedidos salvos neste aparelho.
-    pedidos=ordenarPedidos(locais);
-    mostrarComandas();mostrarHistorico();
-    return;
+    console.error("Erro ao carregar pedidos:",error);
+    pedidos=[];mostrarComandas();mostrarHistorico();return;
   }
-
-  pedidos=mesclarPedidos(data||[],locais);
-  salvarPedidosLocais();
+  pedidos=ordenarPedidos(data||[]);
   mostrarComandas();mostrarHistorico();
-
   if(pedidoSelecionado){
     const p=pedidos.find(x=>String(x.id)===String(pedidoSelecionado.id));
     if(p){pedidoSelecionado=p;mostrarImpressao();}
   }
 }
 
-function statusPedido(p){
-  return p?.status_pedido || "preparo";
-}
-function statusLabel(status){
-  return ({preparo:"🍔 Em preparo",entrega:"🛵 Saiu para entrega",entregue:"✅ Entregue"})[status] || "🍔 Em preparo";
-}
+
 function statusMensagem(status,p){
   const nome=nomeCliente(p);
   return ({
     preparo:`Olá, ${nome}! 😊 Seu pedido já está sendo preparado. 🍔`,
     entrega:`Olá, ${nome}! 🛵 Seu pedido saiu para entrega e está a caminho.`,
     entregue:`Olá, ${nome}! ❤️ Seu pedido foi entregue. Muito obrigado pela compra e pela preferência!`
-  })[status];
+  })[status] || `Olá, ${nome}! Seu pedido está em andamento.`;
 }
 function codificarStatus(obs,status){
-  const limpo=String(obs||"").replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"").trim();
+  const limpo=String(obs||'').replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,'').trim();
   return limpo+`\n\n[ML_STATUS]${status}[/ML_STATUS]`;
 }
 function extrairStatus(obs){
-  const m=String(obs||"").match(/\[ML_STATUS\](preparo|entrega|entregue)\[\/ML_STATUS\]/);
-  return m?m[1]:"preparo";
+  const m=String(obs||'').match(/\[ML_STATUS\](preparo|entrega|entregue)\[\/ML_STATUS\]/);
+  return m?m[1]:'preparo';
 }
-function prepararAvisoWhatsApp(status,p){
-  /*
-    Sem API por enquanto:
-    abre o WhatsApp com o número e a mensagem já preenchidos.
-    O funcionário só precisa tocar em ENVIAR.
-  */
-  const telefone=String(p?.telefone||"").replace(/\\D/g,"");
-  const mensagem=statusMensagem(status,p);
-  if(!telefone){
-    alert("Este cliente não tem um WhatsApp/telefone cadastrado.");
-    return Promise.resolve(false);
-  }
-
+function statusLabel(status){
+  return ({preparo:'🍔 Em preparo',entrega:'🛵 Saiu para entrega',entregue:'✅ Entregue'})[status] || '🍔 Em preparo';
+}
+function abrirWhatsAppPedido(i){
+  const p=ordenarPedidos(pedidos)[i];
+  if(!p)return;
+  const telefone=String(p.telefone||'').replace(/\D/g,'');
+  if(!telefone){alert('Este cliente não tem um telefone/WhatsApp cadastrado.');return;}
   let numero=telefone;
-  if(numero.startsWith("0"))numero=numero.slice(1);
-  if(numero.length===10||numero.length===11)numero="55"+numero;
-
-  const url="https://wa.me/"+numero+"?text="+encodeURIComponent(mensagem);
-  const janela=window.open(url,"_blank");
-  if(!janela)window.location.href=url;
-  return Promise.resolve(true);
+  if(numero.startsWith('0'))numero=numero.slice(1);
+  if(numero.length===10||numero.length===11)numero='55'+numero;
+  const mensagem=statusMensagem(extrairStatus(p.observacoes),p);
+  const url='https://wa.me/'+numero+'?text='+encodeURIComponent(mensagem);
+  window.location.href=url;
 }
 async function alterarStatusPedido(i,status){
   const p=ordenarPedidos(pedidos)[i];
   if(!p)return;
-  p.status_pedido=status;
   p.observacoes=codificarStatus(p.observacoes,status);
-
-  // Salva localmente imediatamente.
   pedidos=ordenarPedidos(pedidos);
   salvarPedidosLocais();
-
-  // Tenta salvar no Supabase sem exigir uma nova coluna.
   if(supabaseClient && p.id){
-    const {error}=await supabaseClient.from("pedidos").update({observacoes:p.observacoes}).eq("id",p.id);
-    if(error)console.error("Status não atualizado no Supabase:",error);
+    const {error}=await supabaseClient.from('pedidos').update({observacoes:p.observacoes}).eq('id',p.id);
+    if(error)console.error('Erro ao atualizar status:',error);
   }
-
-  mostrarComandas();mostrarHistorico();mostrarImpressao();
-
-  // Abre o WhatsApp com a mensagem pronta para o funcionário enviar.
-  await prepararAvisoWhatsApp(status,p);
+  mostrarComandas();mostrarHistorico();
 }
-function botoesStatus(i,status){
-  return `<div class="status-buttons">
-    <button type="button" class="${status==="preparo"?"active":""}" onclick="event.stopPropagation();alterarStatusPedido(${i},'preparo')">🍔 Em preparo</button>
-    <button type="button" class="${status==="entrega"?"active":""}" onclick="event.stopPropagation();alterarStatusPedido(${i},'entrega')">🛵 Saiu para entrega</button>
-    <button type="button" class="${status==="entregue"?"active":""}" onclick="event.stopPropagation();alterarStatusPedido(${i},'entregue')">✅ Entregue</button>
+function controleStatus(i,status){
+  return `<div class="status-controls">
+    <select class="status-select" aria-label="Status do pedido" onchange="alterarStatusPedido(${i},this.value)">
+      <option value="preparo" ${status==='preparo'?'selected':''}>🍔 Em preparo</option>
+      <option value="entrega" ${status==='entrega'?'selected':''}>🛵 Saiu para entrega</option>
+      <option value="entregue" ${status==='entregue'?'selected':''}>✅ Entregue</option>
+    </select>
+    <button type="button" class="whatsapp-btn" onclick="event.stopPropagation();abrirWhatsAppPedido(${i})">📱 WhatsApp</button>
   </div>`;
 }
 
@@ -280,7 +230,7 @@ function mostrarComandas(){
   if(!pedidos.length){area.innerHTML=`<div class="empty-state">Nenhuma comanda aberta.</div>`;return;}
   area.innerHTML=pedidos.map((p,i)=>{
     const itens=extrairItens(p.observacoes);
-    const resumo=itens.length?itens.map(x=>`${x.quantidade}x ${escapar(x.nome)}`).join(", "):"Pedido registrado";
+    const resumo=itens.length?itens.map(x=>`${x.quantidade}x ${escapar(x.nome)}`).join(', '):'Pedido registrado';
     const st=extrairStatus(p.observacoes);
     return `<div class="order-card" style="padding:14px;border-bottom:1px solid #eee">
       <div onclick="selecionarPedido(${i})" style="cursor:pointer">
@@ -288,15 +238,10 @@ function mostrarComandas(){
         <div>${resumo}</div>
         <strong>${moeda(totalPedido(p))}</strong>
         <div class="order-status">${statusLabel(st)}</div>
-        <div class="status-flow">
-          <span class="step ${st==="preparo"?"active":""}">🍔 Em preparo</span>
-          <span class="step ${st==="entrega"?"active":""}">🛵 Em entrega</span>
-          <span class="step ${st==="entregue"?"active":""}">✅ Entregue</span>
-        </div>
       </div>
-      ${botoesStatus(i,st)}
+      ${controleStatus(i,st)}
     </div>`;
-  }).join("");
+  }).join('');
 }
 
 function mostrarHistorico(){
@@ -341,8 +286,7 @@ function mostrarImpressao(){
     <div><strong>CLIENTE:</strong> ${escapar(nomeCliente(p))}</div>
     <div><strong>TELEFONE:</strong> ${escapar(p.telefone||"")}</div>
     <div><strong>ENDEREÇO:</strong> ${escapar(p.endereco||"")}</div>
-    <div><strong>REF:</strong> ${escapar(p.referencia||"")}</div>
-    <div><strong>STATUS:</strong> ${statusLabel(extrairStatus(p.observacoes))}</div><hr>
+    <div><strong>REF:</strong> ${escapar(p.referencia||"")}</div><hr>
     <div><strong>QTD  ITEM                         VALOR</strong></div>
     ${linhas}
     ${obs?`<hr><div><strong>OBSERVAÇÕES:</strong><br>${escapar(obs)}</div>`:""}
@@ -377,14 +321,6 @@ async function finalizarPedido(){
     */
     const {error}=await supabaseClient.from("pedidos").insert(dados);
     if(error)throw error;
-
-    const pedidoLocal={
-      ...dados,
-      __localId:"local-"+Date.now()+"-"+Math.random().toString(36).slice(2),
-      created_at:new Date().toISOString()
-    };
-    pedidos=mesclarPedidos(pedidos,[pedidoLocal]);
-    salvarPedidosLocais();
 
     alert("Pedido salvo com sucesso!");
     carrinho=[];mostrarCarrinho();
@@ -442,5 +378,6 @@ window.limparCarrinho=limparCarrinho;
 window.selecionarCategoria=selecionarCategoria;
 window.abrirPagina=abrirPagina;
 window.selecionarPedido=selecionarPedido;
+window.abrirWhatsAppPedido=abrirWhatsAppPedido;
 window.alterarStatusPedido=alterarStatusPedido;
 window.imprimirComanda=imprimirComanda;
