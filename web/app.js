@@ -217,12 +217,12 @@ function abrirWhatsAppMensagem(p,status){
     window.location.href=appUrl;
     setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=webUrl;},1200);
   }else{
-    window.open(webUrl,"_blank");
+    window.location.href=webUrl;
   }
   return true;
 }
 async function alterarStatusPedido(i,status){
-  const p=ordenarPedidos(pedidos)[i];
+  const p=pedidos[i];
   if(!p)return;
   p.observacoes=codificarStatus(p.observacoes,status);
   p.status_pedido=status;
