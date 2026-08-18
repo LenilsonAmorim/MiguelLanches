@@ -8,11 +8,12 @@ const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replac
 const uid=()=>crypto.randomUUID();
 
 async function loadBairros(){
-  const r=await db.from("configuracoes").select("valor").eq("chave","bairros_entrega").maybeSingle();
-  try{bairros=JSON.parse(r.data?.valor||"[]")}catch{bairros=[]}
+  const r=await db.from("bairros").select("id,nome,taxa_entrega,ativo").eq("ativo",true).order("nome");
+  if(r.error){console.error(r.error);bairros=[];return;}
+  bairros=(r.data||[]).map(b=>({id:b.id,nome:b.nome,taxa:Number(b.taxa_entrega||0)}));
   const s=$("bairro");
-  if(s)s.innerHTML='<option value="">Selecione o bairro</option>'+
-    bairros.map((b,i)=>`<option value="${i}">${esc(b.nome)} — ${money(b.taxa)}</option>`).join("");
+  if(s)s.innerHTML='<option value="">Selecione o bairro *</option>'+
+    bairros.map(b=>`<option value="${esc(b.id)}">${esc(b.nome)} — ${money(b.taxa)}</option>`).join("");
 }
 async function init(){
   const [c,p]=await Promise.all([
@@ -59,11 +60,16 @@ function openCart(){$("cart").classList.add("open");$("overlay").classList.add("
 function closeCart(){$("cart").classList.remove("open");$("overlay").classList.remove("open");document.body.style.overflow=""}
 function phoneDigits(v){return String(v||"").replace(/\D/g,"")}
 function validPhone(v){const n=phoneDigits(v);return n.length===11&&/^[1-9]{2}9[0-9]{8}$/.test(n)}
-function selectedBairro(){const i=Number($("bairro")?.value);return Number.isInteger(i)&&i>=0?bairros[i]:null}
+function selectedBairro(){const id=$("bairro")?.value;return bairros.find(b=>String(b.id)===String(id))||null}
 function updateTotal(){
   const sub=cart.reduce((s,x)=>s+x.preco*x.quantidade,0),b=selectedBairro(),fee=Number(b?.taxa||0);
-  if($("deliveryFee"))$("deliveryFee").textContent=money(fee);
-  if($("total"))$("total").textContent=money(sub+fee)
+  $("subtotal").textContent=money(sub);$("deliveryFee").textContent=money(fee);$("total").textContent=money(sub+fee);
+  updateTroco(sub+fee)
+}
+function updateTroco(total){
+  const pag=$("pagamento")?.value,valor=Number($("valorPago")?.value||0);
+  const box=$("trocoPreview");if(!box)return;
+  if(pag==="Dinheiro"){const t=valor-total;box.textContent=t>=0?`Troco: ${money(t)}`:"Valor insuficiente.";box.style.color=t>=0?"#198754":"#c71926"}else box.textContent="";
 }
 async function sendOrder(){
   if(!cart.length)return alert("Adicione pelo menos um produto.");
@@ -73,12 +79,13 @@ async function sendOrder(){
   if(!bairro)return alert("Selecione o bairro.");
   if(!end)return alert("Informe o endereço.");
   if(!ref)return alert("Informe o ponto de referência.");
-  const obs=$("observacoes").value.trim(),items=cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,obs:x.obs}));
-  const sub=cart.reduce((s,x)=>s+x.preco*x.quantidade,0),fee=Number(bairro.taxa||0),total=sub+fee;
-  const pag=$("pagamento").value,valorPago=pag==="Dinheiro"?Number($("valorPago").value||0):0;
+  const pag=$("pagamento").value;
   if(!pag)return alert("Selecione a forma de pagamento.");
-  if(pag==="Dinheiro"&&(!valorPago||valorPago<total))return alert("Informe um valor de pagamento igual ou maior que o total.");
+  const sub=cart.reduce((s,x)=>s+x.preco*x.quantidade,0),fee=Number(bairro.taxa||0),total=sub+fee;
+  const valorPago=pag==="Dinheiro"?Number($("valorPago").value||0):0;
+  if(pag==="Dinheiro"&&(!valorPago||valorPago<total))return alert(`Informe um valor de pagamento igual ou maior que ${money(total)}.`);
   const troco=pag==="Dinheiro"?valorPago-total:0;
+  const obs=$("observacoes").value.trim(),items=cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,obs:x.obs}));
   const packed=`${obs}
 [ML_BAIRRO]${encodeURIComponent(bairro.nome)}[/ML_BAIRRO]
 [ML_TAXA]${fee}[/ML_TAXA]
@@ -86,17 +93,17 @@ async function sendOrder(){
 [ML_VALOR_PAGO]${valorPago}[/ML_VALOR_PAGO]
 [ML_TROCO]${troco}[/ML_TROCO]
 [ML_ITENS]${encodeURIComponent(JSON.stringify(items))}[/ML_ITENS]
-[ML_STATUS]novo[/ML_STATUS]`;
-  const {error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,endereco:end,referencia:ref,observacoes:packed,total});
+[ML_STATUS]preparo[/ML_STATUS]`;
+  const {error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,bairro:bairro.nome,endereco:end,referencia:ref,forma_pagamento:pag,valor_pago:valorPago,troco:troco,taxa_entrega:fee,observacoes:packed,total});
   if(error)return alert("Não foi possível enviar o pedido: "+error.message);
-  if(phone)await db.from("clientes").upsert({nome,telefone:phone,endereco:end,referencia:ref},{onConflict:"telefone"});
+  await db.from("clientes").upsert({nome,telefone:phone,endereco:end,referencia:ref},{onConflict:"telefone"});
   cart=[];renderCart();closeCart();
   ["nome","telefone","endereco","referencia","observacoes","valorPago"].forEach(id=>$(id).value="");
-  $("bairro").value="";$("pagamento").value="";
-  if($("paymentMoney"))$("paymentMoney").classList.add("hidden");
+  $("bairro").value="";$("pagamento").value="";$("paymentMoney").classList.add("hidden");$("trocoPreview").textContent="";
   alert("Pedido enviado com sucesso! Obrigado.")
 }
 $("search").oninput=renderProducts;$("openCart").onclick=openCart;$("closeCart").onclick=closeCart;$("overlay").onclick=closeCart;$("modalClose").onclick=closeModal;$("send").onclick=sendOrder;
-if($("bairro"))$("bairro").onchange=updateTotal;
-if($("pagamento"))$("pagamento").onchange=()=>{const on=$("pagamento").value==="Dinheiro";$("paymentMoney").classList.toggle("hidden",!on);updateTotal()};
+$("bairro").onchange=updateTotal;
+$("pagamento").onchange=()=>{const on=$("pagamento").value==="Dinheiro";$("paymentMoney").classList.toggle("hidden",!on);updateTotal()};
+$("valorPago").oninput=()=>updateTroco(Number($("total").textContent.replace(/[^\d,-]/g,"").replace(".","").replace(",","."))||0);
 init();renderCart();
