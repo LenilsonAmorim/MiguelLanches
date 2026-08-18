@@ -233,6 +233,7 @@ let janelaWhatsApp=null;
 function abrirWhatsAppMensagem(p,status){
   const numero=normalizarTelefone(p?.telefone);
   if(!numero)return false;
+
   const texto=encodeURIComponent(statusMensagem(status,p));
   const web="https://web.whatsapp.com/send?phone="+numero+"&text="+texto;
   const app="whatsapp://send?phone="+numero+"&text="+texto;
@@ -240,15 +241,13 @@ function abrirWhatsAppMensagem(p,status){
 
   if(mobile){
     window.location.href=app;
-    setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=web;},1200);
+    setTimeout(()=>{
+      if(document.visibilityState==="visible") window.location.href=web;
+    },1200);
   }else{
-    // Reutiliza a mesma aba do WhatsApp criada pelo sistema.
-    if(!janelaWhatsApp || janelaWhatsApp.closed){
-      janelaWhatsApp=window.open(web,"miguelLanchesWhatsApp");
-    }else{
-      janelaWhatsApp.location.href=web;
-      janelaWhatsApp.focus();
-    }
+    // Nome fixo do alvo: o navegador reutiliza a mesma aba/janela
+    // em todos os pedidos, em vez de criar uma nova a cada clique.
+    window.open(web,"MiguelLanchesWhatsApp");
   }
   return true;
 }
