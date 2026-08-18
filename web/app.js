@@ -125,7 +125,9 @@ function conectarBanco(){
   Isso permite guardar os produtos sem exigir uma nova tabela no Supabase.
 */
 function codificarItens(itens,obs){
-  return String(obs||"")+"\n\n[ML_ITENS]"+encodeURIComponent(JSON.stringify(itens))+"[/ML_ITENS]";
+  return String(obs||"")+"
+
+[ML_ITENS]"+encodeURIComponent(JSON.stringify(itens))+"[/ML_ITENS]";
 }
 function extrairItens(obs){
   const m=String(obs||"").match(/\[ML_ITENS\]([\s\S]*?)\[\/ML_ITENS\]/);
@@ -133,7 +135,9 @@ function extrairItens(obs){
   try{return JSON.parse(decodeURIComponent(m[1]));}catch(e){return[];}
 }
 function observacaoVisivel(obs){
-  return String(obs||"").replace(/\n?\n?\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"").trim();
+  return String(obs||"").replace(/
+?
+?\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"").trim();
 }
 function nomeCliente(p){return p?.Cliente??p?.cliente??p?.nome??"Sem nome";}
 function totalPedido(p){return Number(p?.total??p?.Total??0);}
@@ -225,8 +229,12 @@ function statusLabel(status){
   return ({preparo:"🍔 Em preparo",entrega:"🛵 Saiu para entrega",entregue:"✅ Entregue"})[status]||"🍔 Em preparo";
 }
 function codificarStatus(obs,status){
-  const limpo=String(obs||"").replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"").trim();
-  return limpo+`\n\n[ML_STATUS]${status}[/ML_STATUS]`;
+  const limpo=String(obs||"").replace(/
+?
+?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/,"").trim();
+  return limpo+`
+
+[ML_STATUS]${status}[/ML_STATUS]`;
 }
 function extrairStatus(obs){
   const m=String(obs||"").match(/\[ML_STATUS\](preparo|entrega|entregue)\[\/ML_STATUS\]/);
@@ -275,25 +283,81 @@ function abrirWhatsAppMensagem(p,status){
   }
   return true;
 }
-async function alterarStatusPedido(i,status){
-  const p=pedidos[i];
-  if(!p)return;
-  p.observacoes=codificarStatus(p.observacoes,status);
-  p.status_pedido=status;
-  p.__entregue=(status==="entregue");
-  salvarStatusLocal(p.id,status);
+async function alterarStatusPedido(i, status) {
+  const p = pedidos[i];
+  if (!p || !supabaseClient) return;
 
-  if(supabaseClient&&p.id){
-    const {error}=await supabaseClient.from("pedidos").update({status_pedido:status,observacoes:p.observacoes}).eq("id",p.id);
-    if(error)console.error("Erro ao atualizar status no banco:",error);
-  }
+  const observacoesAtualizadas = codificarStatus(
+    p.observacoes,
+    status
+  );
 
-  // Atualiza a tela somente depois de registrar o status.
+  // Atualiza imediatamente a tela.
+  p.status_pedido = status;
+  p.observacoes = observacoesAtualizadas;
+  p.__entregue = status === "entregue";
+
   mostrarComandas();
   mostrarHistorico();
 
-  if((status==="entrega"||status==="entregue")&&normalizarTelefone(p.telefone)){
-    abrirWhatsAppMensagem(p,status);
+  let salvo = false;
+
+  // Primeiro tenta salvar na coluna própria do Supabase.
+  const resultado = await supabaseClient
+    .from("pedidos")
+    .update({
+      status_pedido: status,
+      observacoes: observacoesAtualizadas
+    })
+    .eq("id", p.id);
+
+  if (!resultado.error) {
+    salvo = true;
+  } else {
+    console.warn(
+      "Não foi possível salvar status_pedido. Tentando alternativa...",
+      resultado.error
+    );
+
+    // Fallback: salva o status dentro de observacoes.
+    const alternativa = await supabaseClient
+      .from("pedidos")
+      .update({
+        observacoes: observacoesAtualizadas
+      })
+      .eq("id", p.id);
+
+    if (!alternativa.error) {
+      salvo = true;
+    } else {
+      console.error(
+        "Não foi possível salvar o pedido:",
+        alternativa.error
+      );
+    }
+  }
+
+  if (!salvo) {
+    await carregarPedidos();
+
+    alert(
+      "Não foi possível atualizar o pedido. Verifique a conexão com a internet."
+    );
+
+    return;
+  }
+
+  salvarStatusLocal(p.id, status);
+
+  // Confirma no banco antes de considerar a alteração concluída.
+  await carregarPedidos();
+
+  // WhatsApp somente depois que o status foi salvo.
+  if (
+    (status === "entrega" || status === "entregue") &&
+    normalizarTelefone(p.telefone)
+  ) {
+    abrirWhatsAppMensagem(p, status);
   }
 }
 function acaoStatusComanda(i,p,status){
@@ -353,14 +417,13 @@ function atualizarResumoHistorico(){
   <div class="summary-card"><strong>🧾 Pedidos</strong><div style="font-size:24px;font-weight:800">${lista.length}</div></div>
   <div class="summary-card"><strong>🎟️ Ticket médio</strong><div style="font-size:24px;font-weight:800">${moeda(media)}</div></div>`;
 }
-
 function mostrarHistorico(){
   const t=pegar("historyTable");if(!t)return;
   const grupos={};
   pedidos.forEach(p=>{
     const d=dataPedido(p)?new Date(dataPedido(p)):new Date();
-    const k=d.toLocaleDateString("pt-BR");
-    (grupos[k]??=[]).push(p);
+    const chave=d.toLocaleDateString("pt-BR");
+    (grupos[chave]??=[]).push(p);
   });
   const dias=Object.entries(grupos).sort((a,b)=>{
     const da=a[1][0],db=b[1][0];
@@ -369,11 +432,21 @@ function mostrarHistorico(){
   t.innerHTML=dias.map(([dia,lista])=>{
     const total=lista.reduce((s,p)=>s+totalPedido(p),0);
     const media=lista.length?total/lista.length:0;
-    return `<tr><td colspan="6"><strong>📅 ${dia}</strong> — 🧾 ${lista.length} pedidos — 💰 ${moeda(total)} — 🎟️ Média ${moeda(media)}</td></tr>`+
-      lista.map(p=>`<tr><td>#${numeroPedido(p,0)}</td><td>${escapar(nomeCliente(p))}</td><td>${formatarData(dataPedido(p))}</td><td>${statusLabel(p.status_pedido||extrairStatus(p.observacoes))}</td><td>${moeda(totalPedido(p))}</td><td>—</td></tr>`).join("");
+    return `<tr><td colspan="6">
+      <strong>📅 ${dia}</strong> — 🧾 ${lista.length} pedidos
+      — 💰 ${moeda(total)} — 🎟️ Média ${moeda(media)}
+    </td></tr>`+
+    lista.map(p=>`<tr>
+      <td>#${numeroPedido(p,0)}</td>
+      <td>${escapar(nomeCliente(p))}</td>
+      <td>${formatarData(dataPedido(p))}</td>
+      <td>${statusLabel(p.status_pedido||extrairStatus(p.observacoes))}</td>
+      <td>${moeda(totalPedido(p))}</td>
+      <td>—</td>
+    </tr>`).join("");
   }).join("");
-  atualizarResumoHistorico();
-}
+
+  atualizarResumoHistorico();}
 
 function selecionarPedido(i){
   pedidoSelecionado=ordenarPedidos(pedidos)[i]||null;
@@ -417,7 +490,9 @@ async function finalizarPedido(){
 
   const telefone=pegar("telefone")?pegar("telefone").value.trim():"";
   if(telefone&&!telefoneValido(telefone)){
-    alert("O número de WhatsApp informado parece inválido.\n\nCorrija o número e tente finalizar novamente.");
+    alert("O número de WhatsApp informado parece inválido.
+
+Corrija o número e tente finalizar novamente.");
     if(pegar("telefone")){pegar("telefone").focus();pegar("telefone").select();}
     return;
   }
