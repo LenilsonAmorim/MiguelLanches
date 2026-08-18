@@ -16,19 +16,12 @@ jobs:
 
       - name: Extrair projeto APK
         run: |
-          unzip -o MiguelLanches-APK-realtime.zip -d apk-project
-          echo "Projeto extraído:"
-          find apk-project -maxdepth 3 -type f | sort
+          unzip -o MiguelLanches-APK-realtime-auto-atualizacao.zip -d apk-project
 
-      - name: Verificar projeto Android
+      - name: Verificar projeto
         run: |
-          if [ ! -f "apk-project/settings.gradle" ]; then
-            echo "ERRO: settings.gradle não encontrado!"
-            find apk-project -type f | sort
-            exit 1
-          fi
-
-          echo "Projeto Android encontrado!"
+          test -f apk-project/settings.gradle
+          echo "Projeto Android encontrado."
 
       - name: Configurar Java 17
         uses: actions/setup-java@v4
@@ -46,13 +39,9 @@ jobs:
         run: |
           gradle :app:assembleDebug --no-daemon
 
-      - name: Verificar APK
-        run: |
-          find apk-project -type f -name "*.apk" -print
-
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-Realtime
+          name: MiguelLanches-Realtime-AutoAtualizacao
           path: apk-project/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
