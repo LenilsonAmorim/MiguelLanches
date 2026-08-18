@@ -1,119 +1,99 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Miguel Lanches</title>
-  <link rel="stylesheet" href="style.css">
-
-<style>
-.status-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.status-select{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:9px 10px;font-size:12px;font-weight:600;min-width:155px}
-.whatsapp-btn{border:0;background:#25D366;color:#fff;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer}
-.order-status{display:inline-block;margin-top:8px;padding:5px 9px;border-radius:999px;background:#f3f4f6;font-size:12px}
-</style>
-
-<style>
-.status-action-row{margin-top:10px}
-.status-action{width:100%;border:0;border-radius:8px;padding:10px 12px;background:#e11d2e;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
-.status-action.delivered{background:#16a34a}
-.status-action.delivered-only{background:#16a34a}
-.status-action:active{transform:scale(.99)}
-</style>
-<style>
-.status-action-row{margin-top:10px}
-.status-action{width:100%;border:0;border-radius:8px;padding:10px 12px;background:#e11d2e;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
-.status-action.delivered,.status-action.delivered-only{background:#16a34a}
-</style></head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Miguel Lanches</title>
+<link rel="stylesheet" href="style.css">
+</head>
 <body>
 <div id="app">
-  <aside id="sidebar">
-    <div class="logo">
-      <div class="logo-title">MIGUEL</div>
-      <div class="logo-subtitle">LANCHES</div>
-    </div>
-    <nav>
-      <button class="menu-item active" data-page="dashboard" type="button">🛒 <span>Fazer Pedido</span></button>
-      <button class="menu-item" data-page="comandas" type="button">📋 <span>Comandas Abertas</span></button>
-      <button class="menu-item" data-page="historico" type="button">📚 <span>Histórico</span></button>
-      <button class="menu-item" data-page="impressao" type="button">🖨️ <span>Impressão</span></button>
-    </nav>
-    <div class="sidebar-footer">Miguel Lanches<small>Sistema de Pedidos</small></div>
-  </aside>
+<aside id="sidebar">
+  <div class="logo"><div class="logo-title">MIGUEL</div><div class="logo-subtitle">LANCHES</div></div>
+  <nav>
+    <button class="menu-item active" data-page="dashboard">🛒 <span>Fazer Pedido</span></button>
+    <button class="menu-item" data-page="comandas">📋 <span>Comandas Abertas</span></button>
+    <button class="menu-item" data-page="historico">📚 <span>Histórico</span></button>
+    <button class="menu-item" data-page="impressao">🖨️ <span>Impressão</span></button>
+    <button class="menu-item admin-menu" data-page="admin">⚙️ <span>Administração</span></button>
+  </nav>
+  <div class="sidebar-footer">Miguel Lanches<small>Sistema de Pedidos</small></div>
+</aside>
+<main id="content">
+<header id="topbar">
+  <button id="menuToggle">☰</button>
+  <div><strong id="pageTitle">Fazer Pedido</strong><small>Monte a comanda do cliente</small></div>
+  <button id="logoutBtn">Sair</button>
+</header>
 
-  <main id="content">
-    <header id="topbar">
-      <button id="menuToggle" type="button">☰</button>
-      <div>
-        <strong id="pageTitle">Fazer Pedido</strong>
-        <small>Monte a comanda do cliente</small>
-      </div>
-      <button id="logoutBtn" type="button">Sair</button>
-    </header>
-
-    <section id="page-dashboard" class="page active-page">
-      <div class="page-header"><div><h1>Fazer Pedido</h1><p>Escolha os produtos para adicionar à comanda.</p></div></div>
-      <div class="search-box"><input id="productSearch" type="search" placeholder="🔎 Buscar produto..."></div>
-      <div id="categories" class="categories">
-        <button class="category active" data-category="todos" type="button">🍽️ Todos</button>
-        <button class="category" data-category="lanches" type="button">🍔 Lanches</button>
-        <button class="category" data-category="porcoes" type="button">🍟 Porções</button>
-        <button class="category" data-category="bebidas" type="button">🥤 Bebidas</button>
-        <button class="category" data-category="sobremesas" type="button">🍰 Sobremesas</button>
-      </div>
-      <div class="sales-layout">
-        <div class="products-area"><div id="productsGrid" class="products-grid"></div></div>
-        <aside class="cart-panel">
-          <div class="cart-header">
-            <div><h2>Sua Comanda</h2><span id="cartCount">0 itens</span></div>
-            <button id="clearCart" class="clear-btn" type="button">Limpar</button>
-          </div>
-          <div class="customer-box">
-            <label>Cliente<input id="cliente" type="text" placeholder="Nome do cliente"></label>
-            <label>Telefone<input id="telefone" type="text" placeholder="Telefone"></label>
-            <label>Endereço<input id="endereco" type="text" placeholder="Endereço"></label>
-            <label>Referência<input id="referencia" type="text" placeholder="Ponto de referência"></label>
-          </div>
-          <div id="cartItems" class="cart-items"></div>
-          <label class="observation">Observações<textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></label>
-          <div class="cart-summary">
-            <div><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
-            <div><span>Taxa de entrega</span><strong id="deliveryFee">R$ 0,00</strong></div>
-            <div class="grand-total"><span>TOTAL</span><strong id="cartTotal">R$ 0,00</strong></div>
-          </div>
-          <button id="finishBtn" class="finish-btn" type="button">✓ Finalizar Pedido</button>
-          <button id="printBtn" class="print-btn" type="button">🖨️ Imprimir Comanda</button>
-        </aside>
-      </div>
-    </section>
-
-    <section id="page-comandas" class="page">
-      <div class="page-header"><div><h1>Comandas Abertas</h1><p>Pedidos registrados no sistema.</p></div></div>
-      <div class="panel"><h2>Comandas</h2><div id="openOrders" class="orders-list"></div></div>
-    </section>
-
-    <section id="page-historico" class="page">
-      <div class="page-header"><div><h1>Histórico de Pedidos</h1><p>Consulte os pedidos realizados.</p></div></div>
-      <div class="panel">
-        <h2>Pedidos</h2>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Nº</th><th>Cliente</th><th>Data/Hora</th><th>Status</th><th>Total</th><th>Ação</th></tr></thead>
-            <tbody id="historyTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="page-impressao" class="page">
-      <div class="page-header"><div><h1>Impressão</h1><p>Visualização da comanda.</p></div></div>
-      <div class="panel print-layout">
-        <div id="printPreview" class="receipt"><div class="receipt-empty">Selecione um pedido para visualizar.</div></div>
-        <button id="doPrintBtn" class="primary-btn large-btn" type="button">🖨️ Imprimir</button>
-      </div>
-    </section>
-  </main>
+<section id="page-dashboard" class="page active-page">
+<div class="page-header"><div><h1>Fazer Pedido</h1><p>Escolha os produtos para adicionar à comanda.</p></div></div>
+<div class="search-box"><input id="productSearch" type="search" placeholder="🔎 Buscar produto..."></div>
+<div id="categories" class="categories"></div>
+<div class="sales-layout">
+<div class="products-area"><div id="productsGrid" class="products-grid"></div></div>
+<aside class="cart-panel">
+<div class="cart-header"><div><h2>Sua Comanda</h2><span id="cartCount">0 itens</span></div><button id="clearCart" class="clear-btn">Limpar</button></div>
+<div class="customer-box">
+<label>Cliente<input id="cliente" placeholder="Nome do cliente"></label>
+<label>Telefone<input id="telefone" placeholder="Telefone"></label>
+<label>Endereço<input id="endereco" placeholder="Endereço"></label>
+<label>Referência<input id="referencia" placeholder="Ponto de referência"></label>
 </div>
-<script src="app.js?v=28004"></script>
+<div id="cartItems" class="cart-items"></div>
+<label class="observation">Observações<textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></label>
+<div class="cart-summary"><div><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div><div><span>Taxa de entrega</span><strong id="deliveryFee">R$ 0,00</strong></div><div class="grand-total"><span>TOTAL</span><strong id="cartTotal">R$ 0,00</strong></div></div>
+<button id="finishBtn" class="finish-btn">✓ Finalizar Pedido</button><button id="printBtn" class="print-btn">🖨️ Imprimir Comanda</button>
+</aside></div>
+</section>
+
+<section id="page-comandas" class="page"><div class="page-header"><div><h1>Comandas Abertas</h1><p>Pedidos registrados no sistema.</p></div></div><div class="panel"><h2>Comandas</h2><div id="openOrders" class="orders-list"></div></div></section>
+
+<section id="page-historico" class="page"><div class="page-header"><div><h1>Histórico de Pedidos</h1><p>Pedidos cancelados ficam registrados, mas não entram nas vendas.</p></div></div>
+<div id="dailySalesSummary" class="summary-grid"></div>
+<div class="panel"><h2>Pedidos</h2><div class="table-container"><table><thead><tr><th>Nº</th><th>Cliente</th><th>Data/Hora</th><th>Status</th><th>Total</th><th>Ação</th></tr></thead><tbody id="historyTable"></tbody></table></div></div></section>
+
+<section id="page-impressao" class="page"><div class="page-header"><div><h1>Impressão</h1><p>Visualização da comanda.</p></div></div><div class="panel print-layout"><div id="printPreview" class="receipt"><div class="receipt-empty">Selecione um pedido para visualizar.</div></div><button id="doPrintBtn" class="primary-btn large-btn">🖨️ Imprimir</button></div></section>
+
+<section id="page-admin" class="page">
+<div class="page-header"><div><h1>Administração</h1><p>Controle seu cardápio, adicionais, clientes e configurações.</p></div></div>
+
+<div class="admin-grid">
+<div class="panel admin-card"><h2>📂 Categorias</h2>
+<div class="form-grid"><input id="catNome" placeholder="Nome da categoria"><input id="catEmoji" placeholder="Emoji" value="📦"><input id="catOrdem" type="number" placeholder="Ordem"></div>
+<div class="button-row"><button id="catSaveBtn" class="primary-btn">Adicionar categoria</button><button id="catCancelBtn" class="secondary-btn">Limpar</button></div>
+<div class="table-container"><table><thead><tr><th>Ícone</th><th>Categoria</th><th>Ordem</th><th>Ações</th></tr></thead><tbody id="adminCategoriasTable"></tbody></table></div>
+</div>
+
+<div class="panel admin-card"><h2>🍔 Produtos</h2>
+<div class="form-grid"><input id="prodNome" placeholder="Nome do produto"><input id="prodPreco" type="number" step="0.01" placeholder="Preço"><select id="prodCategoria"></select><input id="prodEmoji" placeholder="Emoji" value="🍔"><input id="prodOrdem" type="number" placeholder="Ordem"></div>
+<h3>Ingredientes adicionais deste produto</h3><div id="prodIngredientes" class="check-grid"></div>
+<div class="button-row"><button id="prodSaveBtn" class="primary-btn">Adicionar produto</button><button id="prodCancelBtn" class="secondary-btn">Limpar</button></div>
+<div class="table-container"><table><thead><tr><th></th><th>Produto</th><th>Preço</th><th>Categoria</th><th>Ações</th></tr></thead><tbody id="adminProdutosTable"></tbody></table></div>
+</div>
+
+<div class="panel admin-card"><h2>🥓 Ingredientes adicionais</h2>
+<div class="form-grid"><input id="ingNome" placeholder="Ex.: Bacon"><input id="ingPreco" type="number" step="0.01" placeholder="Preço"></div>
+<div class="button-row"><button id="ingSaveBtn" class="primary-btn">Adicionar ingrediente</button><button id="ingCancelBtn" class="secondary-btn">Limpar</button></div>
+<div class="table-container"><table><thead><tr><th>Ingrediente</th><th>Preço</th><th>Ações</th></tr></thead><tbody id="adminIngredientesTable"></tbody></table></div>
+</div>
+
+<div class="panel admin-card"><h2>👥 Clientes</h2>
+<div class="form-grid"><input id="cliNome" placeholder="Nome"><input id="cliTelefone" placeholder="Telefone"><input id="cliEndereco" placeholder="Endereço"><input id="cliReferencia" placeholder="Referência"></div>
+<div class="button-row"><button id="cliSaveBtn" class="primary-btn">Salvar cliente</button></div>
+<div class="table-container"><table><thead><tr><th>Nome</th><th>Telefone</th><th>Endereço</th><th>Ação</th></tr></thead><tbody id="adminClientesTable"></tbody></table></div>
+</div>
+
+<div class="panel admin-card"><h2>⚙️ Configurações</h2>
+<div class="form-grid"><input id="cfgTaxa" type="number" step="0.01" placeholder="Taxa de entrega"><input id="cfgWhatsApp" placeholder="WhatsApp padrão"></div>
+<div class="button-row"><button id="cfgSaveBtn" class="primary-btn">Salvar configurações</button></div>
+</div>
+</div>
+</section>
+</main>
+</div>
+
+<div id="extrasModal" class="modal"><div class="modal-card"><div class="modal-head"><h2>Ingredientes adicionais</h2><button id="extrasClose">×</button></div><div id="extrasOptions"></div><div class="button-row"><button id="extrasConfirm" class="primary-btn">Adicionar à comanda</button></div></div></div>
+<script src="app.js?v=30001"></script>
 </body>
 </html>
