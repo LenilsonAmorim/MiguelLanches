@@ -409,13 +409,15 @@ function mostrarHistorico(){
   });
 
   t.innerHTML = dias.map(([dia,lista]) => {
-    const total = lista.reduce((s,p) => s + totalPedido(p),0);
-    const media = lista.length ? total / lista.length : 0;
+    const validos = lista.filter(p => (p.status_pedido || extrairStatus(p.observacoes)) !== "cancelado");
+    const total = validos.reduce((s,p) => s + totalPedido(p),0);
+    const media = validos.length ? total / validos.length : 0;
 
     return `
       <tr>
         <td colspan="6">
-          <strong>📅 ${dia}</strong> — 🧾 ${lista.length} pedidos
+          <strong>📅 ${dia}</strong> — 🧾 ${validos.length} pedidos
+          — ❌ ${lista.length - validos.length} cancelados
           — 💰 ${moeda(total)} — 🎟️ Média ${moeda(media)}
         </td>
       </tr>
@@ -444,8 +446,12 @@ function atualizarResumoHistorico(){
     return d.toLocaleDateString("pt-BR") === hoje;
   });
 
-  const total = lista.reduce((s,p) => s + totalPedido(p),0);
-  const media = lista.length ? total / lista.length : 0;
+  const validos = lista.filter(p =>
+    (p.status_pedido || extrairStatus(p.observacoes)) !== "cancelado"
+  );
+
+  const total = validos.reduce((s,p) => s + totalPedido(p),0);
+  const media = validos.length ? total / validos.length : 0;
 
   let box = pegar("dailySalesSummary");
 
@@ -465,7 +471,8 @@ function atualizarResumoHistorico(){
     </div>
     <div class="summary-card">
       <strong>🧾 Pedidos</strong>
-      <div style="font-size:24px;font-weight:800">${lista.length}</div>
+      <div style="font-size:24px;font-weight:800">${validos.length}</div>
+      <small>❌ ${lista.length - validos.length} cancelados</small>
     </div>
     <div class="summary-card">
       <strong>🎟️ Ticket médio</strong>
