@@ -1,7 +1,10 @@
-name: Gerar APK
+name: Gerar APK Miguel Lanches Realtime
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -20,32 +23,27 @@ jobs:
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
-
-      - name: Extrair projeto v11
-        run: |
-          rm -rf projeto
-          mkdir projeto
-          unzip -q MiguelLanches-v11-Pedidos-Visiveis.zip -d projeto
+          gradle-version: '8.7'
 
       - name: Localizar projeto Android
         run: |
-          SETTINGS=$(find projeto -type f \( -name settings.gradle -o -name settings.gradle.kts \) | head -1)
+          SETTINGS=$(find . -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -1)
 
           if [ -z "$SETTINGS" ]; then
-            echo "ERRO: Projeto Gradle não encontrado."
+            echo "ERRO: Projeto Android não encontrado."
+            echo "Coloque o projeto do APK no repositório."
             exit 1
           fi
 
-          DIR=$(dirname "$SETTINGS")
-
-          if [ "$DIR" != "projeto" ]; then
-            cp -r "$DIR"/. projeto/
-          fi
+          echo "Projeto encontrado em: $(dirname "$SETTINGS")"
 
       - name: Gerar APK
-        working-directory: projeto
         run: |
+          SETTINGS=$(find . -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -1)
+          DIR=$(dirname "$SETTINGS")
+
+          cd "$DIR"
+
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
             ./gradlew assembleDebug --no-daemon
@@ -55,9 +53,7 @@ jobs:
 
       - name: Localizar APK
         run: |
-          echo "===== PROCURANDO APK ====="
-
-          APK=$(find projeto -type f -name "*.apk" | head -1)
+          APK=$(find . -type f -name "*.apk" | head -1)
 
           if [ -z "$APK" ]; then
             echo "ERRO: Nenhum APK foi encontrado."
@@ -67,13 +63,11 @@ jobs:
           echo "APK encontrado: $APK"
 
           mkdir -p apk-final
-          cp "$APK" apk-final/MiguelLanches-v11-Pedidos-Visiveis.apk
-
-          ls -lh apk-final/
+          cp "$APK" apk-final/MiguelLanches-Realtime.apk
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiguelLanches-v11-Pedidos-Visiveis
-          path: apk-final/MiguelLanches-v11-Pedidos-Visiveis.apk
+          name: MiguelLanches-Realtime
+          path: apk-final/MiguelLanches-Realtime.apk
           if-no-files-found: error
