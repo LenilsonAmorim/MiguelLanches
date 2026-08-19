@@ -1,6 +1,58 @@
-/* opcional — visual dos separadores do "Todos" */
-.all-category-section{width:100%;grid-column:1/-1;margin:8px 0 18px}
-.all-category-title{display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:0 4px}
-.all-category-title h2{margin:0;font-size:21px;font-weight:900}
-.all-category-title .cat-icon{width:32px;height:32px;object-fit:contain;border-radius:8px}
-.all-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+/* Layout do "Todos": uma categoria por vez, nunca lado a lado. */
+#products.todos-agrupado{
+  display:block !important;
+  width:100%;
+}
+
+#products.todos-agrupado .categoria-bloco{
+  display:block !important;
+  width:100% !important;
+  margin:0 0 28px !important;
+  grid-column:auto !important;
+}
+
+#products.todos-agrupado .categoria-titulo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  margin:6px 0 12px;
+  padding:0 2px;
+}
+
+#products.todos-agrupado .categoria-titulo h2{
+  margin:0;
+  font-size:24px;
+  line-height:1.15;
+  font-weight:900;
+}
+
+#products.todos-agrupado .categoria-titulo img{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+  border-radius:8px;
+}
+
+#products.todos-agrupado .categoria-titulo span{
+  font-size:28px;
+  line-height:1;
+}
+
+#products.todos-agrupado .categoria-produtos{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:16px !important;
+  width:100%;
+}
+
+#products.todos-agrupado .categoria-produtos .card{
+  min-width:0;
+  width:auto;
+}
+
+@media(max-width:420px){
+  #products.todos-agrupado .categoria-produtos{
+    gap:12px !important;
+  }
+}

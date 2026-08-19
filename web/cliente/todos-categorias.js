@@ -1,179 +1,105 @@
-/* Miguel Lanches — "Todos" agrupado pela ordem das categorias
-   Fonte da ordem: tabela categorias.ordem, que é alterada no Admin.
-   Dentro de cada categoria: produtos.ordem.
+/* "TODOS": categorias inteiras em sequência.
+   Ordem das categorias = categorias.ordem (Admin/Supabase)
+   Ordem dos produtos = produtos.ordem
 */
 (function(){
-  function escLocal(v){
-    return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  const URL="https://lifsxhyeqwppfvajvhpn.supabase.co";
+  const KEY="sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
+  const client=window.supabase.createClient(URL,KEY);
+
+  const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const productsBox=()=>document.getElementById("products");
+
+  function card(p){
+    return `<article class="card">
+      <div class="photo">${p.imagem_url
+        ?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`
+        :esc(p.emoji||"🍔")}</div>
+      <div class="info"><h3>${esc(p.nome)}</h3>
+        <div class="bottom"><span class="price">${money(p.preco)}</span>
+          <button class="plus" onclick="openProduct('${p.id}')">+</button>
+        </div>
+      </div>
+    </article>`;
   }
-  function moneyLocal(v){
-    return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  }
 
-  window.renderProductsTodosCategorias=function(){
-    const q=document.getElementById("search").value.toLowerCase().trim();
-
-    if(window.cat !== undefined && window.cat !== "todos") return;
-
-    const list=(window.products || []).filter(p=>
-      (!q || String(p.nome||"").toLowerCase().includes(q))
-    );
-
-    const categories=window.cats || [];
-
-    /* "cats" e "products" são variáveis globais do app.js.
-       Em caso de escopo lexical, acessamos pelo helper criado abaixo. */
-    let catList=categories;
-    let productList=list;
-
-    const container=document.getElementById("products");
-    if(!container)return;
-
-    const grouped=catList.map((c,index)=>({
-      cat:c,
-      index,
-      products:productList
-        .filter(p=>String(p.categoria_id)===String(c.id))
-        .sort((a,b)=>{
-          const ao=Number(a.ordem), bo=Number(b.ordem);
-          if(Number.isFinite(ao)&&Number.isFinite(bo)&&ao!==bo)return ao-bo;
-          if(Number.isFinite(ao)!==Number.isFinite(bo))return Number.isFinite(ao)?-1:1;
-          return String(a.nome||"").localeCompare(String(b.nome||""));
-        })
-    })).filter(g=>g.products.length);
-
-    if(!grouped.length){
-      container.innerHTML='<div class="empty">Nenhum produto encontrado.</div>';
-      return;
-    }
-
-    container.innerHTML=grouped.map(g=>{
-      const c=g.cat;
-      const icon=c.imagem_url
-        ? `<img class="cat-icon" src="${escLocal(c.imagem_url)}" alt="" onerror="this.style.display='none'">`
-        : escLocal(c.emoji||"📦");
-
-      return `
-        <section class="all-category-section">
-          <div class="all-category-title">
-            <span>${icon}</span>
-            <h2>${escLocal(c.nome)}</h2>
-          </div>
-          <div class="all-category-grid">
-            ${g.products.map(p=>`
-              <article class="card">
-                <div class="photo">
-                  ${p.imagem_url
-                    ? `<img src="${escLocal(p.imagem_url)}" alt="${escLocal(p.nome)}">`
-                    : escLocal(p.emoji||"🍔")}
-                </div>
-                <div class="info">
-                  <h3>${escLocal(p.nome)}</h3>
-                  <div class="bottom">
-                    <span class="price">${moneyLocal(p.preco)}</span>
-                    <button class="plus" onclick="openProduct('${p.id}')">+</button>
-                  </div>
-                </div>
-              </article>`).join("")}
-          </div>
-        </section>`;
-    }).join("");
-  };
-
-  /* O app.js usa let cats/products/cat, que não ficam em window.
-     Criamos um observador simples para capturar os arrays por meio do
-     comportamento atual do DOM: o patch substitui a função original
-     apenas quando as variáveis estiverem acessíveis no escopo global.
-     Se não estiverem, o patch usa uma consulta própria ao Supabase. */
-  async function renderFromSupabase(){
-    const search=(document.getElementById("search")?.value||"").toLowerCase().trim();
-    const box=document.getElementById("products");
+  async function renderTodos(){
+    const box=productsBox();
     if(!box)return;
 
-    const sup=window.supabase;
-    if(!sup)return;
-
-    const db2=sup.createClient(
-      "https://lifsxhyeqwppfvajvhpn.supabase.co",
-      "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ"
-    );
+    const search=(document.getElementById("search")?.value||"").trim().toLowerCase();
 
     const [cr,pr]=await Promise.all([
-      db2.from("categorias").select("*").eq("ativo",true).order("ordem"),
-      db2.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem")
+      client.from("categorias").select("*").eq("ativo",true).order("ordem",{ascending:true}),
+      client.from("produtos").select("*").eq("ativo",true).order("ordem",{ascending:true})
     ]);
 
     if(cr.error||pr.error)return;
-    const categories=cr.data||[];
-    const products=pr.data||[];
 
-    const grouped=categories.map(c=>({
-      cat:c,
-      products:products.filter(p=>
-        String(p.categoria_id)===String(c.id) &&
-        (!search||String(p.nome||"").toLowerCase().includes(search))
-      )
-    })).filter(g=>g.products.length);
+    const categorias=cr.data||[];
+    const produtos=pr.data||[];
 
-    box.innerHTML=grouped.length?grouped.map(g=>`
-      <section class="all-category-section">
-        <div class="all-category-title">
-          <span>${g.cat.imagem_url
-            ?`<img class="cat-icon" src="${escLocal(g.cat.imagem_url)}" alt="">`
-            :escLocal(g.cat.emoji||"📦")}</span>
-          <h2>${escLocal(g.cat.nome)}</h2>
-        </div>
-        <div class="all-category-grid">
-          ${g.products.map(p=>`
-            <article class="card">
-              <div class="photo">${p.imagem_url
-                ?`<img src="${escLocal(p.imagem_url)}" alt="${escLocal(p.nome)}">`
-                :escLocal(p.emoji||"🍔")}</div>
-              <div class="info"><h3>${escLocal(p.nome)}</h3>
-                <div class="bottom"><span class="price">${moneyLocal(p.preco)}</span>
-                  <button class="plus" onclick="openProduct('${p.id}')">+</button>
-                </div>
-              </div>
-            </article>`).join("")}
-        </div>
-      </section>`).join("")
-      :'<div class="empty">Nenhum produto encontrado.</div>';
+    /* IMPORTANTÍSSIMO:
+       O container inteiro deixa de ser um grid quando "Todos" está ativo.
+       Assim uma categoria NÃO fica ao lado da outra.
+    */
+    box.classList.add("todos-agrupado");
+
+    let html="";
+    for(const categoria of categorias){
+      const itens=produtos.filter(p=>
+        String(p.categoria_id)===String(categoria.id) &&
+        (!search || String(p.nome||"").toLowerCase().includes(search))
+      );
+
+      if(!itens.length)continue;
+
+      html+=`
+        <section class="categoria-bloco">
+          <div class="categoria-titulo">
+            ${categoria.imagem_url
+              ?`<img src="${esc(categoria.imagem_url)}" alt="">`
+              :`<span>${esc(categoria.emoji||"📦")}</span>`}
+            <h2>${esc(categoria.nome)}</h2>
+          </div>
+          <div class="categoria-produtos">
+            ${itens.map(card).join("")}
+          </div>
+        </section>`;
+    }
+
+    box.innerHTML=html || '<div class="empty">Nenhum produto encontrado.</div>';
   }
 
-  function apply(){
-    const old=window.renderProducts;
-    if(!old)return setTimeout(apply,300);
-
-    /* Mantém categorias individuais exatamente como estão.
-       Apenas "Todos" recebe a nova renderização. */
-    window.renderProducts=function(){
-      if(typeof window.cat==="string" && window.cat!=="todos"){
-        return old.apply(this,arguments);
-      }
-      renderFromSupabase();
-    };
-
-    document.getElementById("search")?.addEventListener("input",()=>{
-      if(typeof window.cat==="string" && window.cat==="todos")renderFromSupabase();
-    });
-
-    setTimeout(()=>{
-      if(typeof window.cat==="undefined" || window.cat==="todos")renderFromSupabase();
-    },100);
+  function isTodosButton(btn){
+    const txt=(btn?.textContent||"").trim().toLowerCase();
+    return txt.includes("todos");
   }
 
-  /* Como app.js usa let para cat, o valor não é window.cat.
-     O listener abaixo detecta clique em "Todos" e renderiza novamente.
-     Para pesquisa, o input também dispara a renderização própria. */
+  /* O app.js original usa let cat, então não tentamos acessar window.cat.
+     Detectamos a seleção diretamente no botão da categoria. */
   document.addEventListener("click",e=>{
-    const b=e.target.closest("#categories button");
-    if(!b)return;
-    if((b.textContent||"").includes("Todos"))setTimeout(renderFromSupabase,50);
+    const btn=e.target.closest("#categories button");
+    if(!btn)return;
+
+    if(isTodosButton(btn)){
+      setTimeout(renderTodos,80);
+    }else{
+      const box=productsBox();
+      box?.classList.remove("todos-agrupado");
+    }
   });
 
-  const s=document.getElementById("search");
-  s?.addEventListener("input",()=>setTimeout(renderFromSupabase,50));
+  document.getElementById("search")?.addEventListener("input",()=>{
+    const active=document.querySelector("#categories button.active");
+    if(active && isTodosButton(active))renderTodos();
+  });
 
-  apply();
+  /* Espera o app.js carregar categorias/produtos e renderizar o primeiro estado. */
+  setTimeout(()=>{
+    const active=document.querySelector("#categories button.active");
+    if(active && isTodosButton(active))renderTodos();
+  },500);
 })();
