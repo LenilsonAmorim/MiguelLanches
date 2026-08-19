@@ -26,7 +26,7 @@
 <div id="checkout" class="checkout hidden"><div class="checkout-box"><div class="checkout-head"><button id="closeCheckout" class="icon-btn">‹</button><h2>Finalizar pedido</h2><span></span></div>
 <section id="savedAddress" class="saved-address hidden"><div><small>Endereço salvo</small><strong id="savedAddressText"></strong></div><button id="changeAddress">Trocar</button></section>
 <section class="receive-section"><h3>Como você quer receber o pedido?</h3><div class="receive-options"><button class="receive-option" data-method="entrega"><span>🛵</span><div><strong>Entrega</strong><small>A gente leva até você</small></div></button><button class="receive-option" data-method="retirada"><span>🚶</span><div><strong>Retirada</strong><small>Você retira no local</small></div></button></div></section>
-<section id="customerSection" class="customer-section hidden"><h3>Seus dados</h3><input id="nome" placeholder="Nome *" required><input id="telefone" placeholder="WhatsApp * (DDD + celular)" inputmode="tel" required>
+<section id="customerSection" class="customer-section hidden"><h3>Seus dados</h3><input id="nome" placeholder="Nome *" required><input id="telefone" placeholder="WhatsApp * (DDD + celular)" inputmode="tel">
 <div id="deliveryFields"><label>Bairro *</label><select id="bairro"><option value="">Selecione o bairro *</option></select><input id="endereco" placeholder="Endereço *"><input id="referencia" placeholder="Ponto de referência *"></div>
 <label>Forma de pagamento *</label><select id="pagamento"><option value="">Selecione *</option><option>PIX</option><option>Cartão de crédito</option><option>Cartão de débito</option><option>Dinheiro</option></select>
 <div id="paymentMoney" class="hidden"><input id="valorPago" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *"><div id="trocoPreview"></div></div>
@@ -37,4 +37,5 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script src="acai-configurator.js"></script>
+<script src="quantidade-real-client.js"></script>
 </body></html>
