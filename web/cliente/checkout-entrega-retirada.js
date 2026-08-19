@@ -1,170 +1,111 @@
-/* Checkout final — Entrega, Retirada e Endereço Salvo */
+/* Checkout final v2 — pagamento e entrega/retirada */
 (() => {
   const $ = id => document.getElementById(id);
-  const KEY = "miguel_lanches_cliente_v1"; // mesma chave usada pelo dados-cliente-salvos.js
+  const KEY = "miguel_lanches_cliente_v1";
 
   const getSaved = () => {
     try { return JSON.parse(localStorage.getItem(KEY) || "null"); }
     catch { return null; }
   };
 
-  const hasRealAddress = d =>
-    !!(d && String(d.endereco || "").trim());
-
-  const setVisible = (el, visible) => {
+  function forceVisible(el, yes) {
     if (!el) return;
-    el.classList.toggle("hidden", !visible);
-    el.style.display = visible ? "" : "none";
-  };
-
-  function showSavedAddress(method) {
-    const box = $("savedAddress");
-    const text = $("savedAddressText");
-    const d = getSaved();
-
-    // Endereço salvo só existe se houver um endereço REAL salvo.
-    // E nunca aparece durante Retirada.
-    const show = method === "entrega" && hasRealAddress(d);
-
-    setVisible(box, show);
-
-    if (show && text) {
-      text.textContent = [d.bairro, d.endereco, d.referencia]
-        .filter(v => String(v || "").trim())
-        .join(" • ");
-    } else if (text) {
-      text.textContent = "";
+    if (yes) {
+      el.classList.remove("hidden");
+      el.style.removeProperty("display");
+    } else {
+      el.classList.add("hidden");
+      // O !important impede app.js/CSS antigo de reexibir o campo.
+      el.style.setProperty("display", "none", "important");
     }
   }
 
-  function fillSavedData() {
-    const d = getSaved();
-    if (!d) return;
+  function hasAddress(d) {
+    return !!(d && String(d.endereco || "").trim());
+  }
 
-    ["nome","telefone","bairro","endereco","referencia","pagamento"].forEach(id => {
-      const el = $(id);
-      if (el && d[id] !== undefined && d[id] !== null && !el.value) {
-        el.value = d[id];
-      }
-    });
+  function refreshSaved(method) {
+    const box=$("savedAddress"), text=$("savedAddressText"), d=getSaved();
+    const show = method === "entrega" && hasAddress(d);
+    forceVisible(box, show);
+    if (text) text.textContent = show
+      ? [d.bairro,d.endereco,d.referencia].filter(Boolean).join(" • ")
+      : "";
   }
 
   function setMethod(method) {
-    const isDelivery = method === "entrega";
-    const fields = $("deliveryFields");
-    const customer = $("customerSection");
-
-    // Os dados sempre aparecem depois de escolher Entrega/Retirada.
-    setVisible(customer, true);
-
-    // Endereço SOMENTE para Entrega.
-    setVisible(fields, isDelivery);
-
-    document.querySelectorAll(".receive-option").forEach(btn => {
-      btn.classList.toggle("selected", btn.dataset.method === method);
-      btn.setAttribute("aria-pressed", btn.dataset.method === method ? "true" : "false");
-    });
-
-    fillSavedData();
-    showSavedAddress(method);
-
-    // Retirada: não deixar nenhum campo de endereço obrigatório.
-    ["bairro","endereco","referencia"].forEach(id => {
-      const el = $(id);
-      if (el) {
-        el.required = isDelivery;
-        if (!isDelivery) el.setCustomValidity("");
-      }
-    });
-
-    // Entrega exige endereço; Retirada não.
-    if (isDelivery) {
-      setTimeout(() => $("endereco")?.focus({preventScroll:true}), 80);
-    } else {
-      setTimeout(() => $("nome")?.focus({preventScroll:true}), 80);
-    }
-
+    const delivery = method === "entrega";
     window.__mlReceiveMethod = method;
+
+    forceVisible($("customerSection"), true);
+    forceVisible($("deliveryFields"), delivery);
+    refreshSaved(method);
+
+    ["bairro","endereco","referencia"].forEach(id=>{
+      const el=$(id);
+      if(el) el.required=delivery;
+    });
+
+    document.querySelectorAll(".receive-option").forEach(btn=>{
+      const selected=btn.dataset.method===method;
+      btn.classList.toggle("selected",selected);
+      btn.setAttribute("aria-pressed",selected?"true":"false");
+    });
   }
 
-  function updatePayment() {
-    const payment = $("pagamento");
-    const money = $("paymentMoney");
-    const show = payment?.value === "Dinheiro";
-    setVisible(money, show);
-  }
+  function refreshPayment() {
+    const payment=$("pagamento");
+    const money=$("paymentMoney");
+    const isMoney=payment && payment.value === "Dinheiro";
 
-  function hideSavedIfInvalid() {
-    const d = getSaved();
-    if (!hasRealAddress(d)) {
-      const box = $("savedAddress");
-      const text = $("savedAddressText");
-      setVisible(box, false);
-      if (text) text.textContent = "";
+    // Só Dinheiro pode exibir valor pago/troco.
+    forceVisible(money, !!isMoney);
+
+    if (!isMoney) {
+      const paid=$("valorPago");
+      const preview=$("trocoPreview");
+      if(paid) paid.value="";
+      if(preview) preview.textContent="";
     }
   }
 
-  document.addEventListener("click", e => {
-    const option = e.target.closest?.(".receive-option");
-    if (option) {
+  document.addEventListener("click", e=>{
+    const option=e.target.closest?.(".receive-option");
+    if(option){
       e.preventDefault();
       e.stopImmediatePropagation();
-      setMethod(option.dataset.method === "retirada" ? "retirada" : "entrega");
+      setMethod(option.dataset.method==="retirada" ? "retirada" : "entrega");
+      refreshPayment();
       return;
     }
 
-    const change = e.target.closest?.("#changeAddress");
-    if (change) {
+    const change=e.target.closest?.("#changeAddress");
+    if(change){
       e.preventDefault();
       e.stopImmediatePropagation();
       setMethod("entrega");
       return;
     }
+  }, true);
 
-    const close = e.target.closest?.("#closeCheckout");
-    if (close) {
-      e.preventDefault();
-      // deixa o app principal fechar o checkout quando ele tiver o handler;
-      // aqui só não cria um segundo fluxo.
+  document.addEventListener("change", e=>{
+    if(e.target?.id==="pagamento") refreshPayment();
+  }, true);
+
+  // Também corrige imediatamente se outro script tentar mostrar paymentMoney.
+  const observer=new MutationObserver(()=>{
+    refreshPayment();
+    if(window.__mlReceiveMethod) refreshSaved(window.__mlReceiveMethod);
+    else {
+      const d=getSaved();
+      if(!hasAddress(d)) forceVisible($("savedAddress"),false);
     }
-  }, true);
-
-  document.addEventListener("change", e => {
-    if (e.target?.id === "pagamento") updatePayment();
-  }, true);
-
-  document.addEventListener("input", e => {
-    // Se não existe endereço real, nunca mostre o banner.
-    if (["bairro","endereco","referencia"].includes(e.target?.id)) {
-      hideSavedIfInvalid();
-    }
-  }, true);
-
-  // dados-cliente-salvos.js pode tentar restaurar o banner depois.
-  // Reaplica a regra sempre que o DOM mudar.
-  const observer = new MutationObserver(() => {
-    const method = window.__mlReceiveMethod;
-    if (method) showSavedAddress(method);
-    else hideSavedIfInvalid();
-    updatePayment();
   });
-  observer.observe(document.body, {childList:true, subtree:true});
+  observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class","style"]});
 
-  window.mlCheckoutAddress = {
-    setMethod,
-    showSavedAddress,
-    refresh: () => {
-      hideSavedIfInvalid();
-      updatePayment();
-    }
-  };
+  window.mlCheckoutAddress={setMethod,refreshPayment};
 
-  setTimeout(() => {
-    hideSavedIfInvalid();
-    updatePayment();
-  }, 100);
-  setTimeout(() => {
-    hideSavedIfInvalid();
-    updatePayment();
-  }, 1000);
+  setTimeout(refreshPayment,50);
+  setTimeout(refreshPayment,300);
+  setTimeout(refreshPayment,1000);
 })();
