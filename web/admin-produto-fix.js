@@ -1,12 +1,14 @@
 /* Miguel Lanches — correção do produto no ADMIN
-   Usa o estado real do admin: state.products/state.ingredients.
-   Mantém adicionais, observação, quantidade e imagem.
+   Importante: não cria outro controle de quantidade.
+   O quantidade-real-admin.js é o único responsável pelos botões − / +.
 */
 (function(){
   const escA=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;")
     .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
   const cfg=async key=>{
-    const r=await db.from("configuracoes").select("valor").eq("chave",key).maybeSingle();
+    const r=await db.from("configuracoes").select("valor")
+      .eq("chave",key).maybeSingle();
     if(r.error)return{};
     try{return JSON.parse(r.data?.valor||"{}")||{}}catch{return{}}
   };
@@ -19,6 +21,7 @@
       db.from("produto_ingredientes").select("ingrediente_id").eq("produto_id",id),
       cfg("produto_config")
     ]);
+
     const allowed=new Set((rel.data||[]).map(x=>String(x.ingrediente_id)));
     const list=state.ingredients.filter(i=>allowed.has(String(i.id)));
     const desc=pcfg[p.id]||{descricao:"",mostrarDescricao:false};
@@ -48,29 +51,19 @@
       ${description}
       <p class="muted">Escolha os adicionais e a quantidade.</p>
       <div class="form">
-        <label>Quantidade</label>
-        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 18px">
-          <button type="button" id="adminQtyMinus" style="width:46px;height:46px;font-size:25px;font-weight:800">−</button>
-          <b id="adminQtyValue" style="font-size:20px">1</b>
-          <button type="button" id="adminQtyPlus" style="width:46px;height:46px;font-size:25px;font-weight:800">+</button>
-        </div>
-        <input id="mQty" type="hidden" value="1">
+        <label>Quantidade
+          <input id="mQty" type="number" min="1" value="1">
+        </label>
         ${addons}
-        <label>Observação<textarea id="mObs" placeholder="Ex.: sem cebola..."></textarea></label>
+        <label>Observação
+          <textarea id="mObs" placeholder="Ex.: sem cebola..."></textarea>
+        </label>
         <div class="form-actions">
           <button class="mini" onclick="closeModal()">Voltar</button>
           <button class="primary" onclick="addConfigured('${escA(p.id)}')">Adicionar ao pedido</button>
         </div>
       </div>`;
 
-    $("adminQtyMinus").onclick=()=>{
-      const n=Math.max(1,Number($("mQty").value||1)-1);
-      $("mQty").value=n;$("adminQtyValue").textContent=n;
-    };
-    $("adminQtyPlus").onclick=()=>{
-      const n=Number($("mQty").value||1)+1;
-      $("mQty").value=n;$("adminQtyValue").textContent=n;
-    };
     $("modal").classList.remove("hidden");
   };
 })();
