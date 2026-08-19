@@ -36,9 +36,9 @@ async function openProduct(id){
  const allowed=new Set((rel.data||[]).map(x=>String(x.ingrediente_id)));
  const ing=await db.from("ingredientes").select("*").eq("ativo",true).order("nome");
  let list=(ing.data||[]).filter(x=>allowed.has(String(x.id)));
- if(category.ingredientes!==false && !list.length && !isAcai) list=ing.data||[];
- if(category.ingredientes===false) list=[];
- if(isAcai){openAcai(p,category);return;}
+ if(category.ingredientes!==false&&!list.length&&!isAcai)list=ing.data||[];
+ if(category.ingredientes===false)list=[];
+ if(isAcai){openAcai(p,category);return}
  $("modalContent").innerHTML=`<h2>${esc(p.nome)}</h2><div class="form"><label>Quantidade<input id="qty" type="number" min="1" value="1"></label>${list.length?`<label>Ingredientes adicionais</label><div class="checks">${list.map(i=>`<label class="check"><input type="checkbox" value="${i.id}" data-name="${esc(i.nome)}" data-price="${i.preco}"> ${esc(i.nome)} + ${money(i.preco)}</label>`).join("")}</div>`:""}${category.observacao!==false?`<label>Observação<textarea id="itemObs" placeholder="Ex.: sem cebola..."></textarea></label>`:""}<div class="actions"><button onclick="closeModal()">Voltar</button><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div></div>`;
  $("modal").classList.remove("hidden");
 }
@@ -47,33 +47,56 @@ function openAcai(p,category){
  const tops=Array.isArray(acaiCfg.coberturas)?acaiCfg.coberturas:[];
  $("modalContent").innerHTML=`<h2>🍧 ${esc(p.nome)}</h2><div class="form"><label>Tamanho</label><div class="checks">${sizes.map((s,i)=>`<label class="check"><input type="radio" name="acaiSize" value="${i}" ${i===0?'checked':''} data-name="${esc(s.nome)}" data-price="${Number(s.preco||0)}"> ${esc(s.nome)} — ${money(s.preco)}</label>`).join("")}</div>${tops.length?`<label>Coberturas <small>(escolha até 3)</small></label><div class="checks" id="acaiTops">${tops.map((t,i)=>`<label class="check"><input class="acai-top" type="checkbox" value="${i}" data-name="${esc(t.nome)}" data-price="${Number(t.preco||0)}"> ${esc(t.nome)}${Number(t.preco||0)>0?' + '+money(t.preco):''}</label>`).join("")}</div>`:`<p class="muted">Nenhuma cobertura cadastrada ainda.</p>`}${category.observacao!==false?`<label>Observação<textarea id="itemObs" placeholder="Ex.: sem açúcar..."></textarea></label>`:""}<label>Quantidade<input id="qty" type="number" min="1" value="1"></label><div class="actions"><button onclick="closeModal()">Voltar</button><button class="primary" onclick="addAcai('${p.id}')">Adicionar</button></div></div>`;
  $("modal").classList.remove("hidden");
- document.querySelectorAll('.acai-top').forEach(cb=>cb.addEventListener('change',()=>{const checked=[...document.querySelectorAll('.acai-top:checked')];if(checked.length>=3){document.querySelectorAll('.acai-top:not(:checked)').forEach(x=>x.disabled=true)}else document.querySelectorAll('.acai-top').forEach(x=>x.disabled=false)}));
+ document.querySelectorAll(".acai-top").forEach(cb=>cb.addEventListener("change",()=>{const checked=[...document.querySelectorAll(".acai-top:checked")];if(checked.length>=3)document.querySelectorAll(".acai-top:not(:checked)").forEach(x=>x.disabled=true);else document.querySelectorAll(".acai-top").forEach(x=>x.disabled=false)}));
 }
 function closeModal(){$("modal").classList.add("hidden")}
 function addAcai(id){
  const p=products.find(x=>String(x.id)===String(id));const q=Math.max(1,Number($("qty").value||1));const s=document.querySelector('input[name="acaiSize"]:checked');
- const adds=[...document.querySelectorAll('.acai-top:checked')].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)}));
+ const adds=[...document.querySelectorAll(".acai-top:checked")].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)}));
  const sizeName=s?.dataset.name||"";const sizePrice=Number(s?.dataset.price||0);const obs=$("itemObs")?.value.trim()||"";const price=Number(p.preco)+sizePrice+adds.reduce((a,x)=>a+x.preco,0);
  cart.push({key:uid(),id:p.id,nome:`${p.nome} (${sizeName})`,preco:price,quantidade:q,adicionais:adds,obs});closeModal();renderCart();
 }
-function addProduct(id){const p=products.find(x=>String(x.id)===String(id));let q=Math.max(1,Number($("qty").value||1));const adds=[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)}));const obs=$("itemObs")?.value.trim()||"";const price=Number(p.preco)+adds.reduce((s,x)=>s+x.preco,0);cart.push({key:uid(),id:p.id,nome:p.nome,preco:price,quantidade:q,adicionais:adds,obs});closeModal();renderCart()}
-function renderCart(){const n=cart.reduce((s,x)=>s+x.quantidade,0);$("cartCount").textContent=n;$("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cartItem"><div class="cartLine"><span class="cartName">${x.quantidade}x ${esc(x.nome)}</span><span class="cartPrice">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<small>+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</small>`:""}${x.obs?`<small>${esc(x.obs)}</small>`:""}<div class="qty"><button onclick="qty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="qty('${x.key}',1)">+</button><button class="remove" onclick="removeItem('${x.key}')">Excluir</button></div></div>`).join(""):'<div class="empty">Seu pedido está vazio.<br>Toque no + para adicionar.</div>';$("total").textContent=money(cart.reduce((s,x)=>s+x.preco*x.quantidade,0))}
+function addProduct(id){
+ const p=products.find(x=>String(x.id)===String(id));let q=Math.max(1,Number($("qty").value||1));
+ const adds=[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)}));
+ const obs=$("itemObs")?.value.trim()||"";const price=Number(p.preco)+adds.reduce((s,x)=>s+x.preco,0);
+ cart.push({key:uid(),id:p.id,nome:p.nome,preco:price,quantidade:q,adicionais:adds,obs});closeModal();renderCart()
+}
+function renderCart(){
+ const n=cart.reduce((s,x)=>s+x.quantidade,0);
+ $("cartCount").textContent=n;$("cartItemCount").textContent=`${n} ${n===1?"item":"itens"}`;
+ $("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cartItem"><div class="cartLine"><span class="cartName">${x.quantidade}x ${esc(x.nome)}</span><span class="cartPrice">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<small>+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</small>`:""}${x.obs?`<small>${esc(x.obs)}</small>`:""}<div class="qty"><button onclick="qty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="qty('${x.key}',1)">+</button><button class="remove" onclick="removeItem('${x.key}')">Excluir</button></div></div>`).join(""):'<div class="empty">Seu pedido está vazio.<br>Toque no + para adicionar.</div>';
+ const subtotal=cart.reduce((s,x)=>s+x.preco*x.quantidade,0);
+ $("subtotal").textContent=money(subtotal);$("total").textContent=money(subtotal);$("bottomCartTotal").textContent=money(subtotal);$("deliveryFee").textContent="R$ 0,00";
+}
 function qty(k,d){const x=cart.find(x=>x.key===k);if(!x)return;x.quantidade+=d;if(x.quantidade<1)cart=cart.filter(y=>y.key!==k);renderCart()}
 function removeItem(k){cart=cart.filter(x=>x.key!==k);renderCart()}
+function clearCart(){if(!cart.length)return;if(!confirm("Tem certeza que deseja limpar a sacola?"))return;cart=[];renderCart();closeCart()}
+function addMoreItems(){closeCart();window.scrollTo({top:0,behavior:"smooth"})}
 function openCart(){$("cart").classList.add("open");$("overlay").classList.add("open");document.body.style.overflow="hidden"}
 function closeCart(){$("cart").classList.remove("open");$("overlay").classList.remove("open");document.body.style.overflow=""}
+function continueOrder(){if(!cart.length)return alert("Adicione pelo menos um produto.");$("checkout").classList.remove("hidden");closeCart()}
 async function sendOrder(){
  if(!cart.length)return alert("Adicione pelo menos um produto.");
  const nome=$("nome").value.trim();if(!nome)return alert("Informe seu nome.");
  const phone=$("telefone").value.trim(),end=$("endereco").value.trim(),ref=$("referencia").value.trim(),obs=$("observacoes").value.trim();
  const items=cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,obs:x.obs}));
  const total=cart.reduce((s,x)=>s+x.preco*x.quantidade,0);
- /* CLIENTE: sempre entra como NOVO. O Admin é quem confirma e passa para PREPARO. */
  const packed=`${obs}\n\n[ML_ITENS]${encodeURIComponent(JSON.stringify(items))}[/ML_ITENS]\n\n[ML_STATUS]novo[/ML_STATUS]`;
  const {error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,endereco:end,referencia:ref,observacoes:packed,total});
  if(error)return alert("Não foi possível enviar o pedido: "+error.message);
  if(phone)await db.from("clientes").upsert({nome,telefone:phone,endereco:end,referencia:ref},{onConflict:"telefone"});
- cart=[];renderCart();closeCart();$("nome").value=$("telefone").value=$("endereco").value=$("referencia").value=$("observacoes").value="";
+ cart=[];renderCart();closeCart();$("checkout").classList.add("hidden");$("nome").value=$("telefone").value=$("endereco").value=$("referencia").value=$("observacoes").value="";
  alert("Pedido enviado com sucesso! Obrigado.")
 }
-$("search").oninput=renderProducts;$('openCart').onclick=openCart;$('closeCart').onclick=closeCart;$('overlay').onclick=closeCart;$('modalClose').onclick=closeModal;$('send').onclick=sendOrder;init();renderCart();
+$("search").oninput=renderProducts;
+$("openCart").onclick=openCart;
+$("closeCart").onclick=closeCart;
+$("overlay").onclick=closeCart;
+$("clearCart").onclick=clearCart;
+$("addMore").onclick=addMoreItems;
+$("continueOrder").onclick=continueOrder;
+$("closeCheckout").onclick=()=>$("checkout").classList.add("hidden");
+$("modalClose").onclick=closeModal;
+$("send").onclick=sendOrder;
+init();renderCart();
