@@ -1,0 +1,6 @@
+/* opcional — visual dos separadores do "Todos" */
+.all-category-section{width:100%;grid-column:1/-1;margin:8px 0 18px}
+.all-category-title{display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:0 4px}
+.all-category-title h2{margin:0;font-size:21px;font-weight:900}
+.all-category-title .cat-icon{width:32px;height:32px;object-fit:contain;border-radius:8px}
+.all-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
