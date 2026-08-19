@@ -1,0 +1,2 @@
+.cartItem .qty button{touch-action:manipulation;pointer-events:auto}
+#clearCart,#addMore,#continueOrder,.receive-option,#changeAddress{touch-action:manipulation;pointer-events:auto}
