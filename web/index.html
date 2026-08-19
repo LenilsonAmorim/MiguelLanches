@@ -8,5 +8,92 @@
 <section class="page" id="page-admin"><div class="page-head"><div><h1>Administração</h1><p>Gerencie o cardápio sem mexer no código.</p></div></div><div class="admin-tabs"><button class="admin-tab active" data-admin="produtos">🍔 Produtos</button><button class="admin-tab" data-admin="categorias">📂 Categorias</button><button class="admin-tab" data-admin="adicionais">🧀 Adicionais</button><button class="admin-tab" data-admin="tamanhos">📏 Tamanhos</button><button class="admin-tab" data-admin="combos">🎁 Combos</button><button class="admin-tab" data-admin="entrega">🚚 Entrega</button><button class="admin-tab" data-admin="pagamento">💰 Pagamento</button></div><div id="adminContent"></div></section></main></div>
 <div class="modal hidden" id="modal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script><script src="admin-auth.js"></script><script src="orders-enhancements.js"></script><script src="admin-bairros.js"></script><script src="admin-pedido-mesa.js"></script><script src="admin-features.js"></script><script src="admin-category-delete-fix.js"></script><script src="admin-category-patch.js"></script><script src="admin-product-search.js"></script><script src="quantidade-real-admin.js"></script><script src="admin-produto-config.js"></script><script src="admin-produto-fix.js"></script><script src="admin-acai-fix.js"></script>
+<link rel="stylesheet" href="category-group.css"><script src="app.js"></script><script src="admin-auth.js"></script><script src="orders-enhancements.js"></script><script src="admin-bairros.js"></script><script src="admin-pedido-mesa.js"></script><script src="admin-features.js"></script><script src="admin-category-delete-fix.js"></script><script src="admin-category-patch.js"></script><script src="admin-product-search.js"></script><script src="quantidade-real-admin.js"></script><script src="admin-produto-config.js"></script><script src="admin-produto-fix.js"></script><script src="admin-acai-fix.js"></script>
+
+<!-- CORREÇÃO: "TODOS" no Novo Pedido do Admin fica agrupado por categoria. -->
+<script>
+(function(){
+  function renderProductsByCategory(){
+    const grid=document.getElementById("productGrid");
+    const search=document.getElementById("search");
+    if(!grid || typeof state==="undefined") return;
+
+    const q=(search?.value||"").toLowerCase().trim();
+
+    let filtered=(state.products||[]).filter(function(p){
+      return (!q || String(p.nome||"").toLowerCase().includes(q));
+    });
+
+    if(state.cat !== "todos"){
+      filtered=filtered.filter(function(p){
+        return String(p.categoria_id)===String(state.cat);
+      });
+      grid.innerHTML=filtered.length
+        ? filtered.map(function(p){
+            return '<article class="product-card"><div class="product-img">'+
+              (p.imagem_url?'<img src="'+esc(p.imagem_url)+'" alt="">':esc(p.emoji||"🍔"))+
+              '</div><div class="product-info"><h3>'+esc(p.nome)+'</h3><div class="product-bottom">'+
+              '<span class="price">'+money(p.preco)+'</span><button class="plus" onclick="openProduct(\''+p.id+'\')">+</button>'+
+              '</div></div></article>';
+          }).join("")
+        : '<div class="empty">Nenhum produto encontrado.</div>';
+      return;
+    }
+
+    const cats=Array.isArray(state.cats)?state.cats.filter(c=>c.ativo!==false):[];
+    const groups=[];
+
+    cats.forEach(function(cat){
+      const products=filtered
+        .filter(function(p){return String(p.categoria_id)===String(cat.id);})
+        .sort(function(a,b){
+          return Number(a.ordem??999999)-Number(b.ordem??999999);
+        });
+      if(products.length) groups.push({cat:cat,products:products});
+    });
+
+    const known=new Set(cats.map(function(c){return String(c.id);}));
+    const uncategorized=filtered
+      .filter(function(p){return !known.has(String(p.categoria_id));})
+      .sort(function(a,b){return Number(a.ordem??999999)-Number(b.ordem??999999);});
+    if(uncategorized.length) groups.push({cat:{nome:"Outros",emoji:"📦"},products:uncategorized});
+
+    grid.innerHTML=groups.length
+      ? groups.map(function(g){
+          return '<section class="ml-category-group">'+
+            '<h2 class="ml-category-title">'+esc(g.cat.emoji||"📦")+' '+esc(g.cat.nome)+'</h2>'+
+            '<div class="product-grid">'+
+            g.products.map(function(p){
+              return '<article class="product-card"><div class="product-img">'+
+                (p.imagem_url?'<img src="'+esc(p.imagem_url)+'" alt="">':esc(p.emoji||"🍔"))+
+                '</div><div class="product-info"><h3>'+esc(p.nome)+'</h3><div class="product-bottom">'+
+                '<span class="price">'+money(p.preco)+'</span><button class="plus" onclick="openProduct(\''+p.id+'\')">+</button>'+
+                '</div></div></article>';
+            }).join("")+
+            '</div></section>';
+        }).join("")
+      : '<div class="empty">Nenhum produto encontrado.</div>';
+  }
+
+  window.renderProducts=renderProductsByCategory;
+
+  /* Re-renderiza quando a busca, categoria ou dados mudarem. */
+  const originalChooseCat=window.chooseCat;
+  window.chooseCat=function(id){
+    state.cat=id;
+    if(typeof renderCats==="function") renderCats();
+    renderProductsByCategory();
+  };
+
+  const originalLoadAll=window.loadAll;
+  window.loadAll=async function(){
+    const result=await originalLoadAll.apply(this,arguments);
+    renderProductsByCategory();
+    return result;
+  };
+
+  document.getElementById("search")?.addEventListener("input",renderProductsByCategory);
+  setTimeout(renderProductsByCategory,1000);
+})();
+</script>
 </body></html>
