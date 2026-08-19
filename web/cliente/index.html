@@ -12,9 +12,14 @@
   <div class="brand"><strong>MIGUEL</strong><span>LANCHES</span></div>
   <button id="headerCart" class="header-cart" aria-label="Abrir sacola">🛍️<b id="headerCount">0</b></button>
 </header>
+
 <main>
   <section class="hero">
-    <div><small>MIGUEL LANCHES</small><h1>Peça do seu jeito.</h1><p>Escolha, personalize e receba seu pedido com facilidade.</p></div>
+    <div>
+      <small>MIGUEL LANCHES</small>
+      <h1>Peça do seu jeito.</h1>
+      <p>Escolha, personalize e receba seu pedido com facilidade.</p>
+    </div>
     <span>🍔</span>
   </section>
 
@@ -27,14 +32,14 @@
     <nav id="categories" class="categories"></nav>
   </section>
 
-  <section id="featuredSection" class="hidden">
+  <section id="featuredSection">
     <div class="section-title"><h2>Mais pedidos</h2><button id="clearSearch">Ver todos</button></div>
     <div id="featured" class="featured"></div>
   </section>
 
   <section>
-    <div class="section-title"><h2>Cardápio</h2></div>
-    <div id="products" class="category-sections"></div>
+    <div class="section-title"><h2 id="productsTitle">Cardápio</h2></div>
+    <div id="products" class="products"></div>
   </section>
 </main>
 
@@ -47,6 +52,7 @@
 </nav>
 
 <div id="shade" class="shade"></div>
+
 <aside id="cartDrawer" class="drawer">
   <div class="drawer-head"><div><small>SUA SACOLA</small><h2>Seu pedido</h2></div><button class="close" id="closeCart">×</button></div>
   <div id="cartItems"></div>
@@ -65,20 +71,25 @@
 <div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-card">
   <button class="modal-close" id="checkoutClose">×</button>
   <div class="checkout-head"><small>FINALIZAÇÃO</small><h2>Como você quer receber?</h2><p>Preencha seus dados e escolha a forma de pagamento.</p></div>
+
   <div class="receive-grid">
     <button class="receive" data-method="entrega"><span>🛵</span><b>Entrega</b><small>Receba em casa</small></button>
     <button class="receive" data-method="retirada"><span>🚶</span><b>Retirada</b><small>Retire no local</small></button>
   </div>
+
   <div id="savedBox" class="saved hidden"><div><small>ENDEREÇO SALVO</small><b id="savedText"></b></div><button id="changeAddress">Trocar</button></div>
+
   <form id="checkoutForm">
     <h3>Seus dados</h3>
     <input id="customerName" required placeholder="Nome completo *">
     <input id="customerPhone" required inputmode="tel" placeholder="WhatsApp (DDD + celular) *">
+
     <div id="deliveryBox" class="hidden">
       <select id="neighborhood"><option value="">Bairro *</option></select>
       <input id="address" placeholder="Endereço *">
       <input id="reference" placeholder="Ponto de referência *">
     </div>
+
     <label class="label">Forma de pagamento *</label>
     <select id="payment" required>
       <option value="">Selecione *</option>
@@ -87,12 +98,15 @@
       <option value="Cartão de débito">Cartão de débito</option>
       <option value="Dinheiro">Dinheiro</option>
     </select>
+
     <div id="cashBox" class="cash hidden">
       <input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *">
       <div id="change" class="change"></div>
     </div>
+
     <label class="label">Observação do pedido</label>
     <textarea id="orderNote" rows="3" placeholder="Alguma observação?"></textarea>
+
     <div class="checkout-summary">
       <div><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></div>
       <div><span>Taxa</span><b id="checkoutFee">R$ 0,00</b></div>
@@ -109,6 +123,5 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="categorias-fixas.js"></script>
 </body>
 </html>

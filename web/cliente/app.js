@@ -2,7 +2,7 @@ const SUPABASE_URL="https://lifsxhyeqwppfvajvhpn.supabase.co";
 const SUPABASE_KEY="sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let products=[],categories=[],cart=[],selectedCategory="todos",receiveMethod=null,neighborhoods=[];
+let products=[],categories=[],cart=[],selectedCategory="",receiveMethod=null,neighborhoods=[];
 const ADDRESS_KEY="miguel_lanches_cliente_v1";
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -35,31 +35,59 @@ async function loadNeighborhoods(){
 }
 
 function renderCategories(){
- $("categories").innerHTML=`<button class="${selectedCategory==="todos"?"active":""}" onclick="selectCategory('todos')"><span class="cat-emoji">🍽️</span>Todos</button>`+
- categories.map(c=>`<button class="${String(selectedCategory)===String(c.id)?"active":""}" onclick="selectCategory('${esc(c.id)}')"><span class="cat-emoji">${esc(c.emoji||"📦")}</span>${esc(c.nome)}</button>`).join("");
+ $("categories").innerHTML=categories.map(c=>`<button class="${String(selectedCategory)===String(c.id)?"active":""}" onclick="selectCategory('${esc(c.id)}')"><span class="cat-emoji">${esc(c.emoji||"📦")}</span>${esc(c.nome)}</button>`).join("");
 }
 
-function selectCategory(c){selectedCategory=c;renderCategories();renderProducts();document.getElementById("productsTitle").scrollIntoView({behavior:"smooth",block:"start"})}
+function selectCategory(c){
+ selectedCategory=String(c);
+ renderCategories();
+ requestAnimationFrame(()=>{
+   const target=document.getElementById(`cat-section-${CSS.escape(String(c))}`);
+   if(target) target.scrollIntoView({behavior:"smooth",block:"start"});
+ });
+}
 
 function productCategory(p){return String(p.categoria_id||"")}
+
 function listProducts(){
  const q=norm($("search").value);
- let list=products.filter(p=>{
-   const categoryOk=selectedCategory==="todos"||productCategory(p)===String(selectedCategory);
-   const searchOk=!q||norm(p.nome).includes(q)||norm(p.descricao).includes(q);
-   return categoryOk&&searchOk;
- });
- if(selectedCategory==="todos"){
-   const order=new Map(categories.map((c,i)=>[String(c.id),Number(c.ordem??i)]));
-   list.sort((a,b)=>(order.get(productCategory(a))??99999)-(order.get(productCategory(b))??99999)||Number(a.ordem??99999)-Number(b.ordem??99999)||String(a.nome).localeCompare(String(b.nome)));
- }
- return list;
+ const order=new Map(categories.map((c,i)=>[String(c.id),Number(c.ordem??i)]));
+ return products
+   .filter(p=>{
+     const searchOk=!q||norm(p.nome).includes(q)||norm(p.descricao).includes(q);
+     return searchOk;
+   })
+   .sort((a,b)=>
+     (order.get(productCategory(a))??99999)-(order.get(productCategory(b))??99999) ||
+     Number(a.ordem??99999)-Number(b.ordem??99999) ||
+     String(a.nome).localeCompare(String(b.nome))
+   );
 }
 
 function renderProducts(){
- const list=listProducts();
- $("productsTitle").textContent=selectedCategory==="todos"?"Cardápio":(categories.find(c=>String(c.id)===String(selectedCategory))?.nome||"Cardápio");
- $("products").innerHTML=list.length?list.map(card).join(""):'<div class="empty" style="grid-column:1/-1">Nenhum produto encontrado.</div>';
+ const q=norm($("search").value);
+ const order=categories.map((c,i)=>({cat:c,order:Number(c.ordem??i)}))
+   .sort((a,b)=>a.order-b.order);
+
+ const byCat=new Map();
+ listProducts().forEach(p=>{
+   const key=productCategory(p);
+   if(!byCat.has(key)) byCat.set(key,[]);
+   byCat.get(key).push(p);
+ });
+
+ let html="";
+ order.forEach(({cat})=>{
+   const items=byCat.get(String(cat.id))||[];
+   if(q && !items.length) return;
+   html += `<section class="category-section" id="cat-section-${esc(cat.id)}" data-category-id="${esc(cat.id)}">
+      <div class="category-section-title"><span class="cat-title-emoji">${esc(cat.emoji||"📦")}</span><h2>${esc(cat.nome)}</h2></div>
+      <div class="products-grid">${items.length ? items.map(card).join("") : '<div class="empty" style="grid-column:1/-1">Nenhum produto nesta categoria.</div>'}</div>
+   </section>`;
+ });
+
+ $("productsTitle").textContent=q?"Resultados":"Cardápio";
+ $("products").innerHTML=html || '<div class="empty" style="grid-column:1/-1">Nenhum produto encontrado.</div>';
 }
 
 function card(p){
@@ -218,8 +246,17 @@ async function sendOrder(e){
  cart=[];renderCart();closeCheckout();$("orderNumber").textContent=`Pedido #${num}`;$("successModal").classList.remove("hidden");
 }
 
-$("search").addEventListener("input",()=>{renderProducts();$("featuredSection").classList.toggle("hidden",!!$("search").value.trim())});
-$("clearSearch").onclick=()=>{$("search").value="";selectedCategory="todos";renderCategories();renderProducts();$("featuredSection").classList.remove("hidden")};
+$("search").addEventListener("input",()=>{
+ renderProducts();
+ $("featuredSection").classList.toggle("hidden",!!$("search").value.trim());
+});
+$("clearSearch").onclick=()=>{
+ $("search").value="";
+ selectedCategory="";
+ renderCategories();
+ renderProducts();
+ $("featuredSection").classList.remove("hidden");
+};
 $("headerCart").onclick=openCart;$("navCart").onclick=openCart;$("closeCart").onclick=closeCart;$("shade").onclick=closeCart;$("clearCart").onclick=clearCart;$("shopNow").onclick=closeCart;
 $("checkoutBtn").onclick=checkout;$("productClose").onclick=closeProduct;$("checkoutClose").onclick=closeCheckout;$("successClose").onclick=()=>$("successModal").classList.add("hidden");
 document.querySelectorAll(".receive").forEach(b=>b.onclick=()=>selectReceive(b.dataset.method));
