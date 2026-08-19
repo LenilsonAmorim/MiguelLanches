@@ -1,121 +1,146 @@
-/* Miguel Lanches - Correção definitiva do configurador de Açaí */
+/* Miguel Lanches — Açaí em 4 produtos independentes.
+   Substitui o seletor de tamanho apenas para:
+   Açaí 200 ml, Açaí 300 ml, Açaí 500 ml e Açaí 1 litro.
+   Ao abrir um deles, o tamanho já está definido e aparecem somente
+   as coberturas/configuração do Açaí + quantidade + observação.
+*/
 (() => {
-  const money = v => Number(v || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-  const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-  const $ = id => document.getElementById(id);
+  const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+  const esc=s=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-  function currentProduct(id){
-    return (window.products || []).find(p => String(p.id) === String(id));
+  function acaiSize(name){
+    const n=norm(name);
+    if(n.includes("200 ml"))return "200 ml";
+    if(n.includes("300 ml"))return "300 ml";
+    if(n.includes("500 ml"))return "500 ml";
+    if(n.includes("1 litro"))return "1 litro";
+    return null;
   }
 
-  window.openAcai = function(p, category){
-    const sizes = Array.isArray(window.acaiCfg?.tamanhos) && window.acaiCfg.tamanhos.length
-      ? window.acaiCfg.tamanhos : [
-          {nome:"200 ml",preco:0},{nome:"300 ml",preco:0},
-          {nome:"500 ml",preco:0},{nome:"1 litro",preco:0}
-        ];
-    const tops = Array.isArray(window.acaiCfg?.coberturas) ? window.acaiCfg.coberturas : [];
-    const obsAllowed = !category || category.observacao !== false;
+  async function config(key,fallback){
+    const r=await db.from("configuracoes").select("valor").eq("chave",key).maybeSingle();
+    if(r.error)return fallback;
+    try{return JSON.parse(r.data?.valor||"null")??fallback}catch{return fallback}
+  }
 
-    const sizeHtml = sizes.map((s,i) =>
-      '<label class="check" style="display:flex;align-items:center;gap:12px;">' +
-      '<input type="radio" name="mlAcaiSize" value="'+i+'" '+(i===0?'checked':'')+
-      ' data-name="'+esc(s.nome)+'" data-price="'+Number(s.preco||0)+'">' +
-      '<span>'+esc(s.nome)+' — '+money(s.preco)+'</span></label>'
-    ).join("");
+  window.openProduct=function(id){
+    const p=products.find(x=>String(x.id)===String(id));
+    if(!p)return;
 
-    const topHtml = tops.map((t,i) =>
-      '<label class="check" style="display:flex;align-items:center;gap:12px;">' +
-      '<input class="mlAcaiTop" type="checkbox" value="'+i+
-      '" data-name="'+esc(t.nome)+'" data-price="'+Number(t.preco||0)+'">' +
-      '<span>'+esc(t.nome)+(Number(t.preco||0)>0?' + '+money(t.preco):'')+'</span></label>'
-    ).join("");
+    const size=acaiSize(p.nome);
+    if(!size){
+      /* produto normal: usa a função original preservada abaixo */
+      return window._mlOpenProductOriginal(id);
+    }
+    openAcaiFixed(p,size);
+  };
 
-    let html =
-      '<h2>🍧 '+esc(p.nome)+'</h2>' +
-      '<div class="form">' +
-      '<label>Tamanho</label>' +
-      '<div class="checks">'+sizeHtml+'</div>' +
-      '<label>Coberturas <small>(escolha até 3)</small></label>' +
-      '<div class="checks" id="mlAcaiTops">'+
-      (topHtml || '<p class="muted">Nenhuma cobertura cadastrada ainda.</p>')+
-      '</div>';
+  async function openAcaiFixed(p,size){
+    const topsCfg=await config("acai_coberturas",[]);
+    let tops=Array.isArray(topsCfg)?topsCfg.filter(x=>x.ativo!==false):[];
 
-    if(obsAllowed){
-      html += '<label>Observação<textarea id="itemObs" placeholder="Ex.: sem açúcar..."></textarea></label>';
+    /* Também aceita a estrutura nova acai_config, se ela existir. */
+    if(!tops.length){
+      const cfg=await config("acai_config",{});
+      if(Array.isArray(cfg.coberturas))tops=cfg.coberturas.filter(x=>x.ativo!==false);
     }
 
-    html +=
-      '<label>Quantidade<input id="qty" type="number" min="1" value="1"></label>' +
-      '<div class="actions">' +
-      '<button type="button" id="mlAcaiBack">Voltar</button>' +
-      '<button type="button" class="primary" id="mlAcaiAdd">Adicionar</button>' +
-      '</div></div>';
+    $("modalContent").innerHTML=`
+      <h2>🍧 ${esc(p.nome)}</h2>
+      <p class="muted">Escolha as coberturas e a quantidade.</p>
+      <div class="form">
+        <div style="padding:12px 14px;border-radius:12px;background:#f4f5f7;font-weight:800">
+          Tamanho: ${esc(size)} · ${money(p.preco)}
+        </div>
 
-    $("modalContent").innerHTML = html;
+        ${tops.length?`
+          <label>Coberturas <small>(escolha até 3)</small></label>
+          <div class="checks">
+            ${tops.map((t,i)=>`
+              <label class="check">
+                <input class="mlAcaiTop" type="checkbox"
+                  value="${i}"
+                  data-name="${esc(t.nome)}"
+                  data-price="${Number(t.preco||0)}">
+                ${esc(t.nome)}${Number(t.preco||0)>0?" + "+money(t.preco):""}
+              </label>`).join("")}
+          </div>`:
+          `<p class="muted">Nenhuma cobertura cadastrada.</p>`}
+
+        <label>Quantidade
+          <div style="display:flex;align-items:center;justify-content:center;gap:22px">
+            <button type="button" id="mlAcaiMinus" style="width:48px;height:48px;font-size:28px;font-weight:900">−</button>
+            <b id="mlAcaiQtyValue" style="font-size:22px">1</b>
+            <button type="button" id="mlAcaiPlus" style="width:48px;height:48px;font-size:28px;font-weight:900">+</button>
+          </div>
+        </label>
+
+        <input id="mlAcaiQty" type="hidden" value="1">
+
+        <label>Observação
+          <textarea id="itemObs" placeholder="Ex.: sem granola..."></textarea>
+        </label>
+
+        <div class="actions">
+          <button onclick="closeModal()">Voltar</button>
+          <button class="primary" id="mlAcaiAdd">Adicionar ao pedido</button>
+        </div>
+      </div>`;
+
     $("modal").classList.remove("hidden");
 
-    document.querySelectorAll(".mlAcaiTop").forEach(cb => {
-      cb.addEventListener("change", () => {
-        const selected = document.querySelectorAll(".mlAcaiTop:checked").length;
-        if(selected >= 3){
-          document.querySelectorAll(".mlAcaiTop:not(:checked)").forEach(x => x.disabled = true);
-        }else{
-          document.querySelectorAll(".mlAcaiTop").forEach(x => x.disabled = false);
-        }
+    const sync=()=>{
+      const v=Math.max(1,Number($("mlAcaiQty").value||1));
+      $("mlAcaiQty").value=v;
+      $("mlAcaiQtyValue").textContent=v;
+    };
+    $("mlAcaiMinus").onclick=()=>{
+      $("mlAcaiQty").value=Math.max(1,Number($("mlAcaiQty").value||1)-1);sync();
+    };
+    $("mlAcaiPlus").onclick=()=>{
+      $("mlAcaiQty").value=Number($("mlAcaiQty").value||1)+1;sync();
+    };
+
+    document.querySelectorAll(".mlAcaiTop").forEach(cb=>{
+      cb.addEventListener("change",()=>{
+        const checked=[...document.querySelectorAll(".mlAcaiTop:checked")];
+        document.querySelectorAll(".mlAcaiTop:not(:checked)").forEach(x=>{
+          x.disabled=checked.length>=3;
+        });
       });
     });
 
-    $("mlAcaiBack").onclick = () => {
-      if(typeof window.closeModal === "function") window.closeModal();
+    $("mlAcaiAdd").onclick=()=>{
+      const qty=Math.max(1,Number($("mlAcaiQty").value||1));
+      const adds=[...document.querySelectorAll(".mlAcaiTop:checked")].map(x=>({
+        nome:x.dataset.name,preco:Number(x.dataset.price||0)
+      }));
+      const obs=$("itemObs").value.trim();
+      const unit=Number(p.preco||0)+adds.reduce((s,x)=>s+x.preco,0);
+
+      cart.push({
+        key:uid(),id:p.id,nome:p.nome,preco:unit,quantidade:qty,
+        adicionais:adds,obs
+      });
+      closeModal();
+      renderCart();
     };
-    $("mlAcaiAdd").onclick = () => window.mlAddAcai(p.id);
-  };
+  }
 
-  window.mlAddAcai = function(id){
-    const p = currentProduct(id);
-    if(!p) return alert("Produto Açaí não encontrado.");
-
-    const q = Math.max(1, Number($("qty")?.value || 1));
-    const size = document.querySelector('input[name="mlAcaiSize"]:checked');
-    const tops = [...document.querySelectorAll(".mlAcaiTop:checked")];
-
-    if(tops.length > 3){
-      return alert("Você pode escolher no máximo 3 coberturas.");
-    }
-
-    const sizeName = size?.dataset.name || "200 ml";
-    const sizePrice = Number(size?.dataset.price || 0);
-    const additions = tops.map(x => ({
-      nome:x.dataset.name || "",
-      preco:Number(x.dataset.price || 0)
-    }));
-    const obs = $("itemObs")?.value.trim() || "";
-    const price = Number(p.preco || 0) + sizePrice +
-      additions.reduce((sum,x)=>sum+x.preco,0);
-
-    if(!Array.isArray(window.cart)) window.cart = [];
-    window.cart.push({
-      key: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())),
-      id:p.id,
-      nome:p.nome+" ("+sizeName+")",
-      preco:price,
-      quantidade:q,
-      adicionais:additions,
-      obs:obs
-    });
-
-    if(typeof window.closeModal === "function") window.closeModal();
-    if(typeof window.renderCart === "function") window.renderCart();
-  };
-
-  // app.js loads before this file and defines its own openAcai.
-  // Re-apply the override after the page has settled.
-  const install = () => {
-    if(window.products && window.acaiCfg) {
-      window.openAcai = window.openAcai;
+  /* Captura a função original antes de qualquer outro patch sobrescrever. */
+  const boot=()=>{
+    if(typeof window.openProduct==="function" && !window._mlOpenProductOriginal){
+      window._mlOpenProductOriginal=window.openProduct;
+      /* reatribui para nossa função */
+      window.openProduct=function(id){
+        const p=products.find(x=>String(x.id)===String(id));
+        const size=p&&acaiSize(p.nome);
+        return size?openAcaiFixed(p,size):window._mlOpenProductOriginal(id);
+      };
     }
   };
-  setTimeout(install,50);
+  setTimeout(boot,0);
+  setTimeout(boot,100);
+  setTimeout(boot,500);
 })();
