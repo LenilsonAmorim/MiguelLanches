@@ -1,37 +1,26 @@
 const SUPABASE_URL="https://lifsxhyeqwppfvajvhpn.supabase.co";
 const SUPABASE_KEY="sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-let products=[],cats=[],cart=[],cat="todos",bairros=[],receiveMethod=null;
+let products=[],cats=[],cart=[],cat="todos",catCfg={},acaiCfg={tamanhos:[],coberturas:[]};
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 const uid=()=>crypto.randomUUID();
-const PROFILE_KEY="miguel_lanches_cliente_endereco";
-
-async function categoryConfig(id){
- const r=await db.from("configuracoes").select("valor").eq("chave","categoria_config").maybeSingle();
- let all={};try{all=JSON.parse(r.data?.valor||"{}")}catch{}
- return all[String(id)]||{ingredientes:true,observacao:true};
-}
-async function loadBairros(){
- const r=await db.from("bairros").select("id,nome,taxa_entrega,ativo").eq("ativo",true).order("nome");
- bairros=r.data||[];
- $("bairro").innerHTML='<option value="">Selecione o bairro *</option>'+bairros.map(b=>`<option value="${esc(b.id)}">${esc(b.nome)} — ${money(b.taxa_entrega)}</option>`).join("");
-}
+const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+async function cfg(key,fallback){const r=await db.from("configuracoes").select("valor").eq("chave",key).maybeSingle();try{return JSON.parse(r.data?.valor||"null")??fallback}catch{return fallback}}
 async function init(){
- const [c,p]=await Promise.all([
+ const [c,p,cc,aa]=await Promise.all([
   db.from("categorias").select("*").eq("ativo",true).order("ordem"),
-  db.from("produtos").select("*,categorias(nome,emoji)").eq("ativo",true).order("ordem")
+  db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem"),
+  cfg("categoria_config",{}),cfg("acai_config",{tamanhos:[],coberturas:[]})
  ]);
- cats=c.data||[];products=p.data||[];
- await loadBairros();
- renderCats();renderProducts();renderCart();renderAlso();
- loadSavedProfile();
+ if(c.error||p.error){$("products").innerHTML='<div class="empty">Não foi possível carregar o cardápio.</div>';return}
+ cats=c.data||[];products=p.data||[];catCfg=cc||{};acaiCfg=aa||{tamanhos:[],coberturas:[]};renderCats();renderProducts();
 }
+function catSettings(){return cat==="todos"?{ingredientes:false,observacao:true}:(catCfg[cat]||{ingredientes:true,observacao:true})}
 function renderCats(){
- $("categories").innerHTML=`<button class="${cat==="todos"?"active":""}" onclick="chooseCat('todos')">🍽️ Todos</button>`+
- cats.map(c=>`<button class="${String(cat)===String(c.id)?"active":""}" onclick="chooseCat('${c.id}')">${esc(c.emoji||"📦")} ${esc(c.nome)}</button>`).join("");
+ const all=`<button class="${cat==="todos"?"active":""}" onclick="chooseCat('todos')">🍽️ Todos</button>`;
+ $("categories").innerHTML=all+cats.map(c=>`<button class="${String(cat)===String(c.id)?"active":""}" onclick="chooseCat('${c.id}')">${c.imagem_url?`<img class="cat-icon" src="${esc(c.imagem_url)}" alt="" onerror="this.style.display='none'">`:esc(c.emoji||"📦")} ${esc(c.nome)}</button>`).join("");
 }
 function chooseCat(id){cat=id;renderCats();renderProducts()}
 function renderProducts(){
@@ -41,118 +30,37 @@ function renderProducts(){
 }
 async function openProduct(id){
  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
- const catName=(p.categorias?.nome||"").toLowerCase();
- if(catName.includes("açaí")||catName.includes("acai")){await openAcaiConfigurator(p);return}
- const cfg=await categoryConfig(p.categoria_id);let addons="";
- if(cfg.ingredientes){
-  const rel=await db.from("produto_ingredientes").select("ingrediente_id").eq("produto_id",id);
-  const allowed=new Set((rel.data||[]).map(x=>String(x.ingrediente_id)));
-  const ing=await db.from("ingredientes").select("*").eq("ativo",true).order("nome");
-  const list=(ing.data||[]).filter(x=>allowed.has(String(x.id)));
-  if(list.length)addons=`<label>Ingredientes adicionais</label><div class="checks">${list.map(i=>`<label class="check"><input type="checkbox" value="${i.id}" data-name="${esc(i.nome)}" data-price="${i.preco}"> ${esc(i.nome)} + ${money(i.preco)}</label>`).join("")}</div>`;
- }
- $("modalContent").innerHTML=`<h2>${esc(p.nome)}</h2><div class="form"><label>Quantidade<input id="qty" type="number" min="1" value="1"></label>${addons}${cfg.observacao?`<label>Observação<textarea id="itemObs" placeholder="Ex.: sem cebola..."></textarea></label>`:""}<div class="actions"><button onclick="closeModal()">Voltar</button><button class="primary" onclick="addConfigured('${p.id}',${cfg.ingredientes},${cfg.observacao})">Adicionar</button></div></div>`;
+ const category=catCfg[p.categoria_id]||{ingredientes:true,observacao:true};
+ const isAcai=norm(p.nome).includes("acai");
+ const rel=await db.from("produto_ingredientes").select("ingrediente_id").eq("produto_id",id);
+ const allowed=new Set((rel.data||[]).map(x=>String(x.ingrediente_id)));
+ const ing=await db.from("ingredientes").select("*").eq("ativo",true).order("nome");
+ let list=(ing.data||[]).filter(x=>allowed.has(String(x.id)));
+ if(category.ingredientes!==false && !list.length && !isAcai) list=ing.data||[];
+ if(category.ingredientes===false) list=[];
+ if(isAcai){openAcai(p,category);return;}
+ $("modalContent").innerHTML=`<h2>${esc(p.nome)}</h2><div class="form"><label>Quantidade<input id="qty" type="number" min="1" value="1"></label>${list.length?`<label>Ingredientes adicionais</label><div class="checks">${list.map(i=>`<label class="check"><input type="checkbox" value="${i.id}" data-name="${esc(i.nome)}" data-price="${i.preco}"> ${esc(i.nome)} + ${money(i.preco)}</label>`).join("")}</div>`:""}${category.observacao!==false?`<label>Observação<textarea id="itemObs" placeholder="Ex.: sem cebola..."></textarea></label>`:""}<div class="actions"><button onclick="closeModal()">Voltar</button><button class="primary" onclick="addProduct('${p.id}')">Adicionar</button></div></div>`;
  $("modal").classList.remove("hidden");
+}
+function openAcai(p,category){
+ const sizes=Array.isArray(acaiCfg.tamanhos)&&acaiCfg.tamanhos.length?acaiCfg.tamanhos:[{nome:"200 ml",preco:0},{nome:"300 ml",preco:0},{nome:"500 ml",preco:0},{nome:"1 litro",preco:0}];
+ const tops=Array.isArray(acaiCfg.coberturas)?acaiCfg.coberturas:[];
+ $("modalContent").innerHTML=`<h2>🍧 ${esc(p.nome)}</h2><div class="form"><label>Tamanho</label><div class="checks">${sizes.map((s,i)=>`<label class="check"><input type="radio" name="acaiSize" value="${i}" ${i===0?'checked':''} data-name="${esc(s.nome)}" data-price="${Number(s.preco||0)}"> ${esc(s.nome)} — ${money(s.preco)}</label>`).join("")}</div>${tops.length?`<label>Coberturas <small>(escolha até 3)</small></label><div class="checks" id="acaiTops">${tops.map((t,i)=>`<label class="check"><input class="acai-top" type="checkbox" value="${i}" data-name="${esc(t.nome)}" data-price="${Number(t.preco||0)}"> ${esc(t.nome)}${Number(t.preco||0)>0?' + '+money(t.preco):''}</label>`).join("")}</div>`:`<p class="muted">Nenhuma cobertura cadastrada ainda.</p>`}${category.observacao!==false?`<label>Observação<textarea id="itemObs" placeholder="Ex.: sem açúcar...</textarea></label>`:""}<label>Quantidade<input id="qty" type="number" min="1" value="1"></label><div class="actions"><button onclick="closeModal()">Voltar</button><button class="primary" onclick="addAcai('${p.id}')">Adicionar</button></div></div>`;
+ $("modal").classList.remove("hidden");
+ document.querySelectorAll('.acai-top').forEach(cb=>cb.addEventListener('change',()=>{const checked=[...document.querySelectorAll('.acai-top:checked')];if(checked.length>=3){document.querySelectorAll('.acai-top:not(:checked)').forEach(x=>x.disabled=true)}else document.querySelectorAll('.acai-top').forEach(x=>x.disabled=false)}));
 }
 function closeModal(){$("modal").classList.add("hidden")}
-async function addConfigured(id,hasIng,hasObs){
- const p=products.find(x=>String(x.id)===String(id)),q=Math.max(1,Number($("qty").value||1));
- const adds=hasIng?[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)})):[];
- const obs=hasObs?($("itemObs")?.value.trim()||""):"";
- cart.push({key:uid(),id:p.id,nome:p.nome,preco:Number(p.preco)+adds.reduce((s,x)=>s+x.preco,0),quantidade:q,adicionais:adds,obs,coberturas:[]});
- closeModal();renderCart();
+function addAcai(id){
+ const p=products.find(x=>String(x.id)===String(id));const q=Math.max(1,Number($("qty").value||1));const s=document.querySelector('input[name="acaiSize"]:checked');
+ const adds=[...document.querySelectorAll('.acai-top:checked')].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)}));
+ const sizeName=s?.dataset.name||"";const sizePrice=Number(s?.dataset.price||0);const obs=$("itemObs")?.value.trim()||"";const price=Number(p.preco)+sizePrice+adds.reduce((a,x)=>a+x.preco,0);
+ cart.push({key:uid(),id:p.id,nome:`${p.nome} (${sizeName})`,preco:price,quantidade:q,adicionais:adds,obs});closeModal();renderCart();
 }
-const ACAI_TAMANHOS=["200 ml","300 ml","500 ml","1 litro"];
-async function loadAcaiCoberturas(){
- const r=await db.from("configuracoes").select("valor").eq("chave","acai_coberturas").maybeSingle();
- try{return JSON.parse(r.data?.valor||"[]")}catch{return[]}
-}
-async function openAcaiConfigurator(p){
- const covers=(await loadAcaiCoberturas()).filter(x=>x&&x.ativo!==false);window._acaiProduct=p;
- $("modalContent").innerHTML=`<h2>🍧 Monte seu Açaí</h2><div class="form"><label>Tamanho</label><div class="checks">${ACAI_TAMANHOS.map(t=>`<label class="check"><input type="radio" name="acaiSize" value="${t}"> ${t}</label>`).join("")}</div><label>Escolha até 3 coberturas</label><div class="checks">${covers.length?covers.map(c=>`<label class="check"><input type="checkbox" value="${esc(c.nome)}" onchange="acaiLimit(this)"> ${esc(c.nome)}</label>`).join(""):"<small>Nenhuma cobertura cadastrada.</small>"}</div><small id="acaiCount">0/3 coberturas</small><div class="actions"><button onclick="closeModal()">Voltar</button><button class="primary" onclick="addAcai()">Adicionar</button></div></div>`;
- $("modal").classList.remove("hidden");
-}
-window.acaiLimit=el=>{const all=[...document.querySelectorAll("#modalContent input[type=checkbox]")];if(all.filter(x=>x.checked).length>3){el.checked=false;alert("Máximo de 3 coberturas.");}$("acaiCount").textContent=`${all.filter(x=>x.checked).length}/3 coberturas`};
-window.addAcai=()=>{const size=document.querySelector('input[name="acaiSize"]:checked');if(!size)return alert("Escolha o tamanho.");const covers=[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>x.value);const p=window._acaiProduct;cart.push({key:uid(),id:p.id,nome:`${p.nome} — ${size.value}`,preco:Number(p.preco||0),quantidade:1,adicionais:[],obs:"",coberturas:covers});closeModal();renderCart()};
-
-function subtotal(){return cart.reduce((s,x)=>s+x.preco*x.quantidade,0)}
-function selectedBairro(){return bairros.find(b=>String(b.id)==String($("bairro").value))}
-function deliveryFee(){return receiveMethod==="entrega"?Number(selectedBairro()?.taxa_entrega||0):0}
-function total(){return subtotal()+deliveryFee()}
-
-function renderCart(){
- const count=cart.reduce((s,x)=>s+x.quantidade,0);$("cartCount").textContent=count;$("cartItemCount").textContent=`${count} ${count===1?"item":"itens"}`;
- $("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cartItem"><div class="cartLine"><span>${x.quantidade}x ${esc(x.nome)}</span><span class="cartPrice">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<small>+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</small>`:""}${x.coberturas?.length?`<small>Coberturas: ${x.coberturas.map(esc).join(", ")}</small>`:""}${x.obs?`<small>${esc(x.obs)}</small>`:""}<div class="qty"><button onclick="changeQty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="changeQty('${x.key}',1)">+</button><button class="remove" onclick="removeItem('${x.key}')">Remover</button></div></div>`).join(""):'<div class="empty">Sua sacola está vazia.</div>';
- updateSummary();
-}
-function changeQty(k,d){const x=cart.find(x=>x.key===k);if(!x)return;x.quantidade+=d;if(x.quantidade<1)cart=cart.filter(y=>y.key!==k);renderCart()}
+function addProduct(id){const p=products.find(x=>String(x.id)===String(id));let q=Math.max(1,Number($("qty").value||1));const adds=[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>({nome:x.dataset.name,preco:Number(x.dataset.price||0)}));const obs=$("itemObs")?.value.trim()||"";const price=Number(p.preco)+adds.reduce((s,x)=>s+x.preco,0);cart.push({key:uid(),id:p.id,nome:p.nome,preco:price,quantidade:q,adicionais:adds,obs});closeModal();renderCart()}
+function renderCart(){const n=cart.reduce((s,x)=>s+x.quantidade,0);$("cartCount").textContent=n;$("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cartItem"><div class="cartLine"><span class="cartName">${x.quantidade}x ${esc(x.nome)}</span><span class="cartPrice">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<small>+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</small>`:""}${x.obs?`<small>${esc(x.obs)}</small>`:""}<div class="qty"><button onclick="qty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="qty('${x.key}',1)">+</button><button class="remove" onclick="removeItem('${x.key}')">Excluir</button></div></div>`).join(""):'<div class="empty">Seu pedido está vazio.<br>Toque no + para adicionar.</div>';$("total").textContent=money(cart.reduce((s,x)=>s+x.preco*x.quantidade,0))}
+function qty(k,d){const x=cart.find(x=>x.key===k);if(!x)return;x.quantidade+=d;if(x.quantidade<1)cart=cart.filter(y=>y.key!==k);renderCart()}
 function removeItem(k){cart=cart.filter(x=>x.key!==k);renderCart()}
-function updateSummary(){
- const sub=subtotal(),fee=deliveryFee(),tot=sub+fee;
- $("subtotal").textContent=money(sub);$("deliveryFee").textContent=money(fee);$("total").textContent=money(tot);$("bottomCartTotal").textContent=money(tot);
- $("checkoutSubtotal").textContent=money(sub);$("checkoutFee").textContent=money(fee);$("checkoutTotal").textContent=money(tot);
- if($("pagamento").value==="Dinheiro")updateTroco(tot);
-}
-function renderAlso(){
- const list=products.slice(0,8);
- $("alsoProducts").innerHTML=list.map(p=>`<div class="also-card"><div class="also-photo">${p.imagem_url?`<img src="${esc(p.imagem_url)}">`:esc(p.emoji||"🍔")}</div><b>${esc(p.nome)}</b><span class="price">${money(p.preco)}</span><button onclick="openProduct('${p.id}')">Adicionar</button></div>`).join("");
-}
-function openCart(){if(!cart.length){alert("Sua sacola está vazia.");return}$("cart").classList.add("open");$("overlay").classList.add("open")}
-function closeCart(){$("cart").classList.remove("open");$("overlay").classList.remove("open")}
-function clearCart(){if(cart.length&&!confirm("Limpar toda a sacola?"))return;cart=[];renderCart()}
-function openCheckout(){
- if(!cart.length)return alert("Adicione pelo menos um item.");
- closeCart();$("checkout").classList.remove("hidden");loadSavedProfile();updateSummary();
-}
-function closeCheckout(){$("checkout").classList.add("hidden")}
-function chooseReceive(method){
- receiveMethod=method;
- document.querySelectorAll(".receive-option").forEach(b=>b.classList.toggle("active",b.dataset.method===method));
- $("customerSection").classList.remove("hidden");
- $("deliveryFields").classList.toggle("hidden",method!=="entrega");
- if(method!=="entrega"){$("bairro").value="";$("endereco").value="";$("referencia").value=""}
- updateSummary();
-}
-function saveProfile(){
- const profile={nome:$("nome").value.trim(),telefone:$("telefone").value.trim(),bairroId:$("bairro").value,endereco:$("endereco").value.trim(),referencia:$("referencia").value.trim()};
- localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));
-}
-function loadSavedProfile(){
- try{
-  const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||"null");if(!p)return;
-  $("nome").value=p.nome||"";$("telefone").value=p.telefone||"";$("bairro").value=p.bairroId||"";$("endereco").value=p.endereco||"";$("referencia").value=p.referencia||"";
-  if(p.endereco||p.bairroId){$("savedAddress").classList.remove("hidden");$("savedAddressText").textContent=`${p.endereco||""}${p.bairroId?" • "+(bairros.find(b=>String(b.id)===String(p.bairroId))?.nome||""):""}`;}
- }catch{}
-}
-function changeSavedAddress(){$("savedAddress").classList.add("hidden");$("deliveryFields").classList.remove("hidden");$("endereco").focus()}
-function updateTroco(tot){const v=Number($("valorPago").value||0),t=v-tot;$("trocoPreview").textContent=t>=0?`Troco: ${money(t)}`:"Valor insuficiente."}
-function validPhone(v){const n=String(v||"").replace(/\D/g,"");return /^(?:[1-9]{2})9\d{8}$/.test(n)}
-async function sendOrder(){
- if(!cart.length)return alert("Adicione pelo menos um item.");
- if(!receiveMethod)return alert("Escolha Entrega ou Retirada.");
- const nome=$("nome").value.trim(),phone=$("telefone").value.trim(),pag=$("pagamento").value;
- if(!nome)return alert("Informe seu nome.");
- if(!validPhone(phone))return alert("WhatsApp inválido. Digite um celular com DDD.");
- let bairro=null,end="",ref="";
- if(receiveMethod==="entrega"){bairro=selectedBairro();end=$("endereco").value.trim();ref=$("referencia").value.trim();if(!bairro)return alert("Selecione o bairro.");if(!end)return alert("Informe o endereço.");if(!ref)return alert("Informe a referência.")}
- if(!pag)return alert("Selecione a forma de pagamento.");
- const sub=subtotal(),fee=deliveryFee(),tot=sub+fee,valorPago=pag==="Dinheiro"?Number($("valorPago").value||0):0;
- if(pag==="Dinheiro"&&valorPago<tot)return alert(`O valor pago precisa ser pelo menos ${money(tot)}.`);
- const troco=pag==="Dinheiro"?valorPago-tot:0;
- const items=cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,coberturas:x.coberturas||[],obs:x.obs}));
- const obs=`${$("observacoes").value.trim()}\n[ML_ITENS]${encodeURIComponent(JSON.stringify(items))}[/ML_ITENS]\n[ML_RECEBIMENTO]${receiveMethod}[/ML_RECEBIMENTO]\n[ML_BAIRRO]${encodeURIComponent(bairro?.nome||"")}[/ML_BAIRRO]\n[ML_STATUS]preparo[/ML_STATUS]`;
- const r=await db.from("pedidos").insert({Cliente:nome,telefone:phone,bairro:bairro?.nome||"",taxa_entrega:fee,endereco:end,referencia:ref,forma_pagamento:pag,valor_pago:valorPago,troco,total:tot,observacoes:obs});
- if(r.error)return alert("Erro ao enviar pedido: "+r.error.message);
- saveProfile();cart=[];renderCart();closeCheckout();alert("Pedido enviado com sucesso!");
-}
-
-$("search").oninput=renderProducts;
-$("bairro").onchange=updateSummary;
-$("pagamento").onchange=()=>{const d=$("pagamento").value==="Dinheiro";$("paymentMoney").classList.toggle("hidden",!d);updateSummary()};
-$("valorPago").oninput=()=>updateTroco(total());
-$("openCart").onclick=openCart;$("closeCart").onclick=closeCart;$("overlay").onclick=closeCart;
-$("clearCart").onclick=clearCart;$("addMore").onclick=closeCart;$("continueOrder").onclick=openCheckout;
-$("closeCheckout").onclick=closeCheckout;$("changeAddress").onclick=changeSavedAddress;
-document.querySelectorAll(".receive-option").forEach(b=>b.onclick=()=>chooseReceive(b.dataset.method));
-$("modalClose").onclick=closeModal;$("send").onclick=sendOrder;
-init();
+function openCart(){$("cart").classList.add("open");$("overlay").classList.add("open");document.body.style.overflow="hidden"}
+function closeCart(){$("cart").classList.remove("open");$("overlay").classList.remove("open");document.body.style.overflow=""}
+async function sendOrder(){if(!cart.length)return alert("Adicione pelo menos um produto.");const nome=$("nome").value.trim();if(!nome)return alert("Informe seu nome.");const phone=$("telefone").value.trim(),end=$("endereco").value.trim(),ref=$("referencia").value.trim(),obs=$("observacoes").value.trim();const items=cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,obs:x.obs}));const total=cart.reduce((s,x)=>s+x.preco*x.quantidade,0);const packed=`${obs}\n\n[ML_ITENS]${encodeURIComponent(JSON.stringify(items))}[/ML_ITENS]\n\n[ML_STATUS]preparo[/ML_STATUS]`;const {error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,endereco:end,referencia:ref,observacoes:packed,total});if(error)return alert("Não foi possível enviar o pedido: "+error.message);if(phone)await db.from("clientes").upsert({nome,telefone:phone,endereco:end,referencia:ref},{onConflict:"telefone"});cart=[];renderCart();closeCart();$("nome").value=$("telefone").value=$("endereco").value=$("referencia").value=$("observacoes").value="";alert("Pedido enviado com sucesso! Obrigado.")}
+$("search").oninput=renderProducts;$('openCart').onclick=openCart;$('closeCart').onclick=closeCart;$('overlay').onclick=closeCart;$('modalClose').onclick=closeModal;$('send').onclick=sendOrder;init();renderCart();
