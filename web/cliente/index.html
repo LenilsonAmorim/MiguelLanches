@@ -1,127 +1,111 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#b71924">
-<title>Miguel Lanches</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Miguel Lanches — Hambúrgueria e Pizzaria">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>Miguel Lanches</title>
 </head>
 <body>
-<header class="header">
-  <div class="brand"><strong>MIGUEL</strong><span>LANCHES</span></div>
-  <button id="headerCart" class="header-cart" aria-label="Abrir sacola">🛍️<b id="headerCount">0</b></button>
-</header>
-
-<main>
-  <section class="hero">
-    <div>
-      <small>MIGUEL LANCHES</small>
-      <h1>Peça do seu jeito.</h1>
-      <p>Escolha, personalize e receba seu pedido com facilidade.</p>
-    </div>
-    <span>🍔</span>
-  </section>
-
-  <label class="search">
-    <span>⌕</span><input id="search" autocomplete="off" placeholder="Buscar produto...">
-  </label>
-
-  <section>
-    <div class="section-title"><h2>Categorias</h2></div>
-    <nav id="categories" class="categories"></nav>
-  </section>
-
-  <section id="featuredSection">
-    <div class="section-title"><h2>Mais pedidos</h2><button id="clearSearch">Ver todos</button></div>
-    <div id="featured" class="featured"></div>
-  </section>
-
-  <section>
-    <div class="section-title"><h2 id="productsTitle">Cardápio</h2></div>
-    <div id="products" class="products"></div>
-  </section>
-</main>
-
-<nav class="bottom-nav">
-  <button class="nav-active">⌂<small>Início</small></button>
-  <button id="navCategories">☷<small>Categorias</small></button>
-  <button id="navCart">🛍️<small>Sacola</small><i id="navCount">0</i></button>
-  <button id="navOrders">▣<small>Pedidos</small></button>
-  <button>♙<small>Perfil</small></button>
-</nav>
-
-<div id="shade" class="shade"></div>
-
-<aside id="cartDrawer" class="drawer">
-  <div class="drawer-head"><div><small>SUA SACOLA</small><h2>Seu pedido</h2></div><button class="close" id="closeCart">×</button></div>
-  <div id="cartItems"></div>
-  <div id="emptyCart" class="empty hidden">Sua sacola está vazia.<button id="shopNow">Escolher produtos</button></div>
-  <div class="cart-bottom">
-    <button id="clearCart" class="danger-light">LIMPAR SACOLA</button>
-    <div class="totals"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div>
-    <div class="totals"><span>Taxa de entrega</span><b id="cartFee">R$ 0,00</b></div>
-    <div class="totals total"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
-    <button id="checkoutBtn" class="primary">FINALIZAR PEDIDO</button>
-  </div>
-</aside>
-
-<div id="productModal" class="modal hidden"><div class="modal-card"><button class="modal-close" id="productClose">×</button><div id="productBody"></div></div></div>
-
-<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-card">
-  <button class="modal-close" id="checkoutClose">×</button>
-  <div class="checkout-head"><small>FINALIZAÇÃO</small><h2>Como você quer receber?</h2><p>Preencha seus dados e escolha a forma de pagamento.</p></div>
-
-  <div class="receive-grid">
-    <button class="receive" data-method="entrega"><span>🛵</span><b>Entrega</b><small>Receba em casa</small></button>
-    <button class="receive" data-method="retirada"><span>🚶</span><b>Retirada</b><small>Retire no local</small></button>
+  <div id="splash" class="splash">
+    <img src="assets/logo.png" alt="Miguel Lanches">
+    <div class="loader"></div>
   </div>
 
-  <div id="savedBox" class="saved hidden"><div><small>ENDEREÇO SALVO</small><b id="savedText"></b></div><button id="changeAddress">Trocar</button></div>
+  <header class="topbar">
+    <button class="circle-btn" id="backBtn" aria-label="Voltar">‹</button>
+    <div class="mini-brand"><img src="assets/logo.png" alt=""><div><b>Miguel Lanches</b><small id="storeStatus">● online</small></div></div>
+    <button class="circle-btn" id="headerCart" aria-label="Sacola">🛍️<span id="badge">0</span></button>
+  </header>
 
-  <form id="checkoutForm">
-    <h3>Seus dados</h3>
-    <input id="customerName" required placeholder="Nome completo *">
-    <input id="customerPhone" required inputmode="tel" placeholder="WhatsApp (DDD + celular) *">
+  <main>
+    <section id="homeView" class="view active">
+      <div class="store-card">
+        <div class="store-logo"><img src="assets/logo.png" alt="Logo"></div>
+        <div><h1>Miguel Lanches</h1><p>⭐ <b>5,0</b> • Hambúrgueria e Pizzaria</p><p class="muted">Entrega rápida • Pedido online</p></div>
+      </div>
 
-    <div id="deliveryBox" class="hidden">
-      <select id="neighborhood"><option value="">Bairro *</option></select>
-      <input id="address" placeholder="Endereço *">
-      <input id="reference" placeholder="Ponto de referência *">
+      <div class="search"><span>⌕</span><input id="search" placeholder="Busque por item ou categoria..."></div>
+      <div id="categoryTabs" class="chips"></div>
+
+      <section class="section">
+        <div class="section-head"><h2>Destaques</h2><button id="allProducts">Ver todos</button></div>
+        <div id="featured" class="featured-grid"></div>
+      </section>
+
+      <section id="catalog" class="section"></section>
+    </section>
+
+    <section id="categoryView" class="view">
+      <div class="page-title"><span id="categoryTitle">Categorias</span></div>
+      <div id="categoryGrid" class="category-grid"></div>
+    </section>
+
+    <section id="cartView" class="view">
+      <div class="page-title"><span>Sua sacola</span><button id="clearCart" class="text-btn">Limpar</button></div>
+      <div id="cartList"></div>
+      <div id="cartSummary" class="summary-card"></div>
+      <button class="primary wide" id="goCheckout">Continuar</button>
+    </section>
+
+    <section id="checkoutView" class="view">
+      <div class="page-title"><span>Finalizar pedido</span></div>
+      <form id="checkoutForm" class="form-card">
+        <h3>Seus dados</h3>
+        <label>Nome<input id="clientName" required placeholder="Seu nome"></label>
+        <label>WhatsApp<input id="phone" inputmode="tel" placeholder="(84) 99999-9999"></label>
+
+        <h3>Recebimento</h3>
+        <div class="segmented"><button type="button" data-mode="entrega" class="active">🛵 Entrega</button><button type="button" data-mode="retirada">🏪 Retirar</button></div>
+        <div id="addressFields">
+          <label>Endereço<input id="address" placeholder="Rua, número"></label>
+          <label>Bairro<select id="neighborhood"><option value="">Selecione o bairro</option></select></label>
+          <label>Ponto de referência<input id="reference" placeholder="Ex.: perto da praça"></label>
+        </div>
+
+        <h3>Pagamento</h3>
+        <div class="payment-grid">
+          <button type="button" data-payment="Dinheiro" class="pay active">💵 Dinheiro</button>
+          <button type="button" data-payment="Cartão" class="pay">💳 Cartão</button>
+          <button type="button" data-payment="Pix" class="pay">📱 Pix</button>
+        </div>
+        <label id="changeWrap">Troco para <input id="changeFor" inputmode="decimal" placeholder="Ex.: 50"></label>
+        <label>Observações<textarea id="notes" placeholder="Ex.: sem cebola..."></textarea></label>
+        <div id="checkoutTotal"></div>
+        <button class="primary wide" type="submit">Confirmar pedido</button>
+      </form>
+    </section>
+
+    <section id="trackingView" class="view">
+      <div class="page-title"><span>Meu pedido</span></div>
+      <div id="trackingCard" class="tracking-card"></div>
+    </section>
+  </main>
+
+  <div id="productModal" class="modal hidden">
+    <div class="modal-box">
+      <button class="modal-close" id="closeProduct">×</button>
+      <div id="productModalContent"></div>
     </div>
+  </div>
 
-    <label class="label">Forma de pagamento *</label>
-    <select id="payment" required>
-      <option value="">Selecione *</option>
-      <option value="PIX">PIX</option>
-      <option value="Cartão de crédito">Cartão de crédito</option>
-      <option value="Cartão de débito">Cartão de débito</option>
-      <option value="Dinheiro">Dinheiro</option>
-    </select>
+  <div id="cartBar" class="cart-bar hidden">
+    <button id="openCart"><span>🛍️ <b id="barCount">0</b></span><strong>Ver sacola</strong><b id="barTotal">R$ 0,00</b></button>
+  </div>
 
-    <div id="cashBox" class="cash hidden">
-      <input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *">
-      <div id="change" class="change"></div>
-    </div>
+  <nav class="bottom-nav">
+    <button data-view="homeView" class="active">⌂<small>Início</small></button>
+    <button data-view="categoryView">☰<small>Categorias</small></button>
+    <button data-view="cartView">🛍️<small>Sacola</small></button>
+    <button data-view="trackingView">📦<small>Pedido</small></button>
+  </nav>
 
-    <label class="label">Observação do pedido</label>
-    <textarea id="orderNote" rows="3" placeholder="Alguma observação?"></textarea>
-
-    <div class="checkout-summary">
-      <div><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></div>
-      <div><span>Taxa</span><b id="checkoutFee">R$ 0,00</b></div>
-      <div class="grand"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
-    </div>
-    <button class="primary" type="submit">CONFIRMAR PEDIDO</button>
-  </form>
-</div></div>
-
-<div id="successModal" class="modal hidden"><div class="modal-card success">
-  <div class="success-icon">✓</div><h2>Pedido realizado!</h2><p>Obrigado pela preferência.</p><strong id="orderNumber"></strong>
-  <button id="successClose" class="primary">VOLTAR AO CARDÁPIO</button>
-</div></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
