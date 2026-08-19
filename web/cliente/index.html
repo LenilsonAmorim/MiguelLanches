@@ -7,7 +7,6 @@
 <title>Miguel Lanches - Pedidos</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="todos-categorias.css">
-<link rel="stylesheet" href="especiais-lista.css">
 <link rel="stylesheet" href="ml-final-cart-checkout-fix.css">
 </head>
 <body>
@@ -17,11 +16,95 @@
 <div id="categories" class="categories"></div>
 <div id="products" class="products"></div>
 </main>
+
 <div id="overlay" class="overlay"></div>
-<aside id="cart" class="cart"><div class="cart-head"><div><h2>Sua sacola</h2><small id="cartItemCount">0 itens</small></div><button id="closeCart" class="icon-btn">×</button></div><button id="clearCart" class="clear-cart">LIMPAR SACOLA</button><div id="cartItems"></div><button id="addMore" class="add-more">ADICIONAR MAIS ITENS</button><section class="also"><h3>Peça também</h3><div id="alsoProducts" class="also-row"></div></section><div class="summary"><div><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div><div><span>Taxa de entrega</span><b id="deliveryFee">R$ 0,00</b></div><div class="summary-total"><span>Total</span><strong id="total">R$ 0,00</strong></div></div><button id="continueOrder" class="continue-btn">CONTINUAR PEDIDO</button></aside>
-<button id="openCart" class="bottom-bag"><span class="bag-icon">🛍️ <i id="cartCount">0</i></span><strong>Ver sacola</strong><b id="bottomCartTotal">R$ 0,00</b></button>
-<div id="checkout" class="checkout hidden"><div class="checkout-box"><div class="checkout-head"><button id="closeCheckout" class="icon-btn">‹</button><h2>Finalizar pedido</h2><span></span></div><section id="savedAddress" class="saved-address hidden"><div><small>Endereço salvo</small><strong id="savedAddressText"></strong></div><button id="changeAddress">Trocar</button></section><section class="receive-section"><h3>Como você quer receber o pedido?</h3><div class="receive-options"><button class="receive-option" data-method="entrega"><span>🛵</span><div><strong>Entrega</strong><small>A gente leva até você</small></div></button><button class="receive-option" data-method="retirada"><span>🚶</span><div><strong>Retirada</strong><small>Você retira no local</small></div></button></div></section><section id="customerSection" class="customer-section hidden"><h3>Seus dados</h3><input id="nome" placeholder="Nome *" required><input id="telefone" placeholder="WhatsApp * (DDD + celular)" inputmode="tel"><div id="deliveryFields"><label>Bairro *</label><select id="bairro"><option value="">Selecione o bairro *</option></select><input id="endereco" placeholder="Endereço *"><input id="referencia" placeholder="Ponto de referência *"></div><label>Forma de pagamento *</label><select id="pagamento"><option value="">Selecione *</option><option>PIX</option><option>Cartão de crédito</option><option>Cartão de débito</option><option>Dinheiro</option></select><div id="paymentMoney" class="hidden"><input id="valorPago" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *"><div id="trocoPreview"></div></div><label>Observação do pedido</label><textarea id="observacoes" placeholder="Alguma observação?"></textarea><div class="summary checkout-summary"><div><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></div><div><span>Taxa de entrega</span><b id="checkoutFee">R$ 0,00</b></div><div class="summary-total"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div></div><button id="send" class="continue-btn">ENVIAR PEDIDO</button></section></div></div>
-<div id="modal" class="modal hidden"><div class="modal-box"><button id="modalClose" class="icon-btn">×</button><div id="modalContent"></div></div></div>
+
+<aside id="cart" class="cart">
+  <div class="cart-head">
+    <div><h2>Sua sacola</h2><small id="cartItemCount">0 itens</small></div>
+    <button id="closeCart" class="icon-btn">×</button>
+  </div>
+  <button id="clearCart" class="clear-cart">LIMPAR SACOLA</button>
+  <div id="cartItems"></div>
+  <button id="addMore" class="add-more">ADICIONAR MAIS ITENS</button>
+  <section class="also"><h3>Peça também</h3><div id="alsoProducts" class="also-row"></div></section>
+  <div class="summary">
+    <div><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div>
+    <div><span>Taxa de entrega</span><b id="deliveryFee">R$ 0,00</b></div>
+    <div class="summary-total"><span>Total</span><strong id="total">R$ 0,00</strong></div>
+  </div>
+  <button id="continueOrder" class="continue-btn">CONTINUAR PEDIDO</button>
+</aside>
+
+<button id="openCart" class="bottom-bag">
+  <span class="bag-icon">🛍️ <i id="cartCount">0</i></span>
+  <strong>Ver sacola</strong>
+  <b id="bottomCartTotal">R$ 0,00</b>
+</button>
+
+<div id="checkout" class="checkout hidden">
+  <div class="checkout-box">
+    <div class="checkout-head">
+      <button id="closeCheckout" class="icon-btn">‹</button>
+      <h2>Finalizar pedido</h2><span></span>
+    </div>
+
+    <section id="savedAddress" class="saved-address hidden">
+      <div><small>Endereço salvo</small><strong id="savedAddressText"></strong></div>
+      <button id="changeAddress">Trocar</button>
+    </section>
+
+    <section class="receive-section">
+      <h3>Como você quer receber o pedido?</h3>
+      <div class="receive-options">
+        <button class="receive-option" data-method="entrega">
+          <span>🛵</span><div><strong>Entrega</strong><small>A gente leva até você</small></div>
+        </button>
+        <button class="receive-option" data-method="retirada">
+          <span>🚶</span><div><strong>Retirada</strong><small>Você retira no local</small></div>
+        </button>
+      </div>
+    </section>
+
+    <section id="customerSection" class="customer-section hidden">
+      <h3>Seus dados</h3>
+      <input id="nome" placeholder="Nome *" required>
+      <input id="telefone" placeholder="WhatsApp * (DDD + celular)" inputmode="tel">
+      <div id="deliveryFields">
+        <label>Bairro *</label>
+        <select id="bairro"><option value="">Selecione o bairro *</option></select>
+        <input id="endereco" placeholder="Endereço *">
+        <input id="referencia" placeholder="Ponto de referência *">
+      </div>
+      <label>Forma de pagamento *</label>
+      <select id="pagamento">
+        <option value="">Selecione *</option>
+        <option>PIX</option><option>Cartão de crédito</option>
+        <option>Cartão de débito</option><option>Dinheiro</option>
+      </select>
+      <div id="paymentMoney" class="hidden">
+        <input id="valorPago" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *">
+        <div id="trocoPreview"></div>
+      </div>
+      <label>Observação do pedido</label>
+      <textarea id="observacoes" placeholder="Alguma observação?"></textarea>
+      <div class="summary checkout-summary">
+        <div><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></div>
+        <div><span>Taxa de entrega</span><b id="checkoutFee">R$ 0,00</b></div>
+        <div class="summary-total"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
+      </div>
+      <button id="send" class="continue-btn">ENVIAR PEDIDO</button>
+    </section>
+  </div>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <button id="modalClose" class="icon-btn">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script src="acai-configurator.js"></script>
@@ -29,8 +112,6 @@
 <script src="dados-cliente-salvos.js"></script>
 <script src="cliente-produto-detalhes.js"></script>
 <script src="todos-categorias.js"></script>
-<script src="checkout-fix.js"></script>
-<script src="cart-fix.js"></script>
-<script src="ml-final-cart-checkout-fix.js"></script>
+<script src="interacoes-fix.js"></script>
 </body>
 </html>
