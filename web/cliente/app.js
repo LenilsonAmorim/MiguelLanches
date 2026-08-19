@@ -49,8 +49,21 @@ function renderChips(){
   $("categoryTabs").innerHTML=`<button class="${state.cat==="todos"?"active":""}" onclick="setCat('todos')">Todos</button>`+state.cats.map(c=>`<button class="${String(state.cat)===String(c.id)?"active":""}" onclick="setCat('${c.id}')">${esc(c.emoji||"🍽️")} ${esc(c.nome)}</button>`).join("");
 }
 function setCat(id){state.cat=id;renderHome()}
+function localImageFor(p){
+  const n=String(p.nome||"").toLowerCase();
+  if(n.includes("x-tudo")||n.includes("x tudo")) return "assets/x-tudo.png";
+  if(n.includes("smash onions")||n.includes("smash onion")) return "assets/smash-onions-bbq.png";
+  if(n.includes("pense grande")) return "assets/pense-grande.png";
+  if(n.includes("batata")) return "assets/batata-frita.png";
+  if(n.includes("calabresa") && (n.includes("pizza") || String(p.categorias?.nome||"").toLowerCase().includes("pizza"))) return "assets/pizza-calabresa.png";
+  if(n.includes("frango") && n.includes("catup") && String(p.categorias?.nome||"").toLowerCase().includes("pizza")) return "assets/pizza-frango.png";
+  if(n.includes("portuguesa") && String(p.categorias?.nome||"").toLowerCase().includes("pizza")) return "assets/pizza-portuguesa.png";
+  if(n.includes("4 queijos")||n.includes("4 queijo")) return "assets/pizza-4-queijos.png";
+  return "";
+}
 function productCard(p){
-  const img=p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:`<span style="font-size:60px">${esc(p.emoji||"🍔")}</span>`;
+  const local=localImageFor(p);
+  const img=p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:local?`<img src="${local}" alt="${esc(p.nome)}">`:`<span style="font-size:60px">${esc(p.emoji||"🍔")}</span>`;
   return `<article class="product-card"><div class="product-img">${img}</div><div class="product-info"><h3>${esc(p.nome)}</h3><div class="desc">${esc(p.descricao||"Delicioso, preparado na hora.")}</div><div class="product-bottom"><span class="price">${money(p.preco)}</span><button class="plus" onclick="openProduct('${p.id}')">+</button></div></div></article>`
 }
 function renderCatalog(list=state.products){
