@@ -1,11 +1,14 @@
-/* Miguel Lanches — acesso protegido da Administração */
+/* Miguel Lanches — login administrativo por USUÁRIO
+   A tela pede somente usuário + senha.
+   Internamente continua usando Supabase Auth para manter a segurança. */
 (() => {
   const db = window.db;
   if (!db) return;
+
   let isAdmin = false;
 
-  const style=document.createElement("style");
-  style.textContent=`
+  const style = document.createElement("style");
+  style.textContent = `
     #mlAdminLock{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}
     #mlAdminLock.hidden{display:none}
     .ml-auth-box{width:min(420px,100%);background:#fff;border-radius:20px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.28)}
@@ -22,15 +25,16 @@
   document.head.appendChild(style);
 
   const modal=document.createElement("div");
-  modal.id="mlAdminLock";modal.className="hidden";
+  modal.id="mlAdminLock";
+  modal.className="hidden";
   modal.innerHTML=`
     <div class="ml-auth-box">
       <h2>🔐 Administração</h2>
-      <p>Entre com a conta de administrador para gerenciar o cardápio.</p>
-      <label>E-mail</label>
-      <input id="mlAuthEmail" type="email" autocomplete="username" placeholder="seu@email.com">
+      <p>Entre para acessar as configurações do Miguel Lanches.</p>
+      <label>Usuário</label>
+      <input id="mlAuthUser" type="text" autocomplete="username" placeholder="Usuário">
       <label>Senha</label>
-      <input id="mlAuthPassword" type="password" autocomplete="current-password" placeholder="Sua senha">
+      <input id="mlAuthPassword" type="password" autocomplete="current-password" placeholder="Senha">
       <div id="mlAuthMsg"></div>
       <div class="ml-auth-actions">
         <button class="ml-auth-cancel" id="mlAuthCancel">Cancelar</button>
@@ -40,7 +44,7 @@
   document.body.appendChild(modal);
 
   const msg=t=>document.getElementById("mlAuthMsg").textContent=t||"";
-  const open=()=>{msg("");modal.classList.remove("hidden");setTimeout(()=>document.getElementById("mlAuthEmail").focus(),50)};
+  const open=()=>{msg("");modal.classList.remove("hidden");setTimeout(()=>document.getElementById("mlAuthUser").focus(),50)};
   const close=()=>modal.classList.add("hidden");
 
   async function checkAdmin(session){
@@ -53,24 +57,49 @@
   async function requireAdmin(){
     const {data}=await db.auth.getSession();
     if(await checkAdmin(data.session)) return true;
-    open();return false;
+    open();
+    return false;
   }
 
   document.getElementById("mlAuthCancel").onclick=close;
   modal.addEventListener("click",e=>{if(e.target===modal)close()});
 
   document.getElementById("mlAuthLogin").onclick=async()=>{
-    const email=document.getElementById("mlAuthEmail").value.trim();
+    const username=document.getElementById("mlAuthUser").value.trim().toLowerCase();
     const password=document.getElementById("mlAuthPassword").value;
-    if(!email||!password){msg("Informe e-mail e senha.");return}
-    msg("Entrando...");
-    const r=await db.auth.signInWithPassword({email,password});
-    if(r.error){msg(r.error.message||"Não foi possível entrar.");return}
-    if(!await checkAdmin(r.data.session)){
-      await db.auth.signOut();
-      msg("Esta conta não tem permissão de administrador.");
+
+    if(!username || !password){
+      msg("Informe usuário e senha.");
       return;
     }
+
+    msg("Entrando...");
+
+    // Busca internamente o e-mail associado ao usuário administrativo.
+    // O e-mail nunca é solicitado na tela.
+    const lookup=await db.rpc("get_admin_login_email",{p_username:username});
+
+    if(lookup.error || !lookup.data){
+      msg("Usuário ou senha inválidos.");
+      return;
+    }
+
+    const login=await db.auth.signInWithPassword({
+      email:lookup.data,
+      password
+    });
+
+    if(login.error){
+      msg("Usuário ou senha inválidos.");
+      return;
+    }
+
+    if(!await checkAdmin(login.data.session)){
+      await db.auth.signOut();
+      msg("Usuário sem permissão de administrador.");
+      return;
+    }
+
     close();
     const adminBtn=document.querySelector('.nav-item[data-page="admin"]');
     if(adminBtn) adminBtn.click();
@@ -80,30 +109,50 @@
   function refreshAdminSession(){
     const host=document.querySelector(".top-actions");
     if(!host)return;
+
     let el=document.getElementById("mlAdminSession");
-    if(!isAdmin){if(el)el.remove();return}
+
+    if(!isAdmin){
+      if(el)el.remove();
+      return;
+    }
+
     if(el)return;
+
     el=document.createElement("div");
-    el.id="mlAdminSession";el.className="ml-admin-session";
+    el.id="mlAdminSession";
+    el.className="ml-admin-session";
     el.innerHTML=`<small>🔐 Admin</small><button type="button" id="mlAdminLogout">Sair</button>`;
     host.appendChild(el);
-    el.querySelector("#mlAdminLogout").onclick=async()=>{await db.auth.signOut();location.reload()};
+
+    el.querySelector("#mlAdminLogout").onclick=async()=>{
+      await db.auth.signOut();
+      location.reload();
+    };
   }
 
   document.addEventListener("click",async e=>{
     const btn=e.target.closest?.('.nav-item[data-page="admin"]');
     if(!btn)return;
-    if(isAdmin){refreshAdminSession();return}
-    e.preventDefault();e.stopImmediatePropagation();
+
+    if(isAdmin){
+      refreshAdminSession();
+      return;
+    }
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
     await requireAdmin();
   },true);
 
   db.auth.onAuthStateChange(async(_event,session)=>{
-    await checkAdmin(session);refreshAdminSession();
+    await checkAdmin(session);
+    refreshAdminSession();
   });
 
   setTimeout(async()=>{
     const {data}=await db.auth.getSession();
-    await checkAdmin(data.session);refreshAdminSession();
+    await checkAdmin(data.session);
+    refreshAdminSession();
   },500);
 })();
