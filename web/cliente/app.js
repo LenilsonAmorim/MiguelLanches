@@ -23,9 +23,38 @@ function renderCats(){
  $("categories").innerHTML=all+cats.map(c=>`<button class="${String(cat)===String(c.id)?"active":""}" onclick="chooseCat('${c.id}')">${c.imagem_url?`<img class="cat-icon" src="${esc(c.imagem_url)}" alt="" onerror="this.style.display='none'">`:esc(c.emoji||"📦")} ${esc(c.nome)}</button>`).join("");
 }
 function chooseCat(id){cat=id;renderCats();renderProducts()}
+
+/* ALTERAÇÃO:
+   Em "Todos", os produtos são agrupados pela ordem das categorias
+   (categorias.ordem) e, dentro de cada categoria, pela ordem do produto
+   (produtos.ordem). As demais categorias continuam funcionando normalmente.
+*/
 function renderProducts(){
  const q=$("search").value.toLowerCase().trim();
- const list=products.filter(p=>(cat==="todos"||String(p.categoria_id)===String(cat))&&(!q||p.nome.toLowerCase().includes(q)));
+ let list=products.filter(p=>
+   (cat==="todos"||String(p.categoria_id)===String(cat)) &&
+   (!q||p.nome.toLowerCase().includes(q))
+ );
+
+ if(cat==="todos"){
+   const catOrder=new Map(cats.map((c,i)=>[String(c.id),{
+     ordem:Number.isFinite(Number(c.ordem))?Number(c.ordem):i,
+     index:i
+   }]));
+   list.sort((a,b)=>{
+     const ca=catOrder.get(String(a.categoria_id));
+     const cb=catOrder.get(String(b.categoria_id));
+     const ao=ca?.ordem??999999, bo=cb?.ordem??999999;
+     if(ao!==bo)return ao-bo;
+     const ai=ca?.index??999999, bi=cb?.index??999999;
+     if(ai!==bi)return ai-bi;
+     const po=Number(a.ordem), qo=Number(b.ordem);
+     const av=Number.isFinite(po)?po:999999, bv=Number.isFinite(qo)?qo:999999;
+     if(av!==bv)return av-bv;
+     return String(a.nome||"").localeCompare(String(b.nome||""));
+   });
+ }
+
  $("products").innerHTML=list.length?list.map(p=>`<article class="card"><div class="photo">${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:esc(p.emoji||"🍔")}</div><div class="info"><h3>${esc(p.nome)}</h3><div class="bottom"><span class="price">${money(p.preco)}</span><button class="plus" onclick="openProduct('${p.id}')">+</button></div></div></article>`).join(""):'<div class="empty">Nenhum produto encontrado.</div>';
 }
 async function openProduct(id){
