@@ -1,17 +1,18 @@
-/* Miguel Lanches — login administrativo por USUÁRIO
-   A tela pede somente usuário + senha.
-   Internamente continua usando Supabase Auth para manter a segurança. */
+/* Miguel Lanches — proteção do site ADMIN */
 (() => {
-  const db = window.db;
-  if (!db) return;
+  const SUPABASE_URL = "https://lifsxhyeqwppfvajvhpn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 
+  if (!window.supabase) return;
+
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let isAdmin = false;
 
   const style = document.createElement("style");
   style.textContent = `
-    #mlAdminLock{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}
+    #mlAdminLock{position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px}
     #mlAdminLock.hidden{display:none}
-    .ml-auth-box{width:min(420px,100%);background:#fff;border-radius:20px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.28)}
+    .ml-auth-box{width:min(420px,100%);background:#fff;border-radius:20px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.35)}
     .ml-auth-box h2{margin:0 0 6px}.ml-auth-box p{margin:0 0 18px;color:#667085}
     .ml-auth-box label{display:block;font-weight:700;margin:12px 0 6px}
     .ml-auth-box input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #d0d5dd;border-radius:11px;font-size:16px}
@@ -24,135 +25,136 @@
   `;
   document.head.appendChild(style);
 
-  const modal=document.createElement("div");
-  modal.id="mlAdminLock";
-  modal.className="hidden";
-  modal.innerHTML=`
+  const modal = document.createElement("div");
+  modal.id = "mlAdminLock";
+  modal.innerHTML = `
     <div class="ml-auth-box">
       <h2>🔐 Administração</h2>
-      <p>Entre para acessar as configurações do Miguel Lanches.</p>
+      <p>Entre para acessar o painel do Miguel Lanches.</p>
       <label>Usuário</label>
-      <input id="mlAuthUser" type="text" autocomplete="username" placeholder="Usuário">
+      <input id="mlAuthUser" type="text" autocomplete="username" placeholder="admin">
       <label>Senha</label>
       <input id="mlAuthPassword" type="password" autocomplete="current-password" placeholder="Senha">
       <div id="mlAuthMsg"></div>
       <div class="ml-auth-actions">
-        <button class="ml-auth-cancel" id="mlAuthCancel">Cancelar</button>
-        <button id="mlAuthLogin">Entrar</button>
+        <button class="ml-auth-cancel" id="mlAuthCancel" type="button">Cancelar</button>
+        <button id="mlAuthLogin" type="button">Entrar</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
 
-  const msg=t=>document.getElementById("mlAuthMsg").textContent=t||"";
-  const open=()=>{msg("");modal.classList.remove("hidden");setTimeout(()=>document.getElementById("mlAuthUser").focus(),50)};
-  const close=()=>modal.classList.add("hidden");
+  const msg = t => document.getElementById("mlAuthMsg").textContent = t || "";
+  const open = () => {
+    msg("");
+    modal.classList.remove("hidden");
+    setTimeout(() => document.getElementById("mlAuthUser").focus(), 100);
+  };
+  const close = () => modal.classList.add("hidden");
 
-  async function checkAdmin(session){
-    if(!session){isAdmin=false;return false}
-    const r=await db.rpc("is_admin");
-    isAdmin=!r.error && r.data===true;
+  async function checkAdmin(session) {
+    if (!session) {
+      isAdmin = false;
+      return false;
+    }
+    const result = await db.rpc("is_admin");
+    isAdmin = !result.error && result.data === true;
     return isAdmin;
   }
 
-  async function requireAdmin(){
-    const {data}=await db.auth.getSession();
-    if(await checkAdmin(data.session)) return true;
-    open();
-    return false;
-  }
+  async function login() {
+    const username = document.getElementById("mlAuthUser").value.trim().toLowerCase();
+    const password = document.getElementById("mlAuthPassword").value;
 
-  document.getElementById("mlAuthCancel").onclick=close;
-  modal.addEventListener("click",e=>{if(e.target===modal)close()});
-
-  document.getElementById("mlAuthLogin").onclick=async()=>{
-    const username=document.getElementById("mlAuthUser").value.trim().toLowerCase();
-    const password=document.getElementById("mlAuthPassword").value;
-
-    if(!username || !password){
+    if (!username || !password) {
       msg("Informe usuário e senha.");
       return;
     }
 
     msg("Entrando...");
 
-    // Busca internamente o e-mail associado ao usuário administrativo.
-    // O e-mail nunca é solicitado na tela.
-    const lookup=await db.rpc("get_admin_login_email",{p_username:username});
-
-    if(lookup.error || !lookup.data){
-      msg("Usuário ou senha inválidos.");
-      return;
-    }
-
-    const login=await db.auth.signInWithPassword({
-      email:lookup.data,
-      password
+    const lookup = await db.rpc("get_admin_login_email", {
+      p_username: username
     });
 
-    if(login.error){
+    if (lookup.error || !lookup.data) {
       msg("Usuário ou senha inválidos.");
       return;
     }
 
-    if(!await checkAdmin(login.data.session)){
+    const auth = await db.auth.signInWithPassword({
+      email: lookup.data,
+      password: password
+    });
+
+    if (auth.error) {
+      msg("Usuário ou senha inválidos.");
+      return;
+    }
+
+    const autorizado = await checkAdmin(auth.data.session);
+
+    if (!autorizado) {
       await db.auth.signOut();
       msg("Usuário sem permissão de administrador.");
       return;
     }
 
     close();
-    const adminBtn=document.querySelector('.nav-item[data-page="admin"]');
-    if(adminBtn) adminBtn.click();
     refreshAdminSession();
-  };
+  }
 
-  function refreshAdminSession(){
-    const host=document.querySelector(".top-actions");
-    if(!host)return;
+  document.getElementById("mlAuthLogin").onclick = login;
 
-    let el=document.getElementById("mlAdminSession");
+  document.getElementById("mlAuthPassword").addEventListener("keydown", event => {
+    if (event.key === "Enter") login();
+  });
 
-    if(!isAdmin){
-      if(el)el.remove();
-      return;
+  document.getElementById("mlAuthUser").addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      document.getElementById("mlAuthPassword").focus();
     }
+  });
 
-    if(el)return;
+  document.getElementById("mlAuthCancel").onclick = () => window.location.reload();
 
-    el=document.createElement("div");
-    el.id="mlAdminSession";
-    el.className="ml-admin-session";
-    el.innerHTML=`<small>🔐 Admin</small><button type="button" id="mlAdminLogout">Sair</button>`;
+  function refreshAdminSession() {
+    const host = document.querySelector(".top-actions");
+    if (!host || !isAdmin) return;
+
+    let el = document.getElementById("mlAdminSession");
+    if (el) return;
+
+    el = document.createElement("div");
+    el.id = "mlAdminSession";
+    el.className = "ml-admin-session";
+    el.innerHTML = `<small>🔐 Admin</small><button type="button" id="mlAdminLogout">Sair</button>`;
     host.appendChild(el);
 
-    el.querySelector("#mlAdminLogout").onclick=async()=>{
+    el.querySelector("#mlAdminLogout").onclick = async () => {
       await db.auth.signOut();
-      location.reload();
+      window.location.reload();
     };
   }
 
-  document.addEventListener("click",async e=>{
-    const btn=e.target.closest?.('.nav-item[data-page="admin"]');
-    if(!btn)return;
+  async function start() {
+    const session = await db.auth.getSession();
+    const autorizado = await checkAdmin(session.data.session);
 
-    if(isAdmin){
+    if (autorizado) {
+      modal.classList.add("hidden");
       refreshAdminSession();
-      return;
+    } else {
+      open();
     }
+  }
 
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    await requireAdmin();
-  },true);
-
-  db.auth.onAuthStateChange(async(_event,session)=>{
+  db.auth.onAuthStateChange(async (_event, session) => {
     await checkAdmin(session);
-    refreshAdminSession();
+    if (isAdmin) {
+      close();
+      refreshAdminSession();
+    }
   });
 
-  setTimeout(async()=>{
-    const {data}=await db.auth.getSession();
-    await checkAdmin(data.session);
-    refreshAdminSession();
-  },500);
+  setTimeout(start, 500);
 })();
