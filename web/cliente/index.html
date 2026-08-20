@@ -23,14 +23,15 @@
     <div class="brand-mini">
       <img src="assets/logo.png" alt="Miguel Lanches">
     </div>
-  </header>
 
-  <main class="menu-home">
-    <section class="search-wrap">
+    <div class="header-search">
       <span class="search-icon" aria-hidden="true">⌕</span>
       <input id="search" type="search" autocomplete="off" placeholder="Buscar em Miguel Lanches">
       <button type="button" onclick="document.getElementById('search').value='';renderProducts()">×</button>
-    </section>
+    </div>
+  </header>
+
+  <main class="menu-home">
 
     <nav class="categories-wrap" aria-label="Categorias">
       <div id="categories" class="categories"></div>
