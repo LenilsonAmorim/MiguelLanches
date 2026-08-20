@@ -350,3 +350,300 @@ body{background:#050505}
 .topbar-ref{display:none!important}
 /* O único carrinho visível é o do cabeçalho do Cardápio */
 .menu-cart{display:inline-flex!important}
+
+/* =========================================================
+   MOBILE — visual premium + sacola estilo delivery
+   ========================================================= */
+.floating-bag{display:none}
+@media(max-width:600px){
+  body{background:#f5f5f3}
+
+  .hero{
+    min-height:500px;
+    background-image:
+      linear-gradient(180deg,rgba(10,9,7,.72) 0%,rgba(10,9,7,.66) 45%,rgba(7,7,7,.88) 100%),
+      url("../assets/logo.png");
+    background-size:560px auto;
+    background-position:82% 42%;
+    border:0;
+  }
+  .hero-inner{
+    width:100%;
+    padding:68px 24px 25px;
+    text-align:left;
+  }
+  .hero-kicker{font-size:21px;letter-spacing:2.5px}
+  .hero-line{width:62px;height:4px;margin:12px 0 24px}
+  .hero h1{
+    max-width:100%;
+    font-size:clamp(34px,9.6vw,43px);
+    line-height:1.06;
+    letter-spacing:-.9px;
+  }
+  .hero p{
+    margin:27px 0 0;
+    display:flex;
+    justify-content:flex-start;
+    gap:8px;
+    font-size:12.5px;
+    line-height:1.2;
+  }
+  .hero p span{font-size:17px}
+  .hero p i{height:16px}
+  .scroll-cue{margin-top:27px;font-size:34px}
+
+  .menu-section{
+    background:#f5f5f3;
+    padding:0;
+  }
+  .menu-shell{
+    width:100%;
+    padding:20px 16px 55px;
+    border-radius:28px 28px 0 0;
+    background:#fff;
+    border:0;
+    box-shadow:0 -8px 25px rgba(0,0,0,.10);
+  }
+  .menu-head{
+    margin-bottom:17px;
+    justify-content:flex-start;
+  }
+  .menu-title{gap:15px}
+  .hamb{font-size:29px;color:#1a1a1a}
+  .menu-title h2{
+    font-size:28px;
+    letter-spacing:-.6px;
+    color:#111;
+  }
+
+  .search-wrap{
+    height:58px;
+    margin-bottom:16px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid #ddd;
+    box-shadow:0 2px 10px rgba(0,0,0,.035);
+  }
+  .search-wrap span{font-size:28px;color:#777}
+  .search-wrap input{font-size:17px}
+
+  .chips{
+    gap:9px;
+    margin:0 -2px 23px;
+    padding:0 2px 6px;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto;
+    padding:11px 16px;
+    border-radius:24px;
+    background:#fff;
+    border:1px solid #ddd;
+    color:#222;
+    font-size:14px;
+  }
+  .chip.active{
+    background:#080808;
+    border-color:#080808;
+    color:#fff;
+    box-shadow:inset 0 -3px 0 #f0bd2d;
+  }
+
+  .section-label{margin-bottom:14px}
+  .section-label h3{font-size:22px;color:#111}
+
+  .products{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  .product{
+    border:1px solid #e2e2e2;
+    border-radius:17px;
+    background:#fff;
+    box-shadow:0 3px 13px rgba(0,0,0,.055);
+  }
+  .photo{height:137px;background:#eee}
+  .pbody{
+    padding:12px;
+    min-height:138px;
+    display:flex;
+    flex-direction:column;
+  }
+  .pbody h3{font-size:16px;color:#161616;line-height:1.15}
+  .pbody p{
+    color:#6b6b6b;
+    font-size:11.5px;
+    line-height:1.34;
+    min-height:39px;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .pfoot{margin-top:auto;padding-top:9px}
+  .price{font-size:17px;color:#b71924}
+  .plus{
+    width:37px;height:37px;flex:0 0 37px;
+    background:#111;color:#fff;font-size:22px;
+  }
+
+  /* Sacola flutuante: escondida até existir item */
+  .floating-bag{
+    position:fixed;
+    z-index:100;
+    left:50%;
+    bottom:16px;
+    transform:translateX(-50%) translateY(120px);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:175px;
+    justify-content:center;
+    padding:13px 17px;
+    border-radius:30px;
+    background:#b71924;
+    color:#fff;
+    text-decoration:none;
+    box-shadow:0 8px 25px rgba(0,0,0,.24);
+    font-weight:900;
+    transition:transform .25s ease,opacity .25s ease;
+    opacity:0;
+  }
+  .floating-bag.show{
+    transform:translateX(-50%) translateY(0);
+    opacity:1;
+  }
+  .floating-bag .bag-icon{font-size:20px}
+  .floating-bag .bag-label{font-size:15px}
+  .floating-bag strong{
+    background:#fff;
+    color:#b71924;
+    border-radius:999px;
+    min-width:25px;
+    height:25px;
+    display:grid;
+    place-items:center;
+    font-size:12px;
+  }
+
+  .checkout-section,.track{background:#f5f5f3}
+}
+@media(max-width:380px){
+  .hero{min-height:475px;background-size:510px auto}
+  .hero-inner{padding:60px 20px 22px}
+  .hero h1{font-size:32px}
+  .hero p{font-size:11.5px}
+  .menu-shell{padding-left:13px;padding-right:13px}
+  .products{gap:9px}
+  .photo{height:125px}
+}
+
+/* =========================================================
+   AJUSTE FINAL MOBILE — referência aprovada
+   ========================================================= */
+
+/* Nenhum menu de três linhas */
+.hamb{display:none!important}
+.menu-title h2{margin-left:0!important}
+
+/* Carregamento: logo como fundo, visível e elegante; sem logo solta */
+.splash{
+  background:
+    linear-gradient(180deg,rgba(4,4,4,.42),rgba(4,4,4,.58)),
+    url("../assets/logo.png") center 38%/min(760px,92vw) auto no-repeat,
+    #050505!important;
+}
+.splash-inner{
+  position:relative;
+  z-index:2;
+  padding-top:32vh!important;
+}
+.splash span{
+  font-size:14px!important;
+  color:#f0bd2d!important;
+}
+.splash h1{
+  font-size:34px!important;
+  text-shadow:0 2px 15px #000;
+}
+.splash p{
+  font-size:16px;
+  text-shadow:0 2px 10px #000;
+}
+.loader{background:#2d2d2d!important}
+.loader i{background:#b71924!important}
+
+/* Hero mobile: logo grande ao fundo, como na referência, mas mais clara */
+@media(max-width:600px){
+  .hero{
+    min-height:510px!important;
+    background-image:
+      linear-gradient(90deg,rgba(7,7,7,.68) 0%,rgba(7,7,7,.57) 45%,rgba(7,7,7,.38) 100%),
+      url("../assets/logo.png")!important;
+    background-size:620px auto!important;
+    background-position:86% 43%!important;
+    background-repeat:no-repeat!important;
+  }
+  .hero-inner{
+    padding:56px 26px 24px!important;
+    text-align:left!important;
+  }
+  .hero-kicker{
+    font-size:21px!important;
+    letter-spacing:2.5px!important;
+  }
+  .hero-line{
+    margin:11px 0 24px!important;
+    width:64px!important;
+    height:4px!important;
+  }
+  .hero h1{
+    font-size:38px!important;
+    line-height:1.06!important;
+    letter-spacing:-.8px!important;
+    max-width:100%!important;
+  }
+  .hero p{
+    margin:28px 0 0!important;
+    justify-content:flex-start!important;
+    font-size:13px!important;
+    gap:9px!important;
+  }
+  .scroll-cue{
+    margin-top:27px!important;
+    text-align:center!important;
+  }
+
+  /* Cardápio começa mais acima e fica limpo */
+  .menu-shell{
+    padding-top:20px!important;
+    border-radius:28px 28px 0 0!important;
+  }
+  .menu-head{
+    margin-bottom:17px!important;
+  }
+  .menu-title h2{
+    font-size:28px!important;
+    color:#111!important;
+  }
+  .menu-cart{display:none!important}
+
+  /* Sacola estilo delivery aparece só após adicionar produto */
+  .floating-bag{
+    display:flex!important;
+  }
+}
+
+/* telas muito estreitas */
+@media(max-width:380px){
+  .hero{
+    min-height:485px!important;
+    background-size:560px auto!important;
+    background-position:88% 42%!important;
+  }
+  .hero-inner{padding:52px 20px 22px!important}
+  .hero h1{font-size:34px!important}
+  .splash-inner{padding-top:34vh!important}
+  .splash h1{font-size:29px!important}
+}
