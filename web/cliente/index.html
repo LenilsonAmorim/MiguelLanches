@@ -1,138 +1,55 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080808">
-<title>Miguel Lanches — Pedido Online</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>Miguel Lanches</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div id="splash" class="splash">
-  <div class="splash-box">
-    <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
-    <p>Carregando cardápio...</p>
-    <div class="loader"><i></i></div>
-  </div>
-</div>
-
-<div id="site" class="hidden">
-  <header class="header">
-    <div class="logo">
-      <img src="assets/logo.png" alt="Miguel Lanches"
-           onerror="this.parentElement.innerHTML='<b>MIGUEL<br>LANCHES</b>'">
+  <div id="splash" class="splash">
+    <div class="splash-box">
+      <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
+      <p>Hamburgueria e Pizzaria</p>
+      <div class="loader"><i></i></div>
     </div>
-    <label class="search">
-      <span>⌕</span>
-      <input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off">
-    </label>
+  </div>
+
+  <header class="header">
+    <div class="logo"><img src="assets/logo.png" alt="Miguel Lanches"></div>
+    <div class="search"><span>⌕</span><input id="searchInput" placeholder="Buscar em Miguel Lanches"></div>
   </header>
 
   <nav id="categories" class="categories"></nav>
+  <main id="app"></main>
 
-  <main>
-    <section class="section highlights">
-      <div class="section-title"><h2>Destaques</h2></div>
-      <div id="featured" class="featured"></div>
-    </section>
+  <div id="bagBar" class="bag-bar empty"></div>
 
-    <section class="section">
-      <div id="products"></div>
-    </section>
-  </main>
-</div>
-
-<div id="bagBar" class="bag-bar empty">
-  <div class="bag-info">
-    <div class="bag-icon">
-      <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
-    </div>
-    <div><b id="bagText">Sua sacola</b><small id="bagTotal">R$ 0,00</small></div>
+  <div id="shade" class="shade"></div>
+  <div id="cartDrawer" class="cart-drawer">
+    <div class="drawer-head"><div><small>SUA SACOLA</small><h2>Seu pedido</h2></div><button id="closeCart" class="round">×</button></div>
+    <div id="cartItems" class="cart-items"></div>
+    <div class="drawer-bottom"><div class="line"><b>Total</b><strong id="cartTotal">R$ 0,00</strong></div><button id="checkoutBtn" class="main-btn">Finalizar o pedido</button></div>
   </div>
-  <button type="button" onclick="openCart()">Ver sacola</button>
-</div>
 
-<div id="shade" class="shade" onclick="closeCart()"></div>
-
-<section id="cartDrawer" class="cart-drawer">
-  <div class="drawer-head">
-    <div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div>
-    <button class="round" type="button" onclick="closeCart()">×</button>
-  </div>
-  <div id="cartItems" class="cart-items"></div>
-  <div id="emptyCart" class="empty-cart">
-    <div class="empty-bag">□</div>
-    <b>Sua sacola está vazia</b>
-    <small>Adicione produtos para continuar.</small>
-  </div>
-  <div class="drawer-bottom">
-    <div class="line"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
-    <button id="addMoreBtn" class="secondary-btn" type="button" onclick="closeCart()">Adicionar mais itens</button>
-    <button id="checkoutBtn" class="main-btn" type="button" onclick="openCheckout()">Finalizar o pedido</button>
-  </div>
-</section>
-
-<div id="productModal" class="modal hidden">
-  <div class="product-card">
-    <button class="close-product" type="button" onclick="closeProduct()">×</button>
-    <div id="productBody"></div>
-  </div>
-</div>
-
-<div id="checkoutModal" class="modal hidden">
-  <div class="checkout-card">
-    <button class="round checkout-close" type="button" onclick="closeCheckout()">×</button>
-    <div class="checkout-head"><small>FINALIZAR PEDIDO</small><h2>Como você quer receber?</h2></div>
-    <form id="checkoutForm">
-      <div class="receive-grid">
-        <button type="button" class="receive" data-method="entrega" onclick="selectReceive('entrega')"><b>Entrega</b><small>Receba em casa</small></button>
-        <button type="button" class="receive" data-method="retirada" onclick="selectReceive('retirada')"><b>Retirada</b><small>Busque na loja</small></button>
-      </div>
-      <div class="form-grid">
-        <label>Nome<input id="customerName" required placeholder="Seu nome"></label>
-        <label>WhatsApp<input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999"></label>
-      </div>
-      <div id="deliveryBox" class="delivery-box hidden">
-        <label>Bairro<select id="neighborhood"><option value="">Bairro</option></select></label>
-        <label>Endereço<input id="address" placeholder="Rua, número"></label>
-        <label>Referência<input id="reference" placeholder="Ex.: perto da praça"></label>
-      </div>
-      <label>Forma de pagamento
-        <select id="payment"><option value="">Escolha o pagamento</option><option>Dinheiro</option><option>Pix</option><option>Cartão</option></select>
-      </label>
-      <div id="cashBox" class="cash-box hidden">
-        <label>Valor pago<input id="cashValue" type="number" min="0" step="0.01" placeholder="0,00"></label>
-        <strong id="change"></strong>
-      </div>
-      <label>Observações (opcional)<textarea id="orderNote" placeholder="Alguma observação sobre o pedido?"></textarea></label>
-      <div class="checkout-total">
-        <div><span>Subtotal</span><strong id="checkoutSubtotal">R$ 0,00</strong></div>
-        <div><span>Entrega</span><strong>R$ 0,00</strong></div>
-        <div class="grand"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
-      </div>
-      <button class="main-btn" type="submit">Enviar pedido</button>
-    </form>
-  </div>
-</div>
-
-<div id="successModal" class="modal hidden">
-  <div class="success-card">
+  <div id="productModal" class="modal hidden"><div id="productBody" class="product-card"></div></div>
+  <div id="checkoutModal" class="modal hidden"><div id="checkoutBody" class="checkout-card"></div></div>
+  <div id="successModal" class="modal hidden"><div class="success-card">
     <div class="success-icon">✓</div>
     <h2>Pedido enviado!</h2>
     <p id="orderNumber"></p>
     <p>Seu pedido já foi enviado para a loja.</p>
-    <button class="main-btn" type="button" onclick="closeSuccess()">Continuar</button>
-  </div>
-</div>
+  </div></div>
 
-<div id="toast" class="toast"></div>
+  <div id="trackingModal" class="hidden"><div id="trackingCard"><div id="trackingBody"></div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-<script src="app.js"></script>
-<!-- O arquivo completo de opções fica em /web/cliente_opcoes.js -->
-<script src="../cliente_opcoes.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="cliente_opcoes.js"></script>
+  <script src="cliente_opcoes.js"></script>
+  <script src="acompanhamento_realtime.js"></script>
+  <script src="integracao_acompanhamento.js"></script>
 </body>
 </html>
