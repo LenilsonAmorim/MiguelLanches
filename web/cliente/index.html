@@ -25,13 +25,20 @@
     <div class="scroll-cue">⌄</div>
   </div>
 </section>
-<section class="menu-section" id="cardapio"><div class="menu-shell">
-  <div class="menu-head"><div class="menu-title"><h2>Cardápio</h2></div></div>
-  <div class="search-wrap"><span>⌕</span><input id="search" placeholder="Buscar produto..." autocomplete="off"></div>
-  <div id="cats" class="chips"></div>
-  <div class="section-label"><span>🔥</span><h3>Mais pedidos</h3></div>
-  <div id="products" class="products"></div>
-</div></section>
+<section class="menu-section" id="cardapio">
+  <div class="menu-shell">
+    <div class="section-label highlights-title"><span>⭐</span><h3>Destaques</h3></div>
+    <div id="highlights" class="highlights"></div>
+
+    <div id="stickyCats" class="sticky-cats">
+      <div id="cats" class="chips"></div>
+    </div>
+
+    <div class="section-label"><span>🔥</span><h3>Mais pedidos</h3></div>
+    <div id="products" class="products"></div>
+    <div id="categorySections"></div>
+  </div>
+</section>
 <a id="floatingBag" class="floating-bag" href="#carrinho" aria-label="Abrir sacola">
   <span class="bag-icon">🛍️</span><span class="bag-label">Ver sacola</span><strong id="floatingBagCount">0</strong>
 </a>
@@ -43,5 +50,5 @@
 </main>
 <footer><img src="assets/logo.png" alt=""><span>Miguel Lanches</span><a href="../">Área de atendimento</a></footer><div id="toast" class="toast"></div>
 </div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script src="js/client.js"></script><script>window.addEventListener("load",()=>setTimeout(()=>{document.getElementById("splash").classList.add("hide");document.getElementById("site").classList.remove("site-hidden");},1300));</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script src="js/client.js"></script><script>window.addEventListener("load",()=>setTimeout(()=>{document.getElementById("splash").classList.add("hide");document.getElementById("site").classList.remove("site-hidden");},3000));</script>
 </body></html>
