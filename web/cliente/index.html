@@ -39,7 +39,19 @@
 <style>
 .track-access{padding:10px 14px;background:#fff;border-bottom:1px solid #eee;text-align:right}.track-access a{display:inline-flex;align-items:center;min-height:34px;padding:0 13px;border-radius:9px;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:900}
 .success-card{text-align:center;padding:30px 20px 26px}.success-card h2{font-size:26px;margin:8px 0 5px}.success-card #orderNumber{font-weight:900;color:#c71922;margin:0 0 10px}.success-text{color:#666;font-size:13px;line-height:1.4;margin:0 0 20px}.success-actions{display:grid;gap:9px}.success-actions .ghost{min-height:46px}
-</style></head>
+</style>
+<style>
+/* Compatibility visual layer for the project's existing app.js */
+.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card{position:relative;border:1px solid #ddd;border-radius:11px;background:#fff;overflow:hidden;box-shadow:0 1px 4px #00000010;cursor:pointer}
+.photo{height:130px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:45px}
+.photo img{width:100%;height:100%;object-fit:cover}
+.card-body{padding:8px 9px 12px}.card-body h3{margin:0 0 5px;font-size:13px;line-height:1.2}
+.desc{margin:0 0 7px;color:#777;font-size:10px;line-height:1.25}.card-foot{display:flex;align-items:center;justify-content:space-between}
+.price{font-weight:900;color:#d71920}.cart-item{padding:12px 0;border-bottom:1px solid #eee}.cart-row{display:flex;justify-content:space-between;gap:8px}
+.cart-name{font-size:13px}.cart-sub{font-size:10px;color:#777;margin-top:3px}.qty{display:flex;gap:7px;margin-top:8px}.qty button{min-height:28px;border:1px solid #ddd;background:#fff;border-radius:7px}
+</style>
+</head>
 <body>
 <div id="splash" class="splash"><div class="splash-inner"><img src="assets/logo.png" alt="Miguel Lanches"><div class="splash-brand">MIGUEL <span>LANCHES</span></div><p>Carregando seu cardápio...</p><div class="loader"><i></i></div></div></div>
 <div id="site" class="site-hidden">
@@ -81,7 +93,7 @@
 <div id="cashBox" class="cash-box hidden">
   <label for="cashValue">Valor que você vai pagar</label>
   <input id="cashValue" inputmode="decimal" type="text" autocomplete="off" placeholder="Ex.: 10,00"><div id="cashError" class="cash-error"></div>
-  <div class="change-row"><span>Troco</span><strong id="changeValue">R$ 0,00</strong></div>
+  <div class="change-row"><span>Troco</span><strong id="change">R$ 0,00</strong></div>
 </div><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
 <div id="successModal" class="modal hidden"><div class="modal-card success-card">
   <div class="success-icon">✓</div>
@@ -94,7 +106,22 @@
   </div>
 </div></div>
 <div id="toast" class="toast"></div>
+
+<div id="mlCompat" class="hidden" aria-hidden="true">
+  <span id="headerCount"></span>
+  <span id="cartSubtotal"></span><span id="cartFee"></span>
+  <span id="productsTitle"></span>
+  <select id="neighborhood"></select>
+  <span id="savedBox"><span id="savedText"></span></span>
+  <button id="changeAddress" type="button"></button>
+  <button id="shopNow" type="button"></button>
+  <button id="headerCart" type="button"></button>
+  <button id="navCategories" type="button"></button>
+  <button id="navOrders" type="button"></button>
+  <button id="clearSearch" type="button"></button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script><script src="js/client.js"></script><script src="js/home-v2.js"></script>
+<script src="config.js"></script><script src="app.js"></script><script src="js/pedido-flow.js"></script>
 <script>window.addEventListener('load',()=>setTimeout(()=>{document.getElementById('splash').classList.add('hide');document.getElementById('site').classList.remove('site-hidden')},1500));</script>
 </body></html>
