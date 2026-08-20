@@ -15,8 +15,8 @@
       <div><strong>MIGUEL LANCHES</strong><span>PAINEL ADMIN</span></div>
     </div>
     <nav id="nav">
-      <button class="nav active" data-page="dashboard"><i>⌂</i>Dashboard</button>
-      <button class="nav" data-page="pedidos"><i>▣</i>Pedidos <b id="newBadge">0</b></button>
+      <button class="nav" data-page="dashboard"><i>⌂</i>Dashboard</button>
+      <button class="nav active" data-page="pedidos"><i>▣</i>Pedidos <b id="newBadge">0</b></button>
       <button class="nav" data-page="cardapio"><i>☷</i>Cardápio</button>
       <button class="nav" data-page="categorias"><i>◈</i>Categorias</button>
       <button class="nav" data-page="opcoes"><i>◇</i>Opções / adicionais</button>
@@ -32,8 +32,8 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <strong id="pageTitle">Dashboard</strong>
-        <span id="pageSubtitle">Visão geral da operação</span>
+        <strong id="pageTitle">Pedidos</strong>
+        <span id="pageSubtitle">Pedidos novos e andamento da operação</span>
       </div>
       <div class="top-actions">
         <span class="live"><span class="dot"></span> Tempo real</span>
@@ -41,7 +41,7 @@
       </div>
     </header>
 
-    <section class="page active" id="page-dashboard">
+    <section class="page" id="page-dashboard">
       <div class="page-head"><div><h1>Resumo geral</h1><p>Acompanhe pedidos, faturamento e operação.</p></div></div>
       <div id="kpis" class="kpis"></div>
       <div class="grid-2">
@@ -54,7 +54,7 @@
       </div>
     </section>
 
-    <section class="page" id="page-pedidos">
+    <section class="page active" id="page-pedidos">
       <div class="page-head">
         <div><h1>Pedidos em tempo real</h1><p>Novos pedidos chegam automaticamente nesta tela.</p></div>
         <div class="head-actions"><button class="ghost" id="soundBtn">Som: ligado</button></div>

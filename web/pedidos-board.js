@@ -20,7 +20,7 @@
 
   function renderBoard(){
     const host=document.getElementById('orders');
-    if(!host||!window.state)return;
+    if(!host||typeof state==='undefined')return;
 
     const groups=[
       ['novo','Pedido novo','new-col'],
