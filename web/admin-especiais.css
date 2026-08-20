@@ -1,7 +1,0 @@
-/* Complemento visual da configuração Pizza/Pastel do Admin.
-   O admin-category-patch.js também injeta os estilos principais. */
-.admin-category-group{width:100%}
-.special-flavors{width:100%}
-.sp-row{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:8px 0}
-.special-flavor{cursor:pointer}
-.special-flavor input{accent-color:#b71924}
