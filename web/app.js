@@ -37,14 +37,26 @@ function categoryId(p){return String(p.categoria_id||"")}
 
 async function load(){
  try{
-  const [c,p]=await Promise.all([
-   db.from("categorias").select("*").eq("ativo",true).order("ordem"),
-   db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem")
+  const result=await Promise.race([
+   Promise.all([
+    db.from("categorias").select("*").eq("ativo",true).order("ordem"),
+    db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem")
+   ]),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error("Tempo limite ao carregar o cardápio")),8000))
   ]);
+  const [c,p]=result;
   categories=(!c.error&&c.data?.length)?c.data.filter(x=>norm(x.nome)!=="todos"):fallbackCats;
   products=(!p.error&&p.data)?p.data:[];
-  renderCategories();renderFeatured();renderProducts();await loadNeighborhoods();
- }catch(e){console.error(e)}
+ }catch(e){
+  console.error("Erro ao carregar cardápio:",e);
+  categories=fallbackCats;
+  products=[];
+ }
+ try{
+  renderCategories();renderFeatured();renderProducts();
+ }catch(e){console.error("Erro ao renderizar cardápio:",e)}
+ // Bairros são carregados separadamente e não podem travar o site.
+ loadNeighborhoods().catch(e=>console.error("Erro bairros:",e));
  setTimeout(()=>{$("splash")?.classList.add("hide");$("site")?.classList.remove("hidden")},1500);
 }
 
@@ -270,5 +282,16 @@ async function sendOrder(e){
 }
 function closeSuccess(){$("successModal").classList.add("hidden")}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
-$("search").addEventListener("input",renderProducts);$("payment").addEventListener("change",updatePayment);$("cashValue").addEventListener("input",updateChange);$("checkoutForm").addEventListener("submit",sendOrder);
-window.addEventListener("DOMContentLoaded",()=>{  setTimeout(()=>{    const splash=document.getElementById("splash");    const site=document.getElementById("site");    if(splash) splash.classList.add("hide");    if(site) site.classList.remove("hidden");  },1500);  try{ load(); }catch(e){ console.error(e); }});
+window.addEventListener("DOMContentLoaded",()=>{
+ try{
+  $("search")?.addEventListener("input",renderProducts);
+  $("payment")?.addEventListener("change",updatePayment);
+  $("cashValue")?.addEventListener("input",updateChange);
+  $("checkoutForm")?.addEventListener("submit",sendOrder);
+  load();
+ }catch(e){
+  console.error("Erro ao iniciar cliente:",e);
+  $("splash")?.classList.add("hide");
+  $("site")?.classList.remove("hidden");
+ }
+});
