@@ -76,7 +76,7 @@
 <textarea id="orderNote" placeholder="Observações do pedido"></textarea><select id="payment"><option value="">Forma de pagamento *</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option></select>
 <div id="cashBox" class="cash-box hidden">
   <label for="cashValue">Valor que você vai pagar</label>
-  <input id="cashValue" inputmode="decimal" type="number" min="0" step="0.01" placeholder="Ex.: 50,00">
+  <input id="cashValue" inputmode="decimal" type="text" autocomplete="off" placeholder="Ex.: 50,00">
   <div class="change-row"><span>Troco</span><strong id="changeValue">R$ 0,00</strong></div>
 </div><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
 <div id="successModal" class="modal hidden"><div class="modal-card"><div class="success-icon">✓</div><h2 id="orderNumber">Pedido #0000</h2><button id="successClose" class="primary full" type="button">Entendi</button></div></div>
