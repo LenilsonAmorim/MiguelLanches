@@ -1,7 +1,7 @@
 const db=window.db;
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 let categories=[],products=[],cart=[],selectedCategory='todos';
 window.categories=categories;window.products=products;window.cart=cart;
 window.DELIVERY_FEE=Number(window.DELIVERY_FEE||0);
@@ -28,6 +28,8 @@ async function load(){
    db.from('categorias').select('*').order('ordem'),
    db.from('produtos').select('*,categorias(nome,emoji)').eq('ativo',true).order('ordem')
   ]);
+  if(c.error)throw c.error;
+  if(p.error)throw p.error;
   categories=c.data||[];products=p.data||[];cart=cart||[];
   window.categories=categories;window.products=products;window.cart=cart;
   renderCategories();
@@ -68,38 +70,110 @@ async function sendOrder(){
  const reference=$('reference')?.value.trim()||'';
  if(!name||!phone)return toast('Preencha nome e telefone');
  if(method==='entrega'&&!address)return toast('Informe o endereço');
- const sub=cart.reduce((s,x)=>s+Number(x.preco)*Number(x.quantidade),0),fee=method==='entrega'?Number(window.DELIVERY_FEE||0):0,total=sub+fee;
- const items=cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.config?.adicionais||[],obs:x.obs||''}));
- const obs=($('orderNote')?.value||'')+'\n\n[ML_ITENS]'+encodeURIComponent(JSON.stringify(items))+'[/ML_ITENS]\n[ML_ENTREGA]'+fee+'[/ML_ENTREGA]\n[ML_STATUS]novo[/ML_STATUS]';
- const payload={Cliente:name,telefone:phone,endereco:address,referencia:reference,total,observacoes:obs};
+
+ const sub=cart.reduce((s,x)=>s+Number(x.preco)*Number(x.quantidade),0);
+ const fee=method==='entrega'?Number(window.DELIVERY_FEE||0):0;
+ const total=sub+fee;
+ const items=cart.map(x=>({
+   nome:x.nome,
+   quantidade:x.quantidade,
+   preco:x.preco,
+   adicionais:x.config?.adicionais||[],
+   obs:x.obs||''
+ }));
+
+ const obs=(($('orderNote')?.value)||'')+
+   '\n\n[ML_ITENS]'+encodeURIComponent(JSON.stringify(items))+'[/ML_ITENS]'+
+   '\n[ML_ENTREGA]'+fee+'[/ML_ENTREGA]'+
+   '\n[ML_RECEBIMENTO]'+method+'[/ML_RECEBIMENTO]'+
+   '\n[ML_STATUS]novo[/ML_STATUS]';
+
+ // A tabela pedidos usa "cliente" em minúsculo.
+ const payload={
+   cliente:name,
+   telefone:phone,
+   endereco:address,
+   referencia:reference,
+   total,
+   observacoes:obs
+ };
+
  const r=await db.from('pedidos').insert(payload).select('id').single();
- if(r.error){console.error(r.error);return toast('Erro ao enviar pedido');}
- try{await db.from('clientes').upsert({nome:name,telefone:phone,endereco:address,referencia:reference},{onConflict:'telefone'});}catch{}
+
+ if(r.error){
+   console.error('Erro ao inserir pedido:',r.error);
+   return toast('Não foi possível enviar o pedido. Tente novamente.');
+ }
+
+ try{
+   await db.from('clientes').upsert(
+     {nome:name,telefone:phone,endereco:address,referencia:reference},
+     {onConflict:'telefone'}
+   );
+ }catch(e){console.warn('Cliente não atualizado:',e)}
 
  const orderId=r.data.id;
  const num=String(orderId).slice(-5);
- localStorage.setItem('miguel_lanches_ultimo_pedido',JSON.stringify({id:orderId,numero:num}));
- cart=[];syncCart();closeCart();$('checkoutModal')?.classList.add('hidden');
+
+ // Dados usados pela tela "Acompanhar pedido".
+ localStorage.setItem(
+   'miguel_lanches_ultimo_pedido',
+   JSON.stringify({id:orderId,numero:num})
+ );
+ localStorage.setItem('miguel_lanches_ultimo_telefone',phone);
+
+ cart=[];
+ syncCart();
+ closeCart();
+ $('checkoutModal')?.classList.add('hidden');
+
  if($('orderNumber'))$('orderNumber').textContent='Pedido #'+num;
  $('successModal')?.classList.remove('hidden');
 }
 window.sendOrder=sendOrder;
 
 document.addEventListener('DOMContentLoaded',()=>{
- $('navCart')?.addEventListener('click',openCart);$('closeCart')?.addEventListener('click',closeCart);$('shade')?.addEventListener('click',closeCart);
+ $('navCart')?.addEventListener('click',openCart);
+ $('closeCart')?.addEventListener('click',closeCart);
+ $('shade')?.addEventListener('click',closeCart);
  $('clearCart')?.addEventListener('click',()=>{cart=[];syncCart()});
- $('checkoutBtn')?.addEventListener('click',()=>{if(!cart.length)return toast('Adicione produtos à sacola');closeCart();$('checkoutModal')?.classList.remove('hidden')});
+
+ $('checkoutBtn')?.addEventListener('click',()=>{
+   if(!cart.length)return toast('Adicione produtos à sacola');
+   closeCart();
+   $('checkoutModal')?.classList.remove('hidden');
+ });
+
  $('checkoutClose')?.addEventListener('click',()=>$('checkoutModal')?.classList.add('hidden'));
  $('productClose')?.addEventListener('click',window.closeProduct);
 
  $('trackOrderBtn')?.addEventListener('click',()=>{
    const saved=localStorage.getItem('miguel_lanches_ultimo_pedido');
-   if(saved) window.location.href='acompanhar-pedido.html';
+   if(saved)window.location.href='acompanhar-pedido.html';
    else toast('Você ainda não tem um pedido');
  });
+
  $('successClose')?.addEventListener('click',()=>window.location.reload());
 
- $('clearSearch')?.addEventListener('click',()=>{const s=$('search');if(s){s.value='';s.focus();if(window.renderProducts)renderProducts();if(window.renderFeatured)renderFeatured()}});
- document.querySelectorAll('.receive').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.receive').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');const delivery=b.dataset.method==='entrega';$('deliveryBox')?.classList.toggle('hidden',!delivery)}));
- $('checkoutForm')?.addEventListener('submit',e=>{e.preventDefault();sendOrder()});
+ $('clearSearch')?.addEventListener('click',()=>{
+   const s=$('search');
+   if(s){
+     s.value='';
+     s.focus();
+     if(window.renderProducts)renderProducts();
+     if(window.renderFeatured)renderFeatured();
+   }
+ });
+
+ document.querySelectorAll('.receive').forEach(b=>b.addEventListener('click',()=>{
+   document.querySelectorAll('.receive').forEach(x=>x.classList.remove('selected'));
+   b.classList.add('selected');
+   const delivery=b.dataset.method==='entrega';
+   $('deliveryBox')?.classList.toggle('hidden',!delivery);
+ }));
+
+ $('checkoutForm')?.addEventListener('submit',e=>{
+   e.preventDefault();
+   sendOrder();
+ });
 });
