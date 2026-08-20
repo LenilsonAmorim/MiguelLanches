@@ -1,99 +1,101 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#b71924"><title>Miguel Lanches</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="orders-enhancements.css"></head><body>
-<div id="app"><aside class="sidebar" id="sidebar"><div class="brand"><div class="brand-miguel">MIGUEL</div><div class="brand-lanches">LANCHES</div><small>Sistema de pedidos</small></div><nav><button class="nav-item active" data-page="pedido">🛒 <span>Novo Pedido</span></button><button class="nav-item" data-page="comandas">📋 <span>Comandas</span><b id="openCount">0</b></button><button class="nav-item" data-page="historico">📊 <span>Histórico</span></button><button class="nav-item" data-page="clientes">👥 <span>Clientes</span></button><button class="nav-item" data-page="admin">⚙️ <span>Administração</span></button></nav><div class="sidebar-foot">Miguel Lanches<br><small>Cardápio integrado ao Supabase</small></div></aside>
-<main class="main"><header class="topbar"><button class="icon-btn" id="menuBtn">☰</button><div><strong id="pageTitle">Novo Pedido</strong><small id="pageSubtitle">Monte o pedido rapidamente</small></div><div class="top-actions"><span class="sync" id="syncStatus">● conectando</span></div></header>
-<section class="page active" id="page-pedido"><div class="page-head"><div><h1>Novo Pedido</h1><p>Escolha os produtos e monte a comanda.</p></div></div><div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div><div class="category-tabs" id="categoryTabs"></div><button class="view-cart" id="viewCart">🛒 <span>Ver comanda</span> <b id="viewCartCount">0 itens</b> <strong id="viewCartTotal">R$ 0,00</strong></button><div class="cart-overlay" id="cartOverlay"></div><div class="order-layout"><div class="catalog"><div class="product-grid" id="productGrid"></div></div><aside class="cart" id="cart"><div class="cart-title"><div><h2>Comanda</h2><small id="cartCount">0 itens</small></div><div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div></div><div class="customer-mini"><div class="customer-row"><input id="cliente" placeholder="Nome do cliente"><button id="findClient" title="Buscar cliente">👤</button></div><input id="telefone" placeholder="WhatsApp / telefone"><input id="endereco" placeholder="Endereço"><input id="referencia" placeholder="Ponto de referência"></div><div id="cartItems" class="cart-items"></div><div class="note"><label>Observação do pedido</label><textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></div><div class="summary"><div><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div><div><span>Entrega</span><div class="inline-money"><input id="taxaEntrega" type="number" step="0.01" value="0"><b id="deliveryShow">R$ 0,00</b></div></div><div class="total"><span>TOTAL</span><strong id="total">R$ 0,00</strong></div></div><button class="primary big" id="finish">✓ Finalizar Pedido</button></aside></div></section>
-<section class="page" id="page-comandas"><div class="page-head"><div><h1>Pedidos</h1><p>Acompanhe e confirme os pedidos em tempo real.</p></div></div><div class="panel"><div id="prepList"></div><div id="deliveryList"></div></div></section>
-<section class="page" id="page-historico"><div class="page-head"><div><h1>Histórico</h1><p>Vendas reais e pedidos cancelados separados.</p></div></div><div class="stats" id="stats"></div><div class="filters"><button class="filter active" data-history="todos">Todos</button><button class="filter" data-history="entregue">Entregues</button><button class="filter" data-history="cancelado">Cancelados</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead><tbody id="history"></tbody></table></div></div></section>
-<section class="page" id="page-clientes"><div class="page-head"><div><h1>Clientes</h1><p>Salve clientes para preencher pedidos mais rápido.</p></div><button class="primary" id="newClient">+ Novo cliente</button></div><div class="search"><span>⌕</span><input id="clientSearch" placeholder="Buscar por nome ou telefone..."></div><div class="client-grid" id="clientGrid"></div></section>
-<section class="page" id="page-admin"><div class="page-head"><div><h1>Administração</h1><p>Gerencie o cardápio sem mexer no código.</p></div></div><div class="admin-tabs"><button class="admin-tab active" data-admin="produtos">🍔 Produtos</button><button class="admin-tab" data-admin="categorias">📂 Categorias</button><button class="admin-tab" data-admin="adicionais">🧀 Adicionais</button><button class="admin-tab" data-admin="tamanhos">📏 Tamanhos</button><button class="admin-tab" data-admin="combos">🎁 Combos</button><button class="admin-tab" data-admin="entrega">🚚 Entrega</button><button class="admin-tab" data-admin="pagamento">💰 Pagamento</button></div><div id="adminContent"></div></section></main></div>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#b71924">
+<title>Miguel Lanches</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-miguel">MIGUEL</div><div class="brand-lanches">LANCHES</div><small>Sistema de pedidos</small></div>
+    <nav>
+      <button class="nav-item active" data-page="pedido">🛒 <span>Novo Pedido</span><b id="openCount">0</b></button>
+      <button class="nav-item" data-page="comandas">📋 <span>Comandas</span><b id="openCount2">0</b></button>
+      <button class="nav-item" data-page="historico">📊 <span>Histórico</span></button>
+      <button class="nav-item" data-page="clientes">👥 <span>Clientes</span></button>
+      <button class="nav-item" data-page="admin">⚙️ <span>Administração</span></button>
+    </nav>
+    <div class="sidebar-foot">Miguel Lanches<br><small>Cardápio integrado ao Supabase</small></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn">☰</button>
+      <div><strong id="pageTitle">Novo Pedido</strong><small id="pageSubtitle">Monte o pedido rapidamente</small></div>
+      <div class="top-actions"><span class="sync" id="syncStatus">● conectando</span></div>
+    </header>
+
+    <section class="page active" id="page-pedido">
+      <div class="page-head"><div><h1>Novo Pedido</h1><p>Pedidos recebidos aparecem aqui para aceitar, imprimir ou recusar.</p></div></div>
+      <div id="newOrdersBox"></div>
+      <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
+      <div class="category-tabs" id="categoryTabs"></div>
+      <button class="view-cart" id="viewCart">🛒 <span>Ver comanda</span> <b id="viewCartCount">0 itens</b> <strong id="viewCartTotal">R$ 0,00</strong></button>
+      <div class="cart-overlay" id="cartOverlay"></div>
+      <div class="order-layout">
+        <div class="catalog"><div class="product-grid" id="productGrid"></div></div>
+        <aside class="cart" id="cart">
+          <div class="cart-title"><div><h2>Comanda</h2><small id="cartCount">0 itens</small></div><div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div></div>
+          <div class="customer-mini">
+            <div class="customer-row"><input id="cliente" placeholder="Nome do cliente"><button id="findClient" title="Buscar cliente">👤</button></div>
+            <input id="telefone" placeholder="WhatsApp / telefone">
+            <input id="endereco" placeholder="Endereço">
+            <input id="referencia" placeholder="Ponto de referência">
+          </div>
+          <div id="cartItems" class="cart-items"></div>
+          <div class="note"><label>Observação do pedido</label><textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></div>
+          <div class="summary">
+            <div><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div>
+            <div><span>Entrega</span><div class="inline-money"><input id="taxaEntrega" type="number" step="0.01" value="0"><b id="deliveryShow">R$ 0,00</b></div></div>
+            <div class="total"><span>TOTAL</span><strong id="total">R$ 0,00</strong></div>
+          </div>
+          <button class="primary big" id="finish">✓ Finalizar Pedido</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="page" id="page-comandas">
+      <div class="page-head"><div><h1>Comandas</h1><p>Acompanhe os pedidos em tempo real.</p></div></div>
+      <div class="status-columns">
+        <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
+        <div class="status-col"><div class="col-head delivery"><span>🛵 Saiu para entrega</span><b id="countDelivery">0</b></div><div id="deliveryList"></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-historico">
+      <div class="page-head"><div><h1>Histórico</h1><p>Vendas reais e pedidos cancelados separados.</p></div></div>
+      <div class="stats" id="stats"></div>
+      <div class="filters"><button class="filter active" data-history="todos">Todos</button><button class="filter" data-history="entregue">Entregues</button><button class="filter" data-history="cancelado">Cancelados</button></div>
+      <div class="panel"><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead><tbody id="history"></tbody></table></div></div>
+    </section>
+
+    <section class="page" id="page-clientes">
+      <div class="page-head"><div><h1>Clientes</h1><p>Salve clientes para preencher pedidos mais rápido.</p></div><button class="primary" id="newClient">+ Novo cliente</button></div>
+      <div class="search"><span>⌕</span><input id="clientSearch" placeholder="Buscar por nome ou telefone..."></div>
+      <div class="client-grid" id="clientGrid"></div>
+    </section>
+
+    <section class="page" id="page-admin">
+      <div class="page-head"><div><h1>Administração</h1><p>Gerencie o cardápio sem mexer no código.</p></div></div>
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-admin="produtos">🍔 Produtos</button>
+        <button class="admin-tab" data-admin="categorias">📂 Categorias</button>
+        <button class="admin-tab" data-admin="adicionais">🧀 Adicionais</button>
+        <button class="admin-tab" data-admin="tamanhos">📏 Tamanhos</button>
+        <button class="admin-tab" data-admin="combos">🎁 Combos</button>
+        <button class="admin-tab" data-admin="entrega">🚚 Entrega</button>
+        <button class="admin-tab" data-admin="pagamento">💰 Pagamento</button>
+      </div>
+      <div id="adminContent"></div>
+    </section>
+  </main>
+</div>
 <div class="modal hidden" id="modal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="category-group.css"><script src="app.js"></script><script src="admin-auth.js"></script><script src="orders-enhancements.js"></script><script src="admin-bairros.js"></script><script src="admin-pedido-mesa.js"></script><script src="admin-features.js"></script><script src="admin-category-delete-fix.js"></script><script src="admin-category-patch.js"></script><script src="admin-product-search.js"></script><script src="quantidade-real-admin.js"></script><script src="admin-produto-config.js"></script><script src="admin-produto-fix.js"></script><script src="admin-acai-fix.js"></script>
-
-<!-- CORREÇÃO: "TODOS" no Novo Pedido do Admin fica agrupado por categoria. -->
-<script>
-(function(){
-  function renderProductsByCategory(){
-    const grid=document.getElementById("productGrid");
-    const search=document.getElementById("search");
-    if(!grid || typeof state==="undefined") return;
-
-    const q=(search?.value||"").toLowerCase().trim();
-
-    let filtered=(state.products||[]).filter(function(p){
-      return (!q || String(p.nome||"").toLowerCase().includes(q));
-    });
-
-    if(state.cat !== "todos"){
-      filtered=filtered.filter(function(p){
-        return String(p.categoria_id)===String(state.cat);
-      });
-      grid.innerHTML=filtered.length
-        ? filtered.map(function(p){
-            return '<article class="product-card"><div class="product-img">'+
-              (p.imagem_url?'<img src="'+esc(p.imagem_url)+'" alt="">':esc(p.emoji||"🍔"))+
-              '</div><div class="product-info"><h3>'+esc(p.nome)+'</h3><div class="product-bottom">'+
-              '<span class="price">'+money(p.preco)+'</span><button class="plus" onclick="openProduct(\''+p.id+'\')">+</button>'+
-              '</div></div></article>';
-          }).join("")
-        : '<div class="empty">Nenhum produto encontrado.</div>';
-      return;
-    }
-
-    const cats=Array.isArray(state.cats)?state.cats.filter(c=>c.ativo!==false):[];
-    const groups=[];
-
-    cats.forEach(function(cat){
-      const products=filtered
-        .filter(function(p){return String(p.categoria_id)===String(cat.id);})
-        .sort(function(a,b){
-          return Number(a.ordem??999999)-Number(b.ordem??999999);
-        });
-      if(products.length) groups.push({cat:cat,products:products});
-    });
-
-    const known=new Set(cats.map(function(c){return String(c.id);}));
-    const uncategorized=filtered
-      .filter(function(p){return !known.has(String(p.categoria_id));})
-      .sort(function(a,b){return Number(a.ordem??999999)-Number(b.ordem??999999);});
-    if(uncategorized.length) groups.push({cat:{nome:"Outros",emoji:"📦"},products:uncategorized});
-
-    grid.innerHTML=groups.length
-      ? groups.map(function(g){
-          return '<section class="ml-category-group">'+
-            '<h2 class="ml-category-title">'+esc(g.cat.emoji||"📦")+' '+esc(g.cat.nome)+'</h2>'+
-            '<div class="product-grid">'+
-            g.products.map(function(p){
-              return '<article class="product-card"><div class="product-img">'+
-                (p.imagem_url?'<img src="'+esc(p.imagem_url)+'" alt="">':esc(p.emoji||"🍔"))+
-                '</div><div class="product-info"><h3>'+esc(p.nome)+'</h3><div class="product-bottom">'+
-                '<span class="price">'+money(p.preco)+'</span><button class="plus" onclick="openProduct(\''+p.id+'\')">+</button>'+
-                '</div></div></article>';
-            }).join("")+
-            '</div></section>';
-        }).join("")
-      : '<div class="empty">Nenhum produto encontrado.</div>';
-  }
-
-  window.renderProducts=renderProductsByCategory;
-
-  /* Re-renderiza quando a busca, categoria ou dados mudarem. */
-  const originalChooseCat=window.chooseCat;
-  window.chooseCat=function(id){
-    state.cat=id;
-    if(typeof renderCats==="function") renderCats();
-    renderProductsByCategory();
-  };
-
-  const originalLoadAll=window.loadAll;
-  window.loadAll=async function(){
-    const result=await originalLoadAll.apply(this,arguments);
-    renderProductsByCategory();
-    return result;
-  };
-
-  document.getElementById("search")?.addEventListener("input",renderProductsByCategory);
-  setTimeout(renderProductsByCategory,1000);
-})();
-</script>
-</body></html>
+<script src="app.js"></script>
+<script src="new-orders.js"></script>
+</body>
+</html>
