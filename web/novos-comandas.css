@@ -1,20 +1,57 @@
-/* NOVOS PEDIDOS - COMANDAS */
-.novos-comandas{margin:0 0 22px;width:100%}
-.novos-cabecalho{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#b71924;color:#fff;padding:14px 16px;border-radius:12px 12px 0 0}
-.novos-titulo{font-size:21px;font-weight:900}
-.novos-subtitulo{font-size:13px;opacity:.9;margin-top:2px}
-.novos-contador{min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#fff;color:#b71924;border-radius:999px;font-size:18px;font-weight:900}
-.novos-vazio{background:#fff;border:1px solid #ddd;border-top:0;border-radius:0 0 12px 12px;padding:20px;text-align:center;color:#667085}
-.novo-card{background:#fff;border:1px solid #ddd;border-top:0;padding:15px}
-.novo-card:last-child{border-radius:0 0 12px 12px}
-.novo-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.novo-card h3{margin:0 0 5px;font-size:20px}
-.novo-meta{font-size:13px;color:#667085}
-.novo-total{font-size:18px;white-space:nowrap}
-.novo-itens{margin:12px 0;line-height:1.55}
-.novo-itens small{display:block;color:#667085}
-.novo-acoes{display:flex;flex-wrap:wrap;gap:8px}
-.novo-btn{border:0;border-radius:9px;padding:11px 13px;font-weight:800;font-size:14px;cursor:pointer}
-.novo-btn.imprimir{background:#111;color:#fff}
-.novo-btn.preparar{background:#159447;color:#fff}
-.novo-btn.recusar{background:#c62828;color:#fff}
+/* NOVOS PEDIDOS - DENTRO DE COMANDAS */
+.novos-comandas{
+  margin:0 0 20px 0;
+  border-radius:14px;
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #ddd;
+}
+.novos-comandas-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:15px 18px;
+  background:#b71924;
+  color:#fff;
+}
+.novos-comandas-head h2{
+  margin:0;
+  font-size:21px;
+}
+.novos-comandas-head small{
+  display:block;
+  margin-top:3px;
+  opacity:.95;
+}
+.novos-comandas-count{
+  min-width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:#fff;
+  color:#b71924;
+  font-weight:900;
+  font-size:18px;
+}
+.novos-comandas-list{
+  padding:0;
+}
+.novos-comandas-list .new-order-card{
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  border-bottom:1px solid #e5e7eb!important;
+  padding:16px!important;
+}
+.novos-comandas-list .new-order-card:last-child{
+  border-bottom:0!important;
+}
+.novos-comandas-empty{
+  padding:28px 15px;
+  text-align:center;
+  color:#667085;
+  font-size:17px;
+}
