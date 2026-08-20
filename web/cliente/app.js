@@ -117,9 +117,13 @@ function pickPizza(el){
  if(two&&!el.classList.contains("selected")&&document.querySelectorAll(".pizza-option.selected").length>=2)return;
  el.classList.toggle("selected");
 }
+
+/* PASTÉIS: não existe escolha de tamanho.
+   Pastel Médio e Pastel Grande são produtos separados;
+   cada um pede somente o sabor. */
 function pastelOptions(p){
  const flavors=products.filter(x=>isPastel(x)&&String(x.id)!==String(p.id)).slice(0,30);
- return `<div class="option-title">Tamanho</div><div class="options"><button class="option pastel-size selected" data-size="M" data-price="${Number(p.preco||0)}" onclick="pickOne('.pastel-size',this)">Pastel M <strong>${money(p.preco)}</strong></button><button class="option pastel-size" data-size="G" data-price="${Number(p.preco||0)}" onclick="pickOne('.pastel-size',this)">Pastel G <strong>${money(p.preco)}</strong></button></div><div class="option-title">Escolha 1 sabor</div><div class="options">${flavors.map(f=>`<button class="option pastel-flavor" data-name="${esc(f.nome)}" data-price="${Number(f.preco||0)}" onclick="pickOne('.pastel-flavor',this)">${esc(f.nome)} <strong>${money(f.preco)}</strong></button>`).join("")}</div>`;
+ return `<div class="option-title">Escolha 1 sabor</div><div class="options pastel-flavors">${flavors.map(f=>`<button class="option pastel-flavor" data-name="${esc(f.nome)}" onclick="pickOne('.pastel-flavor',this)"><span>${esc(f.nome)}</span></button>`).join("")}</div>`;
 }
 function acaiOptions(){
  return `<div class="option-title">Coberturas <small>(até 3)</small></div><div class="options">${["Leite em pó","Leite condensado","Paçoca","Granola","Morango","Banana","Ovomaltine","Confete"].map(x=>`<button class="option topping" data-name="${esc(x)}" onclick="toggleTopping(this)">${esc(x)}</button>`).join("")}</div>`;
@@ -138,10 +142,11 @@ function addCurrent(pid){
   item.preco=Math.max(Number(p.preco||0),...opts.map(x=>Number(x.dataset.price||0)));
   item.config={tipo:two?"pizza-2-sabores":"pizza-1-sabor",sabores:flavors};
  }else if(isPastel(p)){
-  const s=document.querySelector(".pastel-size.selected"),f=document.querySelector(".pastel-flavor.selected");
-  if(!s||!f)return alert("Escolha o tamanho e 1 sabor.");
-  item.nome=`Pastel ${s.dataset.size} — ${f.dataset.name}`;item.preco=Math.max(Number(s.dataset.price||0),Number(f.dataset.price||0));
-  item.config={tipo:"pastel",tamanho:s.dataset.size,sabor:f.dataset.name};
+  const f=document.querySelector(".pastel-flavor.selected");
+  if(!f)return alert("Escolha 1 sabor.");
+  item.nome=`${p.nome} — ${f.dataset.name}`;
+  item.preco=Number(p.preco||0);
+  item.config={tipo:"pastel",sabor:f.dataset.name};
  }else if(isAcai(p)){
   const tops=[...document.querySelectorAll(".topping.selected")].map(x=>x.dataset.name);
   item.nome=`${p.nome}${tops.length?" — "+tops.join(", "):""}`;
