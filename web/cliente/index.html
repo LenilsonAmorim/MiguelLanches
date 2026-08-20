@@ -1,17 +1,15 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#050505">
-  <meta name="description" content="Cardápio online Miguel Lanches">
-  <title>Miguel Lanches — Cardápio</title>
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>Miguel Lanches — Cardápio</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- Carregamento de 1,5 s -->
-<section id="splash" class="splash" aria-label="Carregando">
+<section id="splash" class="splash">
   <div class="splash-inner">
     <img src="assets/logo.png" alt="Miguel Lanches">
     <div class="splash-brand">MIGUEL <span>LANCHES</span></div>
@@ -21,24 +19,17 @@
 </section>
 
 <div id="site" class="hidden">
-
   <header class="mobile-header">
-    <button class="menu-btn" type="button" aria-label="Menu">☰</button>
     <div class="brand-mini">
       <img src="assets/logo.png" alt="Miguel Lanches">
     </div>
-    <button id="miniCart" class="cart-mini" type="button" onclick="openCart()" aria-label="Abrir sacola">
-      🛒<span id="cartCount">0</span>
-    </button>
   </header>
 
   <main class="menu-home">
-
-    <section class="search-wrap" aria-label="Buscar no cardápio">
-      <span class="search-icon">⌕</span>
-      <input id="search" type="search" autocomplete="off"
-             placeholder="Buscar em Miguel Lanches">
-      <button type="button" aria-label="Limpar" onclick="document.getElementById('search').value='';renderProducts()">×</button>
+    <section class="search-wrap">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input id="search" type="search" autocomplete="off" placeholder="Buscar em Miguel Lanches">
+      <button type="button" onclick="document.getElementById('search').value='';renderProducts()">×</button>
     </section>
 
     <nav class="categories-wrap" aria-label="Categorias">
@@ -53,15 +44,10 @@
       <div id="featured" class="featured-slider"></div>
     </section>
 
-    <section class="popular-section">
-      <div id="popular" class="popular-block"></div>
-    </section>
-
+    <section id="popular" class="popular-block"></section>
     <section id="products"></section>
-
   </main>
 
-  <!-- Sacola fixa -->
   <div id="bagBar" class="bag-bar empty">
     <div class="bag-info">
       <span class="bag-icon">🛍️</span>
@@ -70,94 +56,61 @@
         <small>Total: <span id="bagTotal">R$ 0,00</span></small>
       </div>
     </div>
-    <button type="button" onclick="openCart()">
-      <span>Ver sacola</span>
-      <em id="bagCount">0</em>
-    </button>
+    <button type="button" onclick="openCart()">Ver sacola <em id="bagCount">0</em></button>
   </div>
 
-  <!-- Fundo da sacola -->
   <div id="shade" class="shade" onclick="closeCart()"></div>
 
-  <!-- Sacola -->
   <aside id="cartDrawer" class="cart-drawer" aria-label="Sacola">
     <div class="drawer-head">
-      <div>
-        <small>SUA COMPRA</small>
-        <h2>Sacola</h2>
-      </div>
-      <button type="button" onclick="closeCart()" aria-label="Fechar">×</button>
+      <div><small>SUA COMPRA</small><h2>Sacola</h2></div>
+      <button type="button" onclick="closeCart()">×</button>
     </div>
-
     <div id="cartItems" class="drawer-items"></div>
-
-    <div id="emptyCart" class="empty-cart">
-      Sua sacola está vazia.
-    </div>
-
+    <div id="emptyCart" class="empty-cart">Sua sacola está vazia.</div>
     <div class="drawer-bottom">
-      <div class="drawer-total">
-        <span>Subtotal</span>
-        <b id="cartSubtotal">R$ 0,00</b>
-      </div>
+      <div class="drawer-total"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div>
       <div class="drawer-actions">
         <button type="button" class="ghost" onclick="closeCart()">Continuar</button>
-        <button id="checkoutBtn" type="button" class="primary" onclick="openCheckout()" disabled>
-          Finalizar pedido
-        </button>
+        <button id="checkoutBtn" type="button" class="primary" onclick="openCheckout()" disabled>Finalizar pedido</button>
       </div>
     </div>
   </aside>
 
-  <!-- Modal do produto -->
   <div id="productModal" class="modal hidden">
     <div id="productBody" class="modal-card product-modal"></div>
   </div>
 
-  <!-- Checkout -->
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-card checkout-modal">
       <button class="modal-close" type="button" onclick="closeCheckout()">×</button>
-
-      <div class="modal-title">
-        <small>FINALIZAR PEDIDO</small>
-        <h2>Como você vai receber?</h2>
-      </div>
+      <div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você vai receber?</h2></div>
 
       <div class="receive-grid">
-        <button class="receive" type="button" data-method="retirada"
-                onclick="selectReceive('retirada')">
-          <b>🏪 Retirada</b>
-          <small>Vou buscar na lanchonete</small>
+        <button class="receive" data-method="retirada" type="button" onclick="selectReceive('retirada')">
+          <b>🏪 Retirada</b><small>Vou buscar na lanchonete</small>
         </button>
-        <button class="receive" type="button" data-method="entrega"
-                onclick="selectReceive('entrega')">
-          <b>🛵 Entrega</b>
-          <small>Receber no endereço</small>
+        <button class="receive" data-method="entrega" type="button" onclick="selectReceive('entrega')">
+          <b>🛵 Entrega</b><small>Receber no endereço</small>
         </button>
       </div>
 
       <form id="checkoutForm">
-        <label class="field-label">Nome *</label>
+        <label>Nome *</label>
         <input id="customerName" required placeholder="Seu nome">
-
-        <label class="field-label">WhatsApp *</label>
+        <label>WhatsApp *</label>
         <input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999">
 
         <div id="deliveryBox" class="delivery-box hidden">
-          <label class="field-label">Bairro *</label>
-          <select id="neighborhood">
-            <option value="">Bairro *</option>
-          </select>
-
-          <label class="field-label">Endereço *</label>
+          <label>Bairro *</label>
+          <select id="neighborhood"><option value="">Bairro *</option></select>
+          <label>Endereço *</label>
           <input id="address" placeholder="Rua, número">
-
-          <label class="field-label">Referência</label>
+          <label>Referência</label>
           <input id="reference" placeholder="Ponto de referência">
         </div>
 
-        <label class="field-label">Forma de pagamento *</label>
+        <label>Forma de pagamento *</label>
         <select id="payment">
           <option value="">Escolha uma opção</option>
           <option value="Pix">Pix</option>
@@ -166,26 +119,23 @@
         </select>
 
         <div id="cashBox" class="cash-box hidden">
-          <input id="cashValue" type="number" min="0" step="0.01"
-                 placeholder="Valor pago">
+          <input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor pago">
           <b id="change"></b>
         </div>
 
-        <label class="field-label">Observação</label>
+        <label>Observação</label>
         <textarea id="orderNote" placeholder="Alguma observação?"></textarea>
 
         <div class="checkout-totals">
-          <span><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></span>
-          <span><span>Entrega</span><b>R$ 0,00</b></span>
-          <strong><span>Total</span><span id="checkoutTotal" data-value="0">R$ 0,00</span></strong>
+          <span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span>
+          <span>Entrega <b>R$ 0,00</b></span>
+          <strong>Total <span id="checkoutTotal" data-value="0">R$ 0,00</span></strong>
         </div>
-
         <button class="primary full" type="submit">Enviar pedido</button>
       </form>
     </div>
   </div>
 
-  <!-- Pedido enviado -->
   <div id="successModal" class="modal hidden">
     <div class="modal-card success-card">
       <div class="success-icon">✓</div>
