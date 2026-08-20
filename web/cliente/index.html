@@ -344,8 +344,8 @@
     return p.imagem_url || p.imagem || p.image_url || p.categorias?.imagem_url || "";
   }
   function renderFeaturedClean(){
-    if(!window.products || !document.getElementById("featured"))return;
-    const list=[...window.products].slice(0,6);
+    if(typeof products === "undefined" || !document.getElementById("featured"))return;
+    const list=[...products].slice(0,6);
     const el=document.getElementById("featured");
     if(!list.length){el.innerHTML='<div class="empty">Os produtos aparecerão aqui.</div>';return;}
     el.innerHTML=list.map((p,i)=>{
@@ -437,6 +437,18 @@
   window.openPastel=openPastelClean;
   window.openAcai=openAcaiClean;
   window.openGeneric=openGenericClean;
+
+  // O app.js chama openPizza/openPastel/openAcai internamente por bindings locais.
+  // Por isso, substituímos o ponto de entrada openProduct para garantir que
+  // a versão visual corrigida seja usada ao tocar em qualquer produto.
+  window.openProduct=function(pid){
+    const p=products.find(x=>String(x.id)===String(pid));
+    if(!p)return;
+    if(isPizza(p))return openPizzaClean(p);
+    if(isPastel(p))return openPastelClean(p);
+    if(isAcai(p))return openAcaiClean(p);
+    return openGenericClean(p);
+  };
 
   window.addEventListener("load",()=>{
     setTimeout(renderFeaturedClean,150);
