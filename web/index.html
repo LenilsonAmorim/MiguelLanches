@@ -31,7 +31,7 @@
 
     <section class="page active" id="page-pedido">
       <div class="page-head"><div><h1>Novo Pedido</h1><p>Monte o pedido rapidamente.</p></div></div>
-      <div id="newOrdersBox"></div>
+      <!-- Pedidos recebidos NÃO aparecem aqui. Eles ficam em Comandas. -->
       <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
       <div class="category-tabs" id="categoryTabs"></div>
       <button class="view-cart" id="viewCart">🛒 <span>Ver comanda</span> <b id="viewCartCount">0 itens</b> <strong id="viewCartTotal">R$ 0,00</strong></button>
@@ -59,8 +59,11 @@
     </section>
 
     <section class="page" id="page-comandas">
-      <div class="page-head"><div><h1>Comandas</h1><p>Pedidos novos, em preparo e para entrega.</p></div></div>
+      <div class="page-head"><div><h1>Comandas</h1><p>Acompanhe os pedidos em tempo real.</p></div></div>
+
+      <!-- NOVOS PEDIDOS APARECEM AQUI -->
       <div id="novosComandasBox"></div>
+
       <div class="status-columns">
         <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
         <div class="status-col"><div class="col-head delivery"><span>🛵 Saiu para entrega</span><b id="countDelivery">0</b></div><div id="deliveryList"></div></div>
