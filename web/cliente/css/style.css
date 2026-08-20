@@ -373,10 +373,156 @@ img{display:block;max-width:100%}
   stroke-linejoin:round;
 }
 
-/* Sacola flutuante: só aparece quando houver pedido */
-.bag-bar.empty{
-  display:none !important;
+/* =========================================================
+   SACOLA — redesign profissional
+   ========================================================= */
+.cart-drawer{
+  max-height:90vh;
+  border-radius:28px 28px 0 0;
+  box-shadow:0 -12px 40px rgba(0,0,0,.18);
 }
-.bag-bar:not(.empty){
+.cart-drawer::before{
+  content:"";
+  display:block;
+  width:44px;
+  height:5px;
+  border-radius:99px;
+  background:#dedede;
+  margin:10px auto 0;
+  flex:0 0 auto;
+}
+.drawer-head{
+  padding:14px 22px 16px;
+  align-items:center;
+  border-bottom:1px solid #ededed;
+}
+.drawer-head small{
+  color:var(--red);
+  font-size:10px;
+  letter-spacing:.5px;
+}
+.drawer-head h2{
+  margin:3px 0 0;
+  font-size:30px;
+  letter-spacing:-.5px;
+}
+.drawer-head>button{
+  width:44px;
+  height:44px;
+  background:#f4f4f4;
+  font-size:27px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.drawer-items{
+  padding:16px 18px 8px;
+  overflow:auto;
+}
+.cart-item{
+  background:#fff;
+  border:1px solid #e4e4e4;
+  border-radius:18px;
+  padding:15px;
+  margin-bottom:12px;
+  box-shadow:0 3px 12px rgba(0,0,0,.05);
+}
+.cart-item-top{
   display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.cart-item-top b{
+  font-size:16px;
+  line-height:1.25;
+}
+.cart-item-top strong{
+  flex:0 0 auto;
+  font-size:16px;
+  white-space:nowrap;
+}
+.cart-item>small{
+  display:block;
+  color:#777;
+  font-size:12px;
+  line-height:1.4;
+  margin-top:6px;
+}
+.item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:12px;
+}
+.item-actions button{
+  min-width:38px;
+  height:38px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  background:#fff;
+  font-weight:900;
+  font-size:19px;
+}
+.item-actions span{
+  min-width:25px;
+  text-align:center;
+  font-weight:900;
+}
+.item-actions .remove{
+  min-width:auto;
+  padding:0 12px;
+  color:var(--red);
+  border-color:#f0c5c7;
+  background:#fff7f7;
+  font-size:13px;
+}
+.drawer-bottom{
+  padding:14px 18px calc(18px + env(safe-area-inset-bottom));
+  background:#fff;
+  border-top:1px solid #e8e8e8;
+  box-shadow:0 -5px 18px rgba(0,0,0,.04);
+}
+.drawer-total{
+  margin:0 0 14px;
+  font-size:17px;
+  color:#555;
+}
+.drawer-total b{
+  color:#111;
+  font-size:20px;
+}
+.drawer-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.drawer-actions button{
+  min-height:56px;
+  border:0;
+  border-radius:14px;
+  padding:0 12px;
+  font-size:15px;
+  font-weight:950;
+  line-height:1.1;
+}
+.add-more{
+  background:#f28a00;
+  color:#fff;
+}
+.add-more:active{
+  transform:scale(.98);
+}
+.finish-order{
+  background:#2eaa4f;
+  color:#fff;
+}
+.finish-order:disabled{
+  opacity:.45;
+}
+@media(max-width:380px){
+  .drawer-actions{
+    grid-template-columns:1fr;
+  }
+  .drawer-actions button{
+    min-height:52px;
+  }
 }
