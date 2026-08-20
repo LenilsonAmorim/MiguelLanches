@@ -1,0 +1,10 @@
+
+/* Estilo dos pedidos novos */
+.new-orders-panel{margin-bottom:18px}
+.new-orders-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.new-orders-title h2{margin:0}
+.new-order-card{border:1px solid #ddd;border-radius:12px;padding:14px;margin-top:10px;background:#fff}
+.new-order-card h3{margin:0 0 5px}
+.new-order-items{margin:10px 0;line-height:1.5}
+.new-order-actions{display:flex;flex-wrap:wrap;gap:8px}
+.print-new{background:#111!important;color:#fff!important}
