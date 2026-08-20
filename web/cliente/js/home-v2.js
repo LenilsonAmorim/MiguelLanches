@@ -16,22 +16,14 @@
     host.innerHTML=list.length?list.map((p,i)=>`<button class="highlight-card" onclick="openProduct('${p.id}')"><div class="highlight-photo">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>${esc2(p.emoji||p.categorias?.emoji||'🍔')}</span>`}<b class="highlight-badge">${i===0?'Mais pedido':''}</b></div><div class="highlight-body"><small>A partir de</small><strong>${money2(p.preco)}</strong><span>${esc2(p.nome)}</span></div></button>`).join(''):'<div class="empty-inline">Os produtos aparecerão aqui.</div>';
   };
 
-  function popularCard(p){
-    return `<article class="popular-row" onclick="openProduct('${p.id}')"><div class="popular-copy"><small class="popular-tag">${p===products[0]?'O mais pedido':''}</small><h3>${esc2(p.nome)}</h3><p>${esc2(p.descricao||'Toque para ver as opções.')}</p><b>A partir de <span>${money2(p.preco)}</span></b></div><div class="popular-image">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>${esc2(p.emoji||p.categorias?.emoji||'🍔')}</span>`}</div></article>`;
-  }
 
   window.renderProducts=function(){
     const host=document.getElementById('products');
     if(!host)return;
     const q=norm2(document.getElementById('search')?.value||'');
     const list=products.filter(p=>!q||norm2(p.nome).includes(q)||norm2(p.descricao).includes(q));
-    const pizzaCatIds=categories.filter(c=>norm2(c.nome).includes('pizza')).map(c=>String(c.id));
-    let popular=list.filter(p=>pizzaCatIds.includes(String(p.categoria_id)));
-    if(!popular.length) popular=list.filter(p=>norm2(p.nome).includes('pizza'));
-    if(!popular.length) popular=[...list];
-    popular=popular.sort((a,b)=>Number(a.ordem??99999)-Number(b.ordem??99999)).slice(0,6);
     const grouped=categories.map(c=>({cat:c,items:list.filter(p=>String(p.categoria_id)===String(c.id)).sort((a,b)=>Number(a.ordem??99999)-Number(b.ordem??99999)||String(a.nome).localeCompare(String(b.nome)))})).filter(g=>g.items.length);
-    let html=`<section class="popular-block"><div class="section-head"><h2>Mais pedidos</h2></div>${popular.map(popularCard).join('')}</section>`;
+    let html=``;
     html+=grouped.map(g=>`<section class="category-block" id="cat-${String(g.cat.id).replace(/[^a-zA-Z0-9_-]/g,'-')}" data-category-id="${esc2(g.cat.id)}"><div class="category-heading"><span>${esc2(g.cat.emoji||'📦')}</span><h2>${esc2(g.cat.nome)}</h2><button type="button">Ver todos</button></div><div class="category-products">${g.items.map(p=>`<article class="menu-row" onclick="openProduct('${p.id}')"><div class="menu-photo">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>${esc2(p.emoji||g.cat.emoji||'🍔')}</span>`}</div><div class="menu-info"><h3>${esc2(p.nome)}</h3><p>${esc2(p.descricao||'')}</p><b>${money2(p.preco)}</b></div><button class="plus" type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></article>`).join('')}</div></section>`).join('');
     const uncategorized=list.filter(p=>!categories.some(c=>String(c.id)===String(p.categoria_id)));
     if(uncategorized.length)html+=`<section class="category-block" id="cat-sem-categoria"><div class="category-heading"><span>📦</span><h2>Outros</h2></div><div class="category-products">${uncategorized.map(p=>`<article class="menu-row" onclick="openProduct('${p.id}')"><div class="menu-photo">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>📦</span>`}</div><div class="menu-info"><h3>${esc2(p.nome)}</h3><p>${esc2(p.descricao||'')}</p><b>${money2(p.preco)}</b></div><button class="plus" type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></article>`).join('')}</div></section>`;
