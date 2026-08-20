@@ -539,111 +539,128 @@ body{background:#050505}
   .photo{height:125px}
 }
 
-/* =========================================================
-   AJUSTE FINAL MOBILE — referência aprovada
-   ========================================================= */
-
-/* Nenhum menu de três linhas */
+/* FINAL MOBILE ART DIRECTION — no hamburger, no cart in header */
 .hamb{display:none!important}
-.menu-title h2{margin-left:0!important}
+.menu-cart{display:none!important}
+.hero-cart,.topbar-ref{display:none!important}
 
-/* Carregamento: logo como fundo, visível e elegante; sem logo solta */
 .splash{
+  background:#050505;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+}
+.splash::before{
+  content:"";
+  position:absolute;
+  inset:0;
   background:
-    linear-gradient(180deg,rgba(4,4,4,.42),rgba(4,4,4,.58)),
-    url("../assets/logo.png") center 38%/min(760px,92vw) auto no-repeat,
-    #050505!important;
+    linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.38)),
+    url("../assets/logo.png") center/600px auto no-repeat;
+  opacity:.22;
 }
-.splash-inner{
-  position:relative;
-  z-index:2;
-  padding-top:32vh!important;
+.splash-inner{position:relative;z-index:2}
+.splash-inner img{
+  width:min(330px,76vw);
+  max-height:330px;
+  object-fit:contain;
+  opacity:1;
+  filter:drop-shadow(0 8px 28px rgba(0,0,0,.65));
 }
-.splash span{
-  font-size:14px!important;
-  color:#f0bd2d!important;
+.splash-inner span{
+  display:block;
+  color:#f0bd2d;
+  font-weight:900;
+  letter-spacing:4px;
+  margin-top:12px;
 }
-.splash h1{
-  font-size:34px!important;
-  text-shadow:0 2px 15px #000;
-}
-.splash p{
-  font-size:16px;
-  text-shadow:0 2px 10px #000;
-}
-.loader{background:#2d2d2d!important}
-.loader i{background:#b71924!important}
-
-/* Hero mobile: logo grande ao fundo, como na referência, mas mais clara */
 @media(max-width:600px){
   .hero{
-    min-height:510px!important;
+    min-height:515px;
     background-image:
-      linear-gradient(90deg,rgba(7,7,7,.68) 0%,rgba(7,7,7,.57) 45%,rgba(7,7,7,.38) 100%),
-      url("../assets/logo.png")!important;
-    background-size:620px auto!important;
-    background-position:86% 43%!important;
-    background-repeat:no-repeat!important;
+      linear-gradient(90deg,rgba(4,4,4,.78) 0%,rgba(4,4,4,.63) 48%,rgba(4,4,4,.55) 100%),
+      url("../assets/logo.png");
+    background-size:590px auto;
+    background-position:78% 40%;
   }
   .hero-inner{
-    padding:56px 26px 24px!important;
-    text-align:left!important;
+    padding:62px 24px 25px;
+    text-align:left;
   }
-  .hero-kicker{
-    font-size:21px!important;
-    letter-spacing:2.5px!important;
-  }
-  .hero-line{
-    margin:11px 0 24px!important;
-    width:64px!important;
-    height:4px!important;
-  }
+  .hero-kicker{font-size:21px;letter-spacing:2.6px}
+  .hero-line{width:62px;height:4px;margin:12px 0 24px}
   .hero h1{
-    font-size:38px!important;
-    line-height:1.06!important;
-    letter-spacing:-.8px!important;
-    max-width:100%!important;
+    font-size:clamp(34px,9.4vw,44px);
+    line-height:1.05;
+    max-width:100%;
+    letter-spacing:-1px;
   }
   .hero p{
-    margin:28px 0 0!important;
-    justify-content:flex-start!important;
-    font-size:13px!important;
-    gap:9px!important;
+    margin:28px 0 0;
+    justify-content:flex-start;
+    gap:8px;
+    font-size:12.5px;
   }
-  .scroll-cue{
-    margin-top:27px!important;
-    text-align:center!important;
-  }
+  .scroll-cue{margin-top:28px;font-size:34px}
 
-  /* Cardápio começa mais acima e fica limpo */
   .menu-shell{
-    padding-top:20px!important;
-    border-radius:28px 28px 0 0!important;
+    padding:20px 16px 60px;
+    background:#fff;
+    border-radius:28px 28px 0 0;
+    box-shadow:0 -8px 28px rgba(0,0,0,.12);
   }
-  .menu-head{
-    margin-bottom:17px!important;
-  }
-  .menu-title h2{
-    font-size:28px!important;
-    color:#111!important;
-  }
-  .menu-cart{display:none!important}
+  .menu-head{margin-bottom:17px}
+  .menu-title{gap:0}
+  .menu-title h2{font-size:29px;color:#111}
 
-  /* Sacola estilo delivery aparece só após adicionar produto */
+  .search-wrap{
+    height:58px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid #dedede;
+  }
+  .chips{
+    gap:9px;
+    margin-bottom:23px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto}
+
+  .products{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  .product{
+    border-radius:17px;
+    border:1px solid #e2e2e2;
+    box-shadow:0 4px 14px rgba(0,0,0,.06);
+    background:#fff;
+  }
+  .photo{height:138px;background:#eee}
+  .pbody{padding:12px;min-height:138px}
+  .pbody h3{font-size:16px}
+  .pbody p{font-size:11.5px}
+  .price{color:#b71924;font-size:17px}
+  .plus{background:#111;color:#fff;width:37px;height:37px}
+
+  /* iFood-like bag only after an item is added */
   .floating-bag{
-    display:flex!important;
+    left:50%;
+    bottom:14px;
+    min-width:190px;
+    padding:12px 17px;
+    border-radius:28px;
+    background:#111;
+    color:#fff;
+    box-shadow:0 8px 26px rgba(0,0,0,.25);
   }
-}
+  .floating-bag .bag-label{font-size:15px}
+  .floating-bag strong{
+    background:#f0bd2d;
+    color:#111;
+  }
 
-/* telas muito estreitas */
-@media(max-width:380px){
-  .hero{
-    min-height:485px!important;
-    background-size:560px auto!important;
-    background-position:88% 42%!important;
-  }
-  .hero-inner{padding:52px 20px 22px!important}
-  .hero h1{font-size:34px!important}
-  .splash-inner{padding-top:34vh!important}
-  .splash h1{font-size:29px!important}
+  .checkout-section,.track{background:#f5f5f3}
 }
