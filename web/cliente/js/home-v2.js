@@ -11,6 +11,11 @@ window.renderFeatured=function(){
  host.innerHTML=list.map((p,i)=>`<button class="highlight-card" onclick="openProduct('${p.id}')"><div class="highlight-photo">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>${esc2(p.emoji||p.categorias?.emoji||'🍔')}</span>`}${i===0?'<b class="highlight-badge">Mais pedido</b>':''}</div><div class="highlight-body"><small>A partir de</small><strong>${money2(p.preco)}</strong><span>${esc2(p.nome)}</span></div></button>`).join('');
 };
 
+window.scrollToCategory=function(id){
+ const safe=String(id).replace(/[^a-zA-Z0-9_-]/g,'-');
+ const target=document.getElementById('cat-'+safe);
+ if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+};
 window.renderProducts=function(){
  const host=document.getElementById('products');if(!host)return;
  const q=norm2(document.getElementById('search')?.value||'');
@@ -36,3 +41,12 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(s)s.addEventListener('input',()=>{renderProducts();});
 });
 })();
+
+document.addEventListener('click',function(e){
+ const btn=e.target.closest?.('[data-category-nav]');
+ if(!btn)return;
+ const id=btn.dataset.categoryNav;
+ if(id==='todos'){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});return;}
+ const target=document.getElementById('cat-'+String(id).replace(/[^a-zA-Z0-9_-]/g,'-'));
+ if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}
+});
