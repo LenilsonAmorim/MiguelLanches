@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#b71924">
 <title>Miguel Lanches</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="novos-comandas.css">
 </head>
 <body>
 <div id="app">
@@ -20,6 +21,7 @@
     </nav>
     <div class="sidebar-foot">Miguel Lanches<br><small>Cardápio integrado ao Supabase</small></div>
   </aside>
+
   <main class="main">
     <header class="topbar">
       <button class="icon-btn" id="menuBtn">☰</button>
@@ -28,7 +30,7 @@
     </header>
 
     <section class="page active" id="page-pedido">
-      <div class="page-head"><div><h1>Novo Pedido</h1><p>Pedidos recebidos aparecem aqui para aceitar, imprimir ou recusar.</p></div></div>
+      <div class="page-head"><div><h1>Novo Pedido</h1><p>Monte o pedido rapidamente.</p></div></div>
       <div id="newOrdersBox"></div>
       <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
       <div class="category-tabs" id="categoryTabs"></div>
@@ -57,7 +59,8 @@
     </section>
 
     <section class="page" id="page-comandas">
-      <div class="page-head"><div><h1>Comandas</h1><p>Acompanhe os pedidos em tempo real.</p></div></div>
+      <div class="page-head"><div><h1>Comandas</h1><p>Pedidos novos, em preparo e para entrega.</p></div></div>
+      <div id="novosComandasBox"></div>
       <div class="status-columns">
         <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
         <div class="status-col"><div class="col-head delivery"><span>🛵 Saiu para entrega</span><b id="countDelivery">0</b></div><div id="deliveryList"></div></div>
@@ -92,10 +95,12 @@
     </section>
   </main>
 </div>
+
 <div class="modal hidden" id="modal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script src="new-orders.js"></script>
+<script src="novos-comandas.js"></script>
 </body>
 </html>
