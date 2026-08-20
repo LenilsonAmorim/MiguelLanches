@@ -56,8 +56,8 @@
   CONFIGURE AQUI OS DADOS DO SEU PROJETO SUPABASE.
   Não coloque a service_role key. Use apenas a chave anon/public.
 */
-const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SEU_SUPABASE";
-const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_ANON_DO_SEU_SUPABASE";
+const SUPABASE_URL = "https://lifsxhyeqwppfvajvhpn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 
 const sb = (SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20)
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
