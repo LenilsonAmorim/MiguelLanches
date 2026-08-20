@@ -935,3 +935,165 @@ body{background:#050505}
     font-size:18px!important;
   }
 }
+
+/* =========================================================
+   MOBILE — HERO COMPACTO / FOCO NOS PEDIDOS
+   O objetivo é mostrar o cardápio e os produtos muito mais cedo.
+   ========================================================= */
+@media (max-width: 850px){
+  .hero{
+    min-height: 355px !important;
+    height: 355px !important;
+  }
+
+  .hero::before{
+    width: 430px !important;
+    right: -150px !important;
+    top: 42% !important;
+    opacity: .25 !important;
+  }
+
+  .hero-inner{
+    padding: 38px 24px 18px !important;
+  }
+
+  .hero-kicker{
+    font-size: 18px !important;
+    letter-spacing: 2.2px !important;
+  }
+
+  .hero-line{
+    width: 52px !important;
+    height: 3px !important;
+    margin: 9px 0 17px !important;
+  }
+
+  .hero h1{
+    font-size: clamp(30px, 8.5vw, 38px) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -.7px !important;
+    max-width: 390px !important;
+  }
+
+  .hero p{
+    margin-top: 19px !important;
+    font-size: 11.5px !important;
+    gap: 7px !important;
+  }
+
+  .hero p span{
+    font-size: 15px !important;
+  }
+
+  .scroll-cue{
+    margin-top: 14px !important;
+    font-size: 27px !important;
+  }
+
+  /* Cardápio começa imediatamente depois do hero */
+  .menu-shell{
+    margin-top: 0 !important;
+    padding: 16px 16px 42px !important;
+    border-radius: 23px 23px 0 0 !important;
+  }
+
+  .menu-head{
+    margin-bottom: 12px !important;
+  }
+
+  .menu-title h2{
+    font-size: 25px !important;
+  }
+
+  .search-wrap{
+    height: 52px !important;
+    margin-bottom: 11px !important;
+  }
+
+  .chips{
+    margin-bottom: 15px !important;
+    gap: 7px !important;
+  }
+
+  .chip{
+    padding: 9px 13px !important;
+    font-size: 13px !important;
+  }
+
+  .section-label{
+    margin-bottom: 9px !important;
+  }
+
+  .section-label h3{
+    font-size: 21px !important;
+  }
+
+  /* Produtos entram em cena mais rápido */
+  .products{
+    gap: 10px !important;
+  }
+
+  .photo{
+    height: 118px !important;
+  }
+
+  .pbody{
+    padding: 10px !important;
+    min-height: 125px !important;
+  }
+
+  .pbody h3{
+    font-size: 15px !important;
+  }
+
+  .pbody p{
+    font-size: 11px !important;
+    line-height: 1.28 !important;
+    min-height: 34px !important;
+  }
+
+  .price{
+    font-size: 16px !important;
+  }
+
+  .plus{
+    width: 34px !important;
+    height: 34px !important;
+    flex-basis: 34px !important;
+  }
+}
+
+@media (max-width: 500px){
+  .hero{
+    min-height: 340px !important;
+    height: 340px !important;
+  }
+
+  .hero-inner{
+    padding-top: 32px !important;
+  }
+
+  .hero h1{
+    font-size: 31px !important;
+  }
+
+  .hero p{
+    margin-top: 17px !important;
+  }
+
+  .scroll-cue{
+    margin-top: 10px !important;
+  }
+
+  .menu-shell{
+    padding-top: 14px !important;
+  }
+
+  .section-label h3{
+    font-size: 20px !important;
+  }
+
+  .photo{
+    height: 112px !important;
+  }
+}
