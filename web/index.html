@@ -1,125 +1,13 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0b">
-<title>Miguel Lanches — Admin</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="admin-shell">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <img src="../cliente/assets/logo.png" alt="Miguel Lanches">
-      <div><strong>MIGUEL LANCHES</strong><span>PAINEL ADMIN</span></div>
-    </div>
-    <nav id="nav">
-      <button class="nav active" data-page="dashboard"><i>⌂</i><span>Dashboard</span></button>
-      <button class="nav" data-page="pedidos"><i>▣</i><span>Pedidos</span><b id="newBadge">0</b></button>
-      <button class="nav" data-page="cardapio"><i>☷</i><span>Cardápio</span></button>
-      <button class="nav" data-page="categorias"><i>◈</i><span>Categorias</span></button>
-      <button class="nav" data-page="opcoes"><i>◇</i><span>Opções / adicionais</span></button>
-      <button class="nav" data-page="clientes"><i>♙</i><span>Clientes</span></button>
-      <button class="nav" data-page="promocoes"><i>%</i><span>Promoções</span></button>
-      <button class="nav" data-page="relatorios"><i>▥</i><span>Relatórios</span></button>
-      <button class="nav" data-page="impressoras"><i>▤</i><span>Impressoras</span></button>
-      <button class="nav" data-page="config"><i>⚙</i><span>Configurações</span></button>
-    </nav>
-    <div class="sidebar-foot"><span><span class="dot"></span><span id="connection">Aguardando login...</span></span><a href="../cliente/index.html">Abrir site do cliente</a></div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div class="top-title"><strong id="pageTitle">Dashboard</strong><span id="pageSubtitle">Visão geral da operação</span></div>
-      <div class="top-actions"><span class="live"><span class="dot"></span> Tempo real</span><button id="refreshBtn" class="ghost">Atualizar</button></div>
-    </header>
-
-    <section class="page active" id="page-dashboard">
-      <div class="page-head"><div><h1>Resumo geral</h1><p>Acompanhe pedidos, faturamento e operação.</p></div></div>
-      <div id="kpis" class="kpis"></div>
-      <div class="grid-2">
-        <div class="panel"><h2>Vendas dos últimos 7 dias</h2><div id="salesChart" class="chart"></div></div>
-        <div class="panel"><h2>Pedidos por status</h2><div id="statusChart"></div></div>
-      </div>
-      <div class="grid-2">
-        <div class="panel"><div class="panel-title"><h2>Pedidos recentes</h2><button class="link-btn" data-go="pedidos">Ver todos</button></div><div id="recentOrders"></div></div>
-        <div class="panel"><h2>Mais vendidos</h2><div id="topProducts"></div></div>
-      </div>
-    </section>
-
-    <section class="page" id="page-pedidos">
-      <div class="page-head"><div><h1>Pedidos</h1><p>Pedidos novos e andamento da operação.</p></div><div class="head-actions"><button id="soundBtn" class="ghost">Som: ligado</button></div></div>
-      <div class="order-tabs" id="orderTabs">
-        <button class="active" data-filter="todos">Todos <b id="countTodos">0</b></button>
-        <button data-filter="novo">Novos <b id="countNovo">0</b></button>
-        <button data-filter="preparo">Preparando <b id="countPreparo">0</b></button>
-        <button data-filter="entrega">Saiu para entrega <b id="countEntrega">0</b></button>
-        <button data-filter="entregue">Entregues <b id="countEntregue">0</b></button>
-        <button data-filter="cancelado">Cancelados <b id="countCancelado">0</b></button>
-      </div>
-      <div id="orders" class="orders-board"></div>
-    </section>
-
-    <section class="page" id="page-cardapio">
-      <div class="page-head"><div><h1>Cardápio</h1><p>Produtos conectados ao site do cliente.</p></div><button class="primary" id="newProductBtn">+ Novo produto</button></div>
-      <div class="toolbar"><input id="productSearch" class="search" placeholder="Buscar produto..."><select id="productCat"><option value="">Todas as categorias</option></select></div>
-      <div class="panel table-wrap"><table class="table"><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Destaque</th><th>Status</th><th>Ação</th></tr></thead><tbody id="productsTable"></tbody></table></div>
-    </section>
-
-    <section class="page" id="page-categorias">
-      <div class="page-head"><div><h1>Categorias</h1><p>Organize as categorias exibidas no site.</p></div><button class="primary" id="newCatBtn">+ Nova categoria</button></div>
-      <div class="category-grid" id="categoryGrid"></div>
-    </section>
-
-    <section class="page" id="page-opcoes">
-      <div class="page-head"><div><h1>Opções / adicionais</h1><p>Opções compartilhadas com o cardápio.</p></div><button class="primary" id="newOptionBtn">+ Nova opção</button></div>
-      <div class="panel"><div class="notice">Salvas em <b>configuracoes → opcoes_catalogo</b>.</div><div id="optionsList"></div></div>
-    </section>
-
-    <section class="page" id="page-clientes">
-      <div class="page-head"><div><h1>Clientes</h1><p>Histórico dos clientes.</p></div></div>
-      <div class="toolbar"><input id="clientSearch" class="search" placeholder="Buscar nome ou telefone..."></div>
-      <div class="panel table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Telefone</th><th>Endereço</th><th>Pedidos</th><th>Total gasto</th></tr></thead><tbody id="clientsTable"></tbody></table></div>
-    </section>
-
-    <section class="page" id="page-promocoes">
-      <div class="page-head"><div><h1>Promoções</h1><p>Crie e ative campanhas.</p></div><button class="primary" id="newPromoBtn">+ Nova promoção</button></div>
-      <div class="panel"><div class="notice">Salvas em <b>configuracoes → promocoes</b>.</div><div id="promoList"></div></div>
-    </section>
-
-    <section class="page" id="page-relatorios">
-      <div class="page-head"><div><h1>Relatórios</h1><p>Indicadores da operação.</p></div><button class="ghost" id="exportCsv">Exportar CSV</button></div>
-      <div id="reportCards" class="report-grid"></div>
-      <div class="grid-2"><div class="panel"><h2>Formas de pagamento</h2><div id="paymentReport"></div></div><div class="panel"><h2>Produtos mais vendidos</h2><div id="reportProducts"></div></div></div>
-    </section>
-
-    <section class="page" id="page-impressoras">
-      <div class="page-head"><div><h1>Impressoras</h1><p>Teste de impressão térmica.</p></div></div>
-      <div class="grid-2">
-        <div class="panel"><h2>Teste</h2><p class="muted">Abre a impressão do navegador em 58 mm.</p><button class="primary" id="testPrint">Imprimir teste 58 mm</button></div>
-        <div class="panel"><h2>Preferências</h2><label class="field">Nome no cabeçalho<input id="printStore" value="MIGUEL LANCHES"></label><label class="field">Largura<select id="printWidth"><option value="58">58 mm</option><option value="80">80 mm</option></select></label><button class="ghost" id="savePrint">Salvar preferência</button></div>
-      </div>
-    </section>
-
-    <section class="page" id="page-config">
-      <div class="page-head"><div><h1>Configurações</h1><p>Dados gerais da loja e entrega.</p></div></div>
-      <div class="grid-2">
-        <div class="panel"><h2>Loja</h2><label class="field">Nome<input id="storeName"></label><label class="field">Telefone<input id="storePhone"></label><label class="field">Horário<input id="storeHours" placeholder="08:00 — 23:30"></label><label class="field">Pedido mínimo<input id="minOrder" type="number" step=".01"></label><button class="primary" id="saveStore">Salvar configurações</button></div>
-        <div class="panel"><h2>Entrega</h2><label class="field">Taxa padrão<input id="deliveryFee" type="number" step=".01"></label><label class="check"><input id="deliveryEnabled" type="checkbox"> Aceitar entrega</label><label class="check"><input id="pickupEnabled" type="checkbox"> Aceitar retirada</label><button class="ghost" id="saveDelivery">Salvar entrega</button></div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menu"><span></span><span></span><span></span></button>
-<div id="mobileBackdrop" class="mobile-backdrop"></div>
-<div id="modal" class="modal hidden"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalBody"></div></div></div>
-<div id="toast" class="toast"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../cliente/config.js"></script>
-<script src="admin-auth.js"></script>
-<script src="app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Miguel Lanches Admin</title><link rel="stylesheet" href="admin.css"></head><body>
+<div id=login class=login><div><h1>MIGUEL <b>LANCHES</b></h1><small>PAINEL ADMINISTRATIVO</small><label>Usuário<input id=user></label><label>Senha<input id=pass type=password></label><button id=loginBtn>Entrar</button><p id=msg></p></div></div>
+<div id=app class=hide><aside id=side><h2>MIGUEL <b>LANCHES</b></h2><nav><button data-page=pedidos class=active>Pedidos <b id=badge>0</b></button><button data-page=dashboard>Dashboard</button><button data-page=cardapio>Cardápio</button><button data-page=categorias>Categorias</button><button data-page=clientes>Clientes</button><button data-page=promocoes>Promoções</button><button data-page=relatorios>Relatórios</button><button data-page=config>Configurações</button><button data-page=impressao>Impressão</button></nav><a href="../cliente/index.html">Site do cliente</a><button id=logout>Sair</button></aside><main><header><button id=menu>☰</button><b id=title>Pedidos</b><button id=refresh>Atualizar</button></header>
+<section id=page-pedidos class="page active"><div class=head><div><h1>Pedidos</h1><p>Recebidos do site do cliente.</p></div></div><div id=tabs class=tabs><button class=active data-f=todos>Todos <b>0</b></button><button data-f=novo>Novos <b>0</b></button><button data-f=preparo>Preparando <b>0</b></button><button data-f=entrega>Entrega <b>0</b></button><button data-f=entregue>Entregues <b>0</b></button><button data-f=cancelado>Cancelados <b>0</b></button></div><div id=orders class=board></div></section>
+<section id=page-dashboard class=page><h1>Dashboard</h1><div id=stats class=stats></div><div class=panel id=recent></div></section>
+<section id=page-cardapio class=page><div class=head><h1>Cardápio</h1><button id=newProduct class=primary>+ Produto</button></div><input id=ps class=search placeholder="Buscar produto"><div class=panel><table><tbody id=products></tbody></table></div></section>
+<section id=page-categorias class=page><div class=head><h1>Categorias</h1><button id=newCat class=primary>+ Categoria</button></div><div id=cats class=cards></div></section>
+<section id=page-clientes class=page><h1>Clientes</h1><input id=cs class=search placeholder="Buscar cliente"><div class=panel><table><tbody id=clients></tbody></table></div></section>
+<section id=page-promocoes class=page><h1>Promoções</h1><div class=panel><p>Área pronta para campanhas vinculadas ao cardápio.</p></div></section>
+<section id=page-relatorios class=page><h1>Relatórios</h1><div id=reports class=stats></div><button id=csv>Exportar CSV</button></section>
+<section id=page-config class=page><h1>Configurações</h1><div class=form><label>Nome<input id=store></label><label>Telefone<input id=phoneStore></label><label>Taxa de entrega<input id=fee type=number step=.01></label><button id=save class=primary>Salvar</button></div></section>
+<section id=page-impressao class=page><h1>Impressão</h1><div class=panel><button id=test class=primary>Imprimir teste 58 mm</button></div></section>
+</main></div><div id=modal class="overlay hide"><div class=modal><button id=close>×</button><div id=body></div></div></div><div id=toast></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../cliente/config.js"></script><script src="admin.js"></script></body></html>
