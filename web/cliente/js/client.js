@@ -68,3 +68,13 @@ $("trackBtn").onclick=async()=>{
 };
 load();
 
+
+\n// Busca principal do mobile
+document.addEventListener("DOMContentLoaded",()=>{
+  const s=document.getElementById("mobileSearch");
+  if(s) s.addEventListener("input",()=>{
+    const main=document.getElementById("search");
+    if(main){main.value=s.value; main.dispatchEvent(new Event("input"));}
+    else if(typeof renderProducts==="function") renderProducts();
+  });
+});
