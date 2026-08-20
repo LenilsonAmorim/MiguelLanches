@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="cliente/style.css">
 </head>
 <body>
+
 <div id="splash" class="splash">
   <div class="splash-box">
     <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
@@ -27,22 +28,33 @@
       <input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off">
     </label>
   </header>
+
   <nav id="categories" class="categories"></nav>
+
   <main>
     <section class="section highlights">
       <div class="section-title"><h2>Destaques</h2></div>
       <div id="featured" class="featured"></div>
     </section>
-    <section class="section"><div id="products"></div></section>
+
+    <section class="section">
+      <div id="products"></div>
+    </section>
   </main>
 </div>
 
 <div id="bagBar" class="bag-bar empty">
   <div class="bag-info">
     <div class="bag-icon">
-      <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
+      <svg viewBox="0 0 24 24">
+        <path d="M6 8h12l-1 12H7L6 8Z"/>
+        <path d="M9 8a3 3 0 0 1 6 0"/>
+      </svg>
     </div>
-    <div><b id="bagText">Sua sacola</b><small id="bagTotal">R$ 0,00</small></div>
+    <div>
+      <b id="bagText">Sua sacola</b>
+      <small id="bagTotal">R$ 0,00</small>
+    </div>
   </div>
   <button type="button" onclick="openCart()">Ver sacola</button>
 </div>
@@ -54,16 +66,26 @@
     <div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div>
     <button class="round" type="button" onclick="closeCart()">×</button>
   </div>
+
   <div id="cartItems" class="cart-items"></div>
+
   <div id="emptyCart" class="empty-cart">
     <div class="empty-bag">□</div>
     <b>Sua sacola está vazia</b>
     <small>Adicione produtos para continuar.</small>
   </div>
+
   <div class="drawer-bottom">
-    <div class="line"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
-    <button id="addMoreBtn" class="secondary-btn" type="button" onclick="closeCart()">Adicionar mais itens</button>
-    <button id="checkoutBtn" class="main-btn" type="button" onclick="openCheckout()">Finalizar o pedido</button>
+    <div class="line">
+      <span>Subtotal</span>
+      <strong id="cartSubtotal">R$ 0,00</strong>
+    </div>
+    <button id="addMoreBtn" class="secondary-btn" type="button" onclick="closeCart()">
+      Adicionar mais itens
+    </button>
+    <button id="checkoutBtn" class="main-btn" type="button" onclick="openCheckout()">
+      Finalizar o pedido
+    </button>
   </div>
 </section>
 
@@ -77,39 +99,71 @@
 <div id="checkoutModal" class="modal hidden">
   <div class="checkout-card">
     <button class="round checkout-close" type="button" onclick="closeCheckout()">×</button>
-    <div class="checkout-head"><small>FINALIZAR PEDIDO</small><h2>Como você quer receber?</h2></div>
+
+    <div class="checkout-head">
+      <small>FINALIZAR PEDIDO</small>
+      <h2>Como você quer receber?</h2>
+    </div>
+
     <form id="checkoutForm">
       <div class="receive-grid">
-        <button type="button" class="receive" data-method="entrega" onclick="selectReceive('entrega')"><b>Entrega</b><small>Receba em casa</small></button>
-        <button type="button" class="receive" data-method="retirada" onclick="selectReceive('retirada')"><b>Retirada</b><small>Busque na loja</small></button>
+        <button type="button" class="receive" data-method="entrega"
+                onclick="selectReceive('entrega')">
+          <b>Entrega</b><small>Receba em casa</small>
+        </button>
+        <button type="button" class="receive" data-method="retirada"
+                onclick="selectReceive('retirada')">
+          <b>Retirada</b><small>Busque na loja</small>
+        </button>
       </div>
+
       <div class="form-grid">
-        <label>Nome<input id="customerName" required placeholder="Seu nome"></label>
-        <label>WhatsApp<input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999"></label>
+        <label>Nome
+          <input id="customerName" required placeholder="Seu nome">
+        </label>
+        <label>WhatsApp
+          <input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999">
+        </label>
       </div>
+
       <div id="deliveryBox" class="delivery-box hidden">
-        <label>Bairro<select id="neighborhood"><option value="">Bairro</option></select></label>
-        <label>Endereço<input id="address" placeholder="Rua, número"></label>
-        <label>Referência<input id="reference" placeholder="Ex.: perto da praça"></label>
+        <label>Bairro
+          <select id="neighborhood"><option value="">Bairro</option></select>
+        </label>
+        <label>Endereço
+          <input id="address" placeholder="Rua, número">
+        </label>
+        <label>Referência
+          <input id="reference" placeholder="Ex.: perto da praça">
+        </label>
       </div>
+
       <label>Forma de pagamento
         <select id="payment">
           <option value="">Escolha o pagamento</option>
-          <option>Dinheiro</option><option>Pix</option><option>Cartão</option>
+          <option>Dinheiro</option>
+          <option>Pix</option>
+          <option>Cartão</option>
         </select>
       </label>
+
       <div id="cashBox" class="cash-box hidden">
-        <label>Valor pago<input id="cashValue" type="number" min="0" step="0.01" placeholder="0,00"></label>
+        <label>Valor pago
+          <input id="cashValue" type="number" min="0" step="0.01" placeholder="0,00">
+        </label>
         <strong id="change"></strong>
       </div>
+
       <label>Observações (opcional)
         <textarea id="orderNote" placeholder="Alguma observação sobre o pedido?"></textarea>
       </label>
+
       <div class="checkout-total">
         <div><span>Subtotal</span><strong id="checkoutSubtotal">R$ 0,00</strong></div>
         <div><span>Entrega</span><strong>R$ 0,00</strong></div>
         <div class="grand"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
       </div>
+
       <button class="main-btn" type="submit">Enviar pedido</button>
     </form>
   </div>
@@ -131,5 +185,6 @@
 <script src="cliente/config.js"></script>
 <script src="cliente/app.js"></script>
 <script src="cliente/client_opcoes.js"></script>
+
 </body>
 </html>
