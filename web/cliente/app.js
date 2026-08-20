@@ -41,10 +41,11 @@ function renderHome(){
   const q=$("search").value.toLowerCase().trim();
   renderChips();
   const filtered=state.products.filter(p=>!q||p.nome.toLowerCase().includes(q)||(p.categorias?.nome||"").toLowerCase().includes(q));
-  const featured=(filtered.length?filtered:state.products).slice(0,6);
-  $("featured").innerHTML=featured.length?featured.map(productCard).join(""):`<div class="empty">Seu cardápio ainda está vazio.<br>Cadastre produtos no Admin.</div>`;
+  const featuredGroups=groupVariants((filtered.length?filtered:state.products).slice(0,12)).slice(0,6);
+  $("featured").innerHTML=featuredGroups.length?featuredGroups.map(productCard).join(""):`<div class="empty">Seu cardápio ainda está vazio.<br>Cadastre produtos no Admin.</div>`;
   renderCatalog(filtered);
 }
+
 function renderChips(){
   $("categoryTabs").innerHTML=`<button class="${state.cat==="todos"?"active":""}" onclick="setCat('todos')">Todos</button>`+state.cats.map(c=>`<button class="${String(state.cat)===String(c.id)?"active":""}" onclick="setCat('${c.id}')">${esc(c.emoji||"🍽️")} ${esc(c.nome)}</button>`).join("");
 }
@@ -61,41 +62,90 @@ function localImageFor(p){
   if(n.includes("4 queijos")||n.includes("4 queijo")) return "assets/pizza-4-queijos.png";
   return "";
 }
-function productCard(p){
-  const local=localImageFor(p);
-  const img=p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:local?`<img src="${local}" alt="${esc(p.nome)}">`:`<span style="font-size:60px">${esc(p.emoji||"🍔")}</span>`;
-  return `<article class="product-card"><div class="product-img">${img}</div><div class="product-info"><h3>${esc(p.nome)}</h3><div class="desc">${esc(p.descricao||"Delicioso, preparado na hora.")}</div><div class="product-bottom"><span class="price">${money(p.preco)}</span><button class="plus" onclick="openProduct('${p.id}')">+</button></div></div></article>`
+function variantBaseName(name){
+  return String(name||"")
+    .replace(/\s+—\s+(Média|Grande|Médio|300 ml|500 ml|200 ml|1 litro|Jarra 1L)(?:\s+\((?:água|leite)\))?$/i,"")
+    .trim();
 }
+function variantLabel(name){
+  const m=String(name||"").match(/—\s*(Média|Grande|Médio|300 ml|500 ml|200 ml|1 litro|Jarra 1L)(?:\s+\((água|leite)\))?$/i);
+  if(!m)return "";
+  return m[2]?`${m[1]} • ${m[2]}`:m[1];
+}
+function groupVariants(list){
+  const map=new Map();
+  list.forEach(p=>{
+    const key=variantBaseName(p.nome);
+    if(!map.has(key))map.set(key,[]);
+    map.get(key).push(p);
+  });
+  return [...map.values()].map(items=>{
+    items.sort((a,b)=>Number(a.preco)-Number(b.preco));
+    return {base:variantBaseName(items[0].nome),items,main:items[0]};
+  });
+}
+function productCard(group){
+  const p=group.main;
+  const local=localImageFor(p);
+  const img=p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(group.base)}">`:local?`<img src="${local}" alt="${esc(group.base)}">`:`<span style="font-size:60px">${esc(p.emoji||"🍔")}</span>`;
+  const hasVariants=group.items.length>1;
+  const min=Math.min(...group.items.map(x=>Number(x.preco||0)));
+  return `<article class="product-card"><div class="product-img">${img}</div><div class="product-info"><h3>${esc(group.base)}</h3><div class="desc">${esc(p.descricao||"Delicioso, preparado na hora.")}</div><div class="product-bottom"><span class="price">${hasVariants?"a partir de ":""}${money(min)}</span><button class="plus" onclick="openProductGroup('${group.items.map(x=>x.id).join(",")}')">+</button></div></div></article>`;
+}
+
 function renderCatalog(list=state.products){
   let arr=list.filter(p=>state.cat==="todos"||String(p.categoria_id)===String(state.cat));
-  if(state.cat!=="todos"){$("catalog").innerHTML=`<div class="catalog-category"><h2>${esc(state.cats.find(c=>String(c.id)===String(state.cat))?.nome||"Produtos")}</h2><div class="product-grid">${arr.map(productCard).join("")||`<div class="empty">Nenhum produto nesta categoria.</div>`}</div></div>`;return}
+  if(state.cat!=="todos"){
+    const groups=groupVariants(arr);
+    $("catalog").innerHTML=`<div class="catalog-category"><h2>${esc(state.cats.find(c=>String(c.id)===String(state.cat))?.nome||"Produtos")}</h2><div class="product-grid">${groups.map(productCard).join("")||`<div class="empty">Nenhum produto nesta categoria.</div>`}</div></div>`;
+    return;
+  }
   const groups=state.cats.map(c=>({c,items:arr.filter(p=>String(p.categoria_id)===String(c.id))})).filter(g=>g.items.length);
-  $("catalog").innerHTML=groups.map(g=>`<div class="catalog-category"><h2>${esc(g.c.emoji||"")} ${esc(g.c.nome)}</h2><div class="product-grid">${g.items.map(productCard).join("")}</div></div>`).join("")||`<div class="empty">Nenhum produto cadastrado ainda.</div>`;
+  $("catalog").innerHTML=groups.map(g=>`<div class="catalog-category"><h2>${esc(g.c.emoji||"")} ${esc(g.c.nome)}</h2><div class="product-grid">${groupVariants(g.items).map(productCard).join("")}</div></div>`).join("")||`<div class="empty">Nenhum produto cadastrado ainda.</div>`;
 }
-async function openProduct(id){
-  const p=state.products.find(x=>String(x.id)===String(id));if(!p)return;
-  let allowed=[];
-  try{const r=await db.from("produto_ingredientes").select("ingrediente_id").eq("produto_id",id);allowed=(r.data||[]).map(x=>String(x.ingrediente_id))}catch{}
-  const adds=state.ingredients.filter(i=>allowed.includes(String(i.id)));
-  $("productModalContent").innerHTML=`<h2>${esc(p.nome)}</h2><p class="muted">${esc(p.descricao||"Escolha os adicionais e a quantidade.")}</p>
-  <div class="form-card" style="margin:0;padding:0;background:none;border:0">
-  <label>Quantidade<input id="qty" type="number" min="1" value="1"></label>
-  ${adds.length?`<h3>Adicionais</h3>${adds.map(i=>`<label><input class="addon" type="checkbox" value="${i.id}" data-name="${esc(i.nome)}" data-price="${i.preco}"> ${esc(i.nome)} + ${money(i.preco)}</label>`).join("")}`:"<p class='muted'>Sem adicionais cadastrados para este produto.</p>"}
-  <label>Observação<textarea id="prodObs" placeholder="Ex.: sem cebola..."></textarea></label>
-  <button class="primary wide" onclick="addToCart('${p.id}')">Adicionar — ${money(p.preco)}</button></div>`;
-  $("productModal").classList.remove("hidden")
+
+async function openProductGroup(ids){
+  const products=String(ids).split(",").map(id=>state.products.find(p=>String(p.id)===String(id))).filter(Boolean);
+  if(!products.length)return;
+  const base=variantBaseName(products[0].nome);
+  const isAcai=/^Açaí$/i.test(base);
+  const isCreme=/^Creme de /i.test(base);
+  const variants=products.map(p=>({id:p.id,label:variantLabel(p.nome)||"Único",price:Number(p.preco||0)}));
+  const minPrice=Math.min(...variants.map(v=>v.price));
+  const toppings=["Granola","Confetes","Leite em pó","Amendoim triturado","Jujuba","Ovomaltine","Chocoboll","Coco","Sucrilhos","Farinha láctea","Granulado","Leite condensado","Morango calda","Chocolate calda","Caramelo calda"];
+  $("productModalContent").innerHTML=`<h2>${esc(base)}</h2>
+    <p class="muted">${esc(products[0].descricao||"Escolha as opções para montar seu pedido.")}</p>
+    <div class="form-card" style="margin:0;padding:0;background:none;border:0">
+      <h3>${variants.length>1?"Escolha o tamanho":"Quantidade"}</h3>
+      ${variants.length>1?`<div class="payment-grid">${variants.map((v,i)=>`<button type="button" class="pay ${i===0?"active":""}" data-variant-id="${v.id}" data-variant-price="${v.price}" onclick="selectVariant(this)">${esc(v.label)}<br><b>${money(v.price)}</b></button>`).join("")}</div>`:`<input id="selectedVariant" type="hidden" value="${products[0].id}">`}
+      <label>Quantidade<input id="qty" type="number" min="1" value="1"></label>
+      ${isAcai?`<h3>Coberturas <small class="muted">(escolha até 3)</small></h3><div class="checkboxes">${toppings.map(t=>`<label class="check"><input class="topping" type="checkbox" value="${esc(t)}" onchange="limitToppings()"> ${esc(t)}</label>`).join("")}</div>`:""}
+      ${isCreme?`<p class="notice">Os cremes seguem os mesmos tamanhos e preços informados no cardápio.</p>`:""}
+      <label>Observação<textarea id="prodObs" placeholder="Ex.: sem cebola..."></textarea></label>
+      <button class="primary wide" onclick="addVariantToCart('${esc(base)}')">Adicionar — a partir de ${money(minPrice)}</button>
+    </div>`;
+  $("productModal").classList.remove("hidden");
 }
-$("closeProduct").onclick=()=>$("productModal").classList.add("hidden");
-$("productModal").onclick=e=>{if(e.target.id==="productModal")$("productModal").classList.add("hidden")};
-function addToCart(id){
-  const p=state.products.find(x=>String(x.id)===String(id));const q=Math.max(1,Number($("qty").value||1));
-  const adds=[...document.querySelectorAll(".addon:checked")].map(x=>({id:x.value,nome:x.dataset.name,preco:Number(x.dataset.price||0)}));
-  const unit=Number(p.preco)+adds.reduce((s,a)=>s+a.preco,0);
-  state.cart.push({key:crypto.randomUUID(),id:p.id,nome:p.nome,base:Number(p.preco),preco:unit,quantidade:q,adicionais:adds,obs:$("prodObs").value.trim()});
-  $("productModal").classList.add("hidden");renderCartBar();
+function selectVariant(btn){
+  document.querySelectorAll("[data-variant-id]").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");
 }
-function cartCount(){return state.cart.reduce((s,x)=>s+x.quantidade,0)}
-function subtotal(){return state.cart.reduce((s,x)=>s+x.preco*x.quantidade,0)}
+function limitToppings(){
+  const checked=[...document.querySelectorAll(".topping:checked")];
+  if(checked.length>3){checked.at(-1).checked=false;alert("Você pode escolher no máximo 3 coberturas.");}
+}
+async function addVariantToCart(base){
+  const variants=state.products.filter(p=>variantBaseName(p.nome)===base);
+  const selected=document.querySelector("[data-variant-id].active")?.dataset.variantId||$("selectedVariant")?.value||variants[0]?.id;
+  const p=variants.find(x=>String(x.id)===String(selected))||variants[0];
+  if(!p)return;
+  const q=Math.max(1,Number($("qty").value||1));
+  const toppings=[...document.querySelectorAll(".topping:checked")].map(x=>({id:null,nome:x.value,preco:0}));
+  const unit=Number(p.preco);
+  state.cart.push({key:crypto.randomUUID(),id:p.id,nome:base+(variantLabel(p.nome)?` — ${variantLabel(p.nome)}`:""),base:Number(p.preco),preco:unit,quantidade:q,adicionais:toppings,obs:$("prodObs").value.trim()});
+  $("productModal").classList.add("hidden");renderCart();
+}
+
 function renderCartBar(){const n=cartCount(),total=subtotal()+Number(state.delivery||0);$("badge").textContent=n;$("barCount").textContent=n;$("barTotal").textContent=money(total);$("cartBar").classList.toggle("hidden",n===0)}
 function renderCart(){
   $("cartList").innerHTML=state.cart.length?state.cart.map(x=>`<div class="cart-item"><div class="cart-main"><span class="cart-name">${x.quantidade}x ${esc(x.nome)}</span><span class="cart-price">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<div class="cart-addons">+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</div>`:""}${x.obs?`<div class="cart-addons">Obs.: ${esc(x.obs)}</div>`:""}<div class="qty"><button onclick="changeQty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="changeQty('${x.key}',1)">+</button><button class="remove" onclick="removeCart('${x.key}')">🗑</button></div></div>`).join(""):`<div class="empty">Sua sacola está vazia.<br>Escolha um produto para começar.</div>`;
