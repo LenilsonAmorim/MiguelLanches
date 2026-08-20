@@ -1,253 +1,137 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080808">
-<title>Miguel Lanches</title>
-<link rel="stylesheet" href="style.css">
-<style>
-#ml-footer{position:fixed;left:0;right:0;bottom:0;height:68px;background:#080808;display:flex;z-index:600;box-shadow:0 -5px 20px #0004}
-#ml-footer button{flex:1;border:0;background:transparent;color:#aaa;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:21px}
-#ml-footer button span{font-size:11px}
-#ml-footer button.active{color:#f4bd17}
-body{padding-bottom:94px}
-#bagBar{bottom:82px!important;z-index:650!important}
-html.modal-lock,body.modal-lock{overflow:hidden!important;overscroll-behavior:none!important;touch-action:none!important}
-.modal{z-index:1000!important;touch-action:none!important;overscroll-behavior:contain!important}
-.modal .product-card,.modal .checkout-card,.modal .success-card{touch-action:pan-y!important;overscroll-behavior-y:contain!important;max-height:93vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.modal-lock #ml-footer{z-index:50!important;pointer-events:none!important}
-.compat-hidden{display:none!important}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>Miguel Lanches — Painel Admin</title>
+  <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="splash" class="splash">
-  <div class="splash-box">
-    <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
-    <p>Hamburgueria e Pizzaria</p>
-    <div class="loader"><i></i></div>
+<section id="login" class="login-screen">
+  <div class="login-card">
+    <div class="logo-mark">ML</div>
+    <h1>MIGUEL <span>LANCHES</span></h1>
+    <p>Painel administrativo</p>
+    <label>Usuário<input id="user" autocomplete="username" placeholder="Usuário"></label>
+    <label>Senha<input id="pass" type="password" autocomplete="current-password" placeholder="Senha"></label>
+    <button id="loginBtn" class="btn primary wide" type="button" style="margin-top:16px">Entrar</button>
+    <div id="msg" class="message"></div>
   </div>
-</div>
+</section>
 
-<div id="site" class="hidden">
-<header class="header">
-  <div class="logo"><img src="assets/logo.png" alt="Miguel Lanches"></div>
-  <div class="search"><span>⌕</span><input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off"></div>
-</header>
-
-<nav id="categories" class="categories" aria-label="Categorias"></nav>
-
-<main class="section">
-  <section class="category-block">
-    <div class="section-title"><h2>Destaques</h2></div>
-    <div id="featured" class="featured"></div>
-  </section>
-  <div id="products"></div>
-</main>
-
-<div id="bagBar" class="bag-bar empty">
-  <div class="bag-info">
-    <div class="bag-icon">🛍️</div>
-    <div><b>Sua sacola</b><small id="bagText">Sua sacola está vazia</small></div>
-  </div>
-  <button id="openCart" type="button">Ver sacola · <span id="bagTotal">R$ 0,00</span></button>
-</div>
-
-<div id="shade" class="shade"></div>
-
-<div id="cartDrawer" class="cart-drawer" aria-hidden="true">
-  <div class="drawer-head">
-    <div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div>
-    <button id="closeCart" class="round" type="button">×</button>
-  </div>
-  <div id="cartItems" class="cart-items"></div>
-  <div id="emptyCart" class="compat-hidden">Sua sacola está vazia</div>
-  <div class="drawer-bottom">
-    <div class="line"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
-    <button id="addMoreItems" class="main-btn" type="button" style="margin-bottom:10px;background:#fff;border:1px solid #ddd">Adicionar mais itens</button>
-    <button id="checkoutBtn" class="main-btn" type="button">Finalizar o pedido</button>
-  </div>
-</div>
-
-<div id="productModal" class="modal hidden"><div id="productBody" class="product-card"></div></div>
-
-<div id="checkoutModal" class="modal hidden">
-  <div id="checkoutBody" class="checkout-card">
-    <button id="checkoutClose" type="button" class="round">×</button>
-    <h2>Finalizar pedido</h2>
-    <form id="checkoutForm">
-      <input id="customerName" class="field" required placeholder="Seu nome">
-      <input id="customerPhone" class="field" required placeholder="Telefone">
-      <div class="receive-row">
-        <button type="button" class="receive selected" data-method="entrega">Entrega</button>
-        <button type="button" class="receive" data-method="retirada">Retirar na loja</button>
-      </div>
-      <div id="deliveryBox">
-        <input id="address" class="field" placeholder="Endereço">
-        <input id="reference" class="field" placeholder="Ponto de referência">
-      </div>
-      <select id="payment" class="field" required>
-        <option value="">Forma de pagamento</option>
-        <option value="Dinheiro">Dinheiro</option>
-        <option value="Pix">Pix</option>
-        <option value="Cartão">Cartão</option>
-      </select>
-      <div id="cashBox" class="hidden">
-        <input id="cashValue" class="field" inputmode="numeric" placeholder="Quanto vai pagar?">
-        <div id="changeValue">R$ 0,00</div>
-        <small id="cashError"></small>
-      </div>
-      <textarea id="orderNote" class="field" placeholder="Observação"></textarea>
-      <div class="line"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
-      <button class="main-btn" type="submit">Enviar pedido</button>
-    </form>
-  </div>
-</div>
-
-<div id="successModal" class="modal hidden">
-  <div class="success-card">
-    <div class="success-icon">✓</div>
-    <h2>Pedido enviado!</h2>
-    <p id="orderNumber"></p>
-    <p>Seu pedido já foi enviado para a loja.</p>
-    <div style="display:grid;gap:10px;margin-top:22px">
-      <button id="trackOrderBtn" class="main-btn" type="button">Acompanhar pedido</button>
-      <button id="newOrderBtn" class="main-btn" type="button" style="background:#fff;border:1px solid #ddd">Novo pedido</button>
+<div id="app" class="app hidden">
+  <aside id="side" class="sidebar">
+    <div class="brand">
+      <div class="logo-mark small">ML</div>
+      <div><strong>MIGUEL LANCHES</strong><small>PAINEL ADMIN</small></div>
     </div>
-  </div>
+
+    <nav>
+      <button class="nav-btn active" data-page="dashboard"><span>⌂ Dashboard</span></button>
+      <button class="nav-btn" data-page="pedidos"><span>▣ Pedidos</span><b id="badge">0</b></button>
+      <button class="nav-btn" data-page="cardapio"><span>☷ Cardápio</span></button>
+      <button class="nav-btn" data-page="categorias"><span>◇ Categorias</span></button>
+      <button class="nav-btn" data-page="clientes"><span>♙ Clientes</span></button>
+      <button class="nav-btn" data-page="promocoes"><span>% Promoções</span></button>
+      <button class="nav-btn" data-page="relatorios"><span>▤ Relatórios</span></button>
+      <button class="nav-btn" data-page="impressoras"><span>▥ Impressoras</span></button>
+      <button class="nav-btn" data-page="config"><span>⚙ Configurações</span></button>
+    </nav>
+
+    <a class="client-link" href="cliente/index.html">Abrir site do cliente ↗</a>
+    <button id="logout" class="logout" type="button">Sair</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button id="menu" class="icon-btn" type="button">☰</button>
+      <div><strong id="title">Dashboard</strong><small id="connection">Verificando conexão...</small></div>
+      <button id="refresh" class="btn" type="button">Atualizar</button>
+    </header>
+
+    <section id="page-dashboard" class="page active">
+      <div class="page-head"><div><h1>Resumo geral</h1><p>Acompanhe pedidos, faturamento e operação.</p></div></div>
+      <div id="stats" class="stats"></div>
+      <div class="panel"><div class="panel-title">Pedidos recentes</div><div id="recent" class="mini-list"></div></div>
+      <div class="panel"><div class="panel-title">Mais vendidos / destaques</div><div id="featuredProducts" class="mini-list"></div></div>
+    </section>
+
+    <section id="page-pedidos" class="page">
+      <div class="page-head"><div><h1>Pedidos</h1><p>Atualização automática em tempo real.</p></div></div>
+      <div id="statusTabs" class="status-tabs" aria-label="Etapas dos pedidos"></div>
+      <div id="orders" class="orders-board"></div>
+    </section>
+
+    <section id="page-cardapio" class="page">
+      <div class="page-head"><div><h1>Cardápio</h1><p>Produtos e categorias do banco atual.</p></div>
+        <button id="newProduct" class="btn primary" type="button">+ Novo produto</button>
+      </div>
+      <input id="ps" class="search" type="search" placeholder="Buscar produto...">
+      <div class="panel"><div class="table-wrap"><table>
+        <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Destaque</th><th>Ações</th></tr></thead>
+        <tbody id="products"></tbody>
+      </table></div></div>
+    </section>
+
+    <section id="page-categorias" class="page">
+      <div class="page-head"><div><h1>Categorias</h1><p>Organize as categorias do cardápio.</p></div>
+        <button id="newCat" class="btn primary" type="button">+ Nova categoria</button>
+      </div>
+      <div id="cats" class="category-admin-grid"></div>
+    </section>
+
+    <section id="page-clientes" class="page">
+      <div class="page-head"><div><h1>Clientes</h1><p>Clientes que fizeram pedidos.</p></div></div>
+      <input id="cs" class="search" type="search" placeholder="Buscar cliente...">
+      <div class="panel"><div class="table-wrap"><table>
+        <thead><tr><th>Cliente</th><th>Telefone</th><th>Pedidos</th><th>Total comprado</th></tr></thead>
+        <tbody id="clients"></tbody>
+      </table></div></div>
+    </section>
+
+    <section id="page-promocoes" class="page">
+      <div class="page-head"><div><h1>Promoções</h1><p>Produtos marcados como destaque no site.</p></div></div>
+      <div class="panel"><div class="panel-title">Produtos em destaque</div><div id="featuredProductsPromo" class="mini-list"></div></div>
+    </section>
+
+    <section id="page-relatorios" class="page">
+      <div class="page-head"><div><h1>Relatórios</h1><p>Resumo da operação.</p></div>
+        <button id="csv" class="btn dark" type="button">Exportar CSV</button>
+      </div>
+      <div id="reports" class="stats"></div>
+    </section>
+
+    <section id="page-impressoras" class="page">
+      <div class="page-head"><div><h1>Impressoras</h1><p>Teste a impressão no formato térmico de 58 mm.</p></div></div>
+      <div class="panel print-test">
+        <div><h3>Impressão 58 mm</h3><p class="muted">O botão abre a impressão do navegador.</p>
+          <button id="test" class="btn dark" type="button">Imprimir teste</button>
+        </div>
+        <div class="receipt-preview"><div style="text-align:center"><b>MIGUEL LANCHES</b><br>TESTE 58 MM</div>
+          <hr>Pedido #00001<br>1x Produto de teste — R$ 10,00<hr><b>TOTAL R$ 10,00</b>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-config" class="page">
+      <div class="page-head"><div><h1>Configurações</h1><p>Dados básicos usados pelo painel.</p></div></div>
+      <div class="panel"><div class="form">
+        <label>Nome da loja<input id="store" placeholder="Miguel Lanches"></label>
+        <label>Telefone da loja<input id="phoneStore" placeholder="(84) 99999-9999"></label>
+        <label>Taxa de entrega padrão<input id="fee" type="number" min="0" step="0.01" placeholder="0,00"></label>
+        <button id="save" class="btn primary" type="button">Salvar configurações</button>
+      </div></div>
+    </section>
+  </main>
 </div>
 
-<div id="trackingModal" class="hidden">
-  <div id="trackingCard"><div id="trackingBody"></div></div>
-</div>
-
-<div id="checkoutSubtotal" class="compat-hidden">R$ 0,00</div>
-<select id="neighborhood" class="compat-hidden"></select>
-<span id="navCount" class="compat-hidden">0</span>
-<span id="bagStatus" class="compat-hidden">Sua sacola está vazia</span>
-<span id="cartTotal" class="compat-hidden">R$ 0,00</span>
-</div>
-
-<nav id="ml-footer">
-  <button id="mlHome" class="active" type="button">⌂<span>Início</span></button>
-  <button id="mlOrders" type="button">▣<span>Pedidos</span></button>
-</nav>
+<div id="modal" class="overlay hidden"><div class="modal"><button id="close" class="modal-close" type="button">×</button><div id="body"></div></div></div>
+<div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-<script>
-window.db=window.supabase.createClient(window.ML_CONFIG.SUPABASE_URL,window.ML_CONFIG.SUPABASE_KEY);
-window.uid=window.uid||function(){
-  return window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
-};
-</script>
-
-<script src="js/client.js"></script>
-<script src="js/home-v2.js"></script>
-<script src="../cliente_opcoes.js"></script>
-<script src="cliente_sacola_fix.js"></script>
-<script src="acompanhamento_realtime.js"></script>
-<script src="cliente_runtime_fix.js"></script>
-
-<script>
-(function(){
-const $=id=>document.getElementById(id);
-const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-
-const oldRenderCart=window.renderCart;
-window.renderCart=function(){
-  if(typeof oldRenderCart==='function')oldRenderCart();
-  const c=Array.isArray(window.cart)?window.cart:[];
-  const count=c.reduce((s,x)=>s+Number(x.quantidade||0),0);
-  const total=c.reduce((s,x)=>s+Number(x.preco||0)*Number(x.quantidade||0),0);
-
-  $('bagBar')?.classList.toggle('empty',count===0);
-  if($('bagText'))$('bagText').textContent=count?`${count} ${count===1?'item':'itens'} na sacola`:'Sua sacola está vazia';
-  if($('bagTotal'))$('bagTotal').textContent=money(total);
-  if($('cartSubtotal'))$('cartSubtotal').textContent=money(total);
-  if($('checkoutTotal'))$('checkoutTotal').textContent=money(total);
-};
-
-function openCart(){
-  $('shade')?.classList.add('open');
-  $('cartDrawer')?.classList.add('open');
-  $('cartDrawer')?.setAttribute('aria-hidden','false');
-}
-function closeCart(){
-  $('shade')?.classList.remove('open');
-  $('cartDrawer')?.classList.remove('open');
-  $('cartDrawer')?.setAttribute('aria-hidden','true');
-}
-window.closeCart=closeCart;
-
-$('openCart')?.addEventListener('click',openCart);
-$('closeCart')?.addEventListener('click',closeCart);
-$('shade')?.addEventListener('click',closeCart);
-$('addMoreItems')?.addEventListener('click',closeCart);
-
-$('checkoutBtn')?.addEventListener('click',()=>{
-  if(!window.cart?.length){
-    window.toast?.('Adicione produtos à sacola');
-    return;
-  }
-  closeCart();
-  $('checkoutModal')?.classList.remove('hidden');
-});
-
-$('checkoutClose')?.addEventListener('click',()=>$('checkoutModal')?.classList.add('hidden'));
-
-$('mlHome')?.addEventListener('click',function(){
-  this.classList.add('active');
-  $('mlOrders')?.classList.remove('active');
-  $('trackingModal')?.classList.add('hidden');
-  window.scrollTo({top:0,behavior:'smooth'});
-});
-
-$('mlOrders')?.addEventListener('click',function(){
-  this.classList.add('active');
-  $('mlHome')?.classList.remove('active');
-  if(typeof window.openTracking==='function')window.openTracking();
-  else $('trackingModal')?.classList.remove('hidden');
-});
-
-$('trackOrderBtn')?.addEventListener('click',()=>{
-  $('successModal')?.classList.add('hidden');
-  $('mlOrders')?.click();
-});
-
-$('newOrderBtn')?.addEventListener('click',()=>{
-  $('successModal')?.classList.add('hidden');
-  $('mlHome')?.click();
-});
-
-const modalIds=['productModal','checkoutModal','successModal'];
-function syncLock(){
-  const open=modalIds.some(id=>{
-    const e=$(id);
-    return e&&!e.classList.contains('hidden');
-  });
-  document.documentElement.classList.toggle('modal-lock',open);
-  document.body.classList.toggle('modal-lock',open);
-}
-new MutationObserver(syncLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
-
-document.addEventListener('touchmove',e=>{
-  if(document.body.classList.contains('modal-lock')&&!e.target.closest('.product-card,.checkout-card,.success-card'))e.preventDefault();
-},{passive:false});
-
-/* 1,5 segundos */
-function hideSplash(){
-  setTimeout(()=>{
-    $('splash')?.classList.add('hide');
-    $('site')?.classList.remove('hidden');
-  },1500);
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hideSplash,{once:true});
-else hideSplash();
-
-})();
-</script>
-
+<script src="cliente/config.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
