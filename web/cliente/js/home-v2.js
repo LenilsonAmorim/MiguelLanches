@@ -57,126 +57,148 @@ window.addEventListener('load',()=>setTimeout(()=>{if(typeof load==='function')l
 
 
 
+
+
+
+
 (function(){
-  function parseCash(value){
-    let s=String(value??'').trim().replace(/\s/g,'');
-    if(!s) return 0;
-    // Brazilian format: 10,00 / 10.00 / 10
-    s=s.replace(/\./g,'').replace(',','.');
+  const $=id=>document.getElementById(id);
+  let integerDigits='';
+
+  function parseBR(v){
+    let s=String(v||'').replace(/\s/g,'');
+    if(!s)return 0;
+    if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
     return Number(s)||0;
   }
 
-  function formatCash(value){
-    if(value==='') return '';
-    let s=String(value).replace(/[^\d,]/g,'');
-    if(s.includes(',')){
-      let parts=s.split(',');
-      let whole=parts[0].replace(/\D/g,'')||'0';
-      let decimals=(parts[1]||'').replace(/\D/g,'').slice(0,2);
-      return whole+','+decimals;
-    }
-    return s;
-  }
-
   function totalPedido(){
-    const list=Array.isArray(window.cart)?window.cart:[];
-    return list.reduce((sum,item)=>sum+(Number(item.preco)||0)*(Number(item.quantidade)||0),0)
-      +(document.querySelector('.receive.selected')?.dataset.method==='entrega'?Number(window.DELIVERY_FEE||0):0);
+    const el=$('checkoutTotal');
+    const shown=parseBR(el?.textContent||'');
+    if(shown>0)return shown;
+    const items=Array.isArray(window.cart)?window.cart:[];
+    return items.reduce((s,x)=>s+(Number(x.preco)||0)*(Number(x.quantidade)||0),0);
   }
 
-  function atualizarDinheiro(){
-    const payment=document.getElementById('payment');
-    const input=document.getElementById('cashValue');
-    const box=document.getElementById('cashBox');
-    const error=document.getElementById('cashError');
-    const troco=document.getElementById('changeValue');
+  function update(){
+    const payment=$('payment'), input=$('cashValue');
+    const box=$('cashBox'), out=$('changeValue'), err=$('cashError');
     if(!payment||!input)return;
 
-    const isCash=payment.value==='Dinheiro';
-    box?.classList.toggle('hidden',!isCash);
+    const cash=payment.value==='Dinheiro';
+    box?.classList.toggle('hidden',!cash);
 
-    if(!isCash){
-      if(error) error.textContent='';
-      if(troco) troco.textContent='R$ 0,00';
-      input.setCustomValidity('');
+    if(!cash){
+      if(out)out.textContent='R$ 0,00';
+      if(err)err.textContent='';
       return;
     }
 
-    const pago=parseCash(input.value);
+    const paid=parseBR(input.value);
     const total=totalPedido();
 
-    if(!input.value.trim()){
-      if(error) error.textContent='';
-      if(troco) troco.textContent='R$ 0,00';
-      input.setCustomValidity('');
-      return;
-    }
-
-    if(pago < total){
-      const faltam=total-pago;
-      if(error) error.textContent=`Valor insuficiente. Faltam ${money2(faltam)}.`;
-      if(troco) troco.textContent='R$ 0,00';
-      input.setCustomValidity(`O valor deve ser no mínimo ${money2(total)}`);
+    if(!input.value){
+      if(out)out.textContent='R$ 0,00';
+      if(err)err.textContent='';
+    }else if(paid<total){
+      if(out)out.textContent='R$ 0,00';
+      if(err)err.textContent='Valor insuficiente. Faltam '+money2(total-paid)+'.';
     }else{
-      if(error) error.textContent='';
-      if(troco) troco.textContent=money2(pago-total);
-      input.setCustomValidity('');
+      if(out)out.textContent=money2(paid-total);
+      if(err)err.textContent='';
     }
   }
 
-  function formatarEAtualizar(){
-    const input=document.getElementById('cashValue');
-    if(!input)return;
-    input.value=formatCash(input.value);
-    atualizarDinheiro();
+  // Controlled integer input:
+  // Typing 1 -> 1,00; typing 0 next -> 10,00.
+  // The automatically added ",00" is never treated as user input, preventing
+  // the "01,1" / "1,10" behavior from the previous version.
+  function renderInput(input){
+    input.value=integerDigits ? integerDigits+',00' : '';
+    const pos=integerDigits.length;
+    try{input.setSelectionRange(pos,pos);}catch(e){}
+    update();
   }
 
-  document.addEventListener('DOMContentLoaded',()=>{
-    const payment=document.getElementById('payment');
-    const input=document.getElementById('cashValue');
-    payment?.addEventListener('change',atualizarDinheiro);
-    input?.addEventListener('input',formatarEAtualizar);
-    input?.addEventListener('change',formatarEAtualizar);
-    input?.addEventListener('blur',()=>{
-      if(input.value && !input.value.includes(',')) input.value += ',00';
-      else if(input.value.includes(',')){
-        const p=input.value.split(',');
-        input.value=p[0]+','+(p[1]||'').padEnd(2,'0').slice(0,2);
-      }
-      atualizarDinheiro();
-    });
-    atualizarDinheiro();
-  });
+  function setup(){
+    const input=$('cashValue'), payment=$('payment');
+    if(!input||!payment)return;
 
-  const originalSendOrder=window.sendOrder;
-  window.sendOrder=async function(){
-    const payment=document.getElementById('payment')?.value||'';
-    const input=document.getElementById('cashValue');
-    const pago=parseCash(input?.value);
-    const total=totalPedido();
+    integerDigits=(input.value.match(/\d+/)?.[0]||'').replace(/^0+(?=\d)/,'');
+    renderInput(input);
 
-    if(!payment){ toast('Escolha a forma de pagamento'); return; }
-    if(payment==='Dinheiro'){
-      atualizarDinheiro();
-      if(pago<=0){ toast('Informe o valor que você vai pagar'); input?.focus(); return; }
-      if(pago<total){
-        toast(`Valor insuficiente. O total é ${money2(total)}`);
-        input?.focus();
+    input.addEventListener('beforeinput',function(e){
+      if(e.inputType==='insertText' && /\d/.test(e.data||'')){
+        e.preventDefault();
+        integerDigits += String(e.data).replace(/\D/g,'');
+        integerDigits=integerDigits.replace(/^0+(?=\d)/,'');
+        renderInput(input);
         return;
       }
-    }
 
-    const note=document.getElementById('orderNote');
-    const previous=note?.value||'';
-    if(note){
-      const troco=payment==='Dinheiro'?pago-total:0;
-      note.value=previous+`\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({
-        forma:payment,valor_pago:payment==='Dinheiro'?pago:0,troco:troco
-      }))}[/ML_PAGAMENTO]`;
-    }
-    try{return await originalSendOrder();}
-    finally{if(note)note.value=previous;}
-  };
+      if(e.inputType==='deleteContentBackward' || e.inputType==='deleteContentForward'){
+        e.preventDefault();
+        integerDigits=integerDigits.slice(0,-1);
+        renderInput(input);
+        return;
+      }
 
-  document.addEventListener('click',()=>setTimeout(atualizarDinheiro,0));
+      if(e.inputType==='insertFromPaste'){
+        e.preventDefault();
+        const pasted=String(e.data||'').replace(/\D/g,'');
+        integerDigits=pasted.replace(/^0+(?=\d)/,'');
+        renderInput(input);
+      }
+    });
+
+    // Android keyboards can skip beforeinput, so input is also handled.
+    input.addEventListener('input',function(){
+      const digits=input.value.replace(/\D/g,'');
+      // Ignore the auto ",00" suffix when reconstructing.
+      if(digits.length>=2 && input.value.endsWith(',00')){
+        integerDigits=digits.slice(0,-2).replace(/^0+(?=\d)/,'');
+      }else{
+        integerDigits=digits.replace(/^0+(?=\d)/,'');
+      }
+      renderInput(input);
+    });
+
+    input.addEventListener('focus',function(){
+      renderInput(input);
+    });
+
+    payment.addEventListener('change',update);
+    document.addEventListener('click',()=>setTimeout(update,20));
+    update();
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
+  else setup();
+
+  const originalSend=window.sendOrder;
+  if(typeof originalSend==='function'){
+    window.sendOrder=async function(){
+      const payment=$('payment')?.value||'';
+      const paid=parseBR($('cashValue')?.value||'');
+      const total=totalPedido();
+
+      if(!payment){toast('Escolha a forma de pagamento');return;}
+      if(payment==='Dinheiro' && paid<total){
+        update();
+        toast(paid>0?'Valor insuficiente. O total é '+money2(total):'Informe o valor que você vai pagar');
+        $('cashValue')?.focus();
+        return;
+      }
+
+      const note=$('orderNote');
+      const old=note?.value||'';
+      if(note && payment==='Dinheiro'){
+        note.value=old+'\n[ML_PAGAMENTO]'+encodeURIComponent(JSON.stringify({
+          forma:'Dinheiro',valor_pago:paid,troco:paid-total
+        }))+'[/ML_PAGAMENTO]';
+      }
+      try{return await originalSend();}
+      finally{if(note)note.value=old;}
+    };
+  }
 })();
