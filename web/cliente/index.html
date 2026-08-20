@@ -5,102 +5,41 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050505">
 <title>Miguel Lanches — Pedido Online</title>
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css">
+<style>
+:root{--gold:#f4bd17;--red:#e32622;--text:#171717;--muted:#777}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#fff;color:var(--text);padding-bottom:76px}button,input,textarea,select{font:inherit}button{cursor:pointer}img{max-width:100%}.hidden{display:none!important}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.splash{position:fixed;inset:0;z-index:9999;background:#050505;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;transition:opacity .45s ease,visibility .45s ease}.splash.hide{opacity:0;visibility:hidden;pointer-events:none}.splash-inner{width:min(90%,360px);padding:30px}.splash-inner img{width:120px;height:92px;object-fit:contain;display:block;margin:0 auto 10px}.splash-brand{font-weight:900;font-size:18px;letter-spacing:1px}.splash-brand span{color:var(--red)}.splash p{color:#aaa;font-size:13px;margin:16px 0}.loader{width:160px;height:4px;background:#272727;border-radius:99px;margin:auto;overflow:hidden}.loader i{display:block;width:50%;height:100%;background:var(--gold);border-radius:99px;animation:load 1.25s ease-in-out infinite}@keyframes load{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+.site-hidden{visibility:hidden;height:100vh;overflow:hidden}
+.mobile-header{height:86px;background:#050505;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:80;border-bottom:1px solid #191919}.menu-btn,.cart-mini{width:42px;height:42px;border:0;background:transparent;color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center}.brand-mini{position:absolute;left:50%;transform:translateX(-50%);top:9px;width:102px;height:68px;display:flex;align-items:center;justify-content:center}.brand-mini img{width:100%;height:100%;object-fit:contain}.cart-mini{position:relative;font-size:20px}.cart-mini span{position:absolute;top:0;right:-2px;min-width:18px;height:18px;border-radius:99px;background:var(--gold);color:#111;font-size:10px;font-weight:900;display:none;align-items:center;justify-content:center}
+.menu-home{background:#fff;min-height:100vh}.search-wrap{height:52px;margin:14px 14px 8px;background:#222;border-radius:12px;display:flex;align-items:center;padding:0 13px;gap:9px;color:#fff}.search-icon{font-size:25px;color:#eee}.search-wrap input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:14px}.search-wrap input::placeholder{color:#bdbdbd}.search-wrap button{border:0;background:transparent;color:#aaa;font-size:22px;display:none}
+.categories-wrap{position:sticky;top:86px;z-index:70;background:#050505;border-bottom:1px solid #222}.categories{height:46px;display:flex;gap:22px;overflow-x:auto;padding:0 14px;scrollbar-width:none}.categories::-webkit-scrollbar{display:none}.categories button{position:relative;flex:0 0 auto;height:46px;border:0;background:transparent;color:#e8e8e8;padding:0;font-size:12px;font-weight:700;white-space:nowrap}.categories button.active{color:var(--gold)}.categories button.active:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--gold)}
+.home-section,.popular-block,.category-block{padding:0 14px}.featured-section{padding-top:18px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 11px}.section-head h2,.category-heading h2{margin:0;font-size:17px;letter-spacing:-.2px;color:#181818}.see-all,.category-heading button{border:0;background:transparent;color:#d01b1b;font-size:11px;font-weight:900;padding:4px}.section-accent{color:var(--red)}
+.featured-slider{display:flex;gap:7px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 0 12px;scrollbar-width:none}.featured-slider::-webkit-scrollbar{display:none}.highlight-card{scroll-snap-align:start;flex:0 0 31.8%;min-width:108px;padding:0;border:1px solid #ddd;border-radius:10px;background:#fff;overflow:hidden;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.07)}.highlight-photo{height:110px;background:#eee;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}.highlight-photo img{width:100%;height:100%;object-fit:cover}.highlight-photo>span{font-size:46px}.highlight-badge{position:absolute;left:6px;top:6px;background:var(--red);color:#fff;font-size:9px;border-radius:10px;padding:4px 6px}.highlight-body{padding:7px 8px 10px;display:flex;flex-direction:column;gap:2px}.highlight-body small{font-size:9px;color:#777}.highlight-body strong{font-size:15px;color:#222}.highlight-body span{font-size:11px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.popular-section{padding-top:5px}.popular-block{padding:5px 0 0}.popular-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;min-height:112px;padding:10px 0;border-bottom:1px solid #e7e7e7;cursor:pointer}.popular-copy h3{margin:3px 0;font-size:13px;line-height:1.22}.popular-copy p{margin:0 0 4px;color:#6f6f6f;font-size:10px;line-height:1.28;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.popular-copy>b{font-size:10px}.popular-copy>b span{color:#d71920;font-size:12px}.popular-tag{display:inline-block;color:#e04b2b;background:#fff2ee;border-radius:8px;padding:3px 6px;font-size:8px;font-weight:900}.popular-image{width:100px;height:100px;border-radius:9px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center}.popular-image img{width:100%;height:100%;object-fit:cover}.popular-image span{font-size:42px}
+.category-block{padding-top:15px;scroll-margin-top:135px}.category-heading{display:flex;align-items:center;gap:7px;margin:0 0 8px}.category-heading>span{font-size:18px}.category-heading h2{font-size:16px;flex:1}.category-products{border-top:1px solid #ececec}.menu-row{display:grid;grid-template-columns:92px minmax(0,1fr) 34px;gap:9px;align-items:center;min-height:96px;padding:8px 0;border-bottom:1px solid #e9e9e9;cursor:pointer}.menu-photo{width:92px;height:78px;border-radius:8px;overflow:hidden;background:#f2f2f2;display:flex;align-items:center;justify-content:center}.menu-photo img{width:100%;height:100%;object-fit:cover}.menu-photo span{font-size:38px}.menu-info h3{margin:0 0 4px;font-size:13px;line-height:1.2}.menu-info p{margin:0 0 6px;color:#777;font-size:10px;line-height:1.28}.menu-info>b{font-size:12px}.plus{width:29px;height:29px;border:0;border-radius:50%;background:var(--gold);color:#111;font-size:21px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.bag-bar{position:fixed;left:8px;right:8px;bottom:8px;height:58px;background:#090909;color:#fff;border-radius:9px;z-index:90;display:flex;align-items:center;justify-content:space-between;padding:5px 6px 5px 11px;box-shadow:0 8px 25px rgba(0,0,0,.28)}.bag-info{display:flex;align-items:center;gap:8px;min-width:0}.bag-icon{font-size:20px}.bag-info b{display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px}.bag-info small{display:block;color:#aaa;font-size:8px;margin-top:2px}.bag-bar>button{height:45px;border:0;border-radius:7px;background:var(--gold);color:#111;font-weight:900;font-size:11px;padding:0 10px}.bag-bar>button em{font-style:normal;background:#111;color:#fff;border-radius:50%;min-width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:9px}.bag-bar.has-items>button em{display:inline-flex}
+.shade{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;opacity:0;visibility:hidden;transition:.2s}.shade.open{opacity:1;visibility:visible}.cart-drawer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;z-index:110;max-height:86vh;transform:translateY(110%);transition:.28s;display:flex;flex-direction:column}.cart-drawer.open{transform:translateY(0)}.drawer-head{padding:18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between}.drawer-head h2{margin:3px 0 0;font-size:22px}.drawer-head small{color:#b71924;font-size:9px;font-weight:900}.drawer-head>button,.modal-close{border:0;background:#f2f2f2;width:34px;height:34px;border-radius:50%;font-size:22px}.drawer-items{overflow:auto;padding:0 18px}.drawer-item{padding:12px 0;border-bottom:1px solid #eee;display:grid;grid-template-columns:1fr auto;gap:7px}.drawer-item small{display:block;color:#777;font-size:9px;margin-top:3px}.qty{grid-column:1/-1;display:flex;gap:7px}.qty button{height:28px;min-width:28px;border:1px solid #ddd;background:#fff;border-radius:7px}.qty .remove{border:0;color:#c71919;background:transparent}.empty-cart{text-align:center;padding:45px 15px;color:#777;font-size:13px}.drawer-bottom{padding:12px 18px 18px;border-top:1px solid #eee}.drawer-total{display:flex;justify-content:space-between;font-size:17px;margin-bottom:10px}.drawer-actions{display:grid;grid-template-columns:90px 1fr;gap:8px}.ghost,.primary{border:0;border-radius:10px;min-height:45px;font-weight:900}.ghost{background:#eee}.primary{background:var(--gold);color:#111}.full{width:100%}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:200;display:flex;align-items:flex-end;justify-content:center}.modal-card{position:relative;width:100%;max-height:92vh;overflow:auto;background:#fff;border-radius:22px 22px 0 0;padding:22px 18px 25px}.modal-close{position:absolute;right:14px;top:12px}.product-main h2{font-size:22px;margin:0 0 6px}.big-price{font-size:20px;font-weight:900;color:#b71924}.option-title{font-size:11px;font-weight:900;margin:17px 0 7px}.modal-field,.checkout-modal input,.checkout-modal textarea,.checkout-modal select{width:100%;border:1px solid #ddd;border-radius:10px;padding:12px}.options{display:grid;gap:7px}.option{border:1px solid #ddd;background:#fff;border-radius:10px;padding:10px;display:flex;justify-content:space-between}.option.selected{border-color:#e0ad10;background:#fff9df}.checkout-modal{padding-top:36px}.modal-title h2{margin:5px 0 18px;font-size:22px}.receive-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.receive{border:1px solid #ddd;background:#fff;border-radius:12px;text-align:left;padding:13px}.receive b,.receive small{display:block}.receive small{color:#777;font-size:10px;margin-top:4px}.receive.selected{border-color:#e2b216;background:#fff8dc}.saved-box{margin-top:10px;padding:10px;border-radius:10px;background:#f6f6f6;display:grid;gap:4px}.delivery-box{display:grid;gap:8px;margin-top:12px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkout-modal textarea{min-height:78px;margin-top:10px}.checkout-modal select{margin-top:10px}.cash-box{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}.checkout-totals{display:grid;gap:7px;border-top:1px solid #eee;margin:15px 0;padding-top:12px}.checkout-totals span,.checkout-totals strong{display:flex;justify-content:space-between}.checkout-totals strong{font-size:20px}.success-card{text-align:center;padding:40px 25px}.success-icon{width:62px;height:62px;border-radius:50%;background:#e6f6ea;color:#17813d;font-size:38px;display:flex;align-items:center;justify-content:center;margin:0 auto 15px}
+</style>
 </head>
 <body>
-<div id="splash" class="splash">
-  <div class="splash-inner">
-    <img src="assets/logo.png" alt="Miguel Lanches">
-    <div class="splash-brand">MIGUEL <span>LANCHES</span></div>
-    <p>Carregando seu cardápio...</p>
-    <div class="loader"><i></i></div>
-  </div>
-</div>
-
+<div id="splash" class="splash"><div class="splash-inner"><img src="assets/logo.png" alt="Miguel Lanches"><div class="splash-brand">MIGUEL <span>LANCHES</span></div><p>Carregando seu cardápio...</p><div class="loader"><i></i></div></div></div>
 <div id="site" class="site-hidden">
-<header class="mobile-header">
-  <button class="menu-btn" type="button" aria-label="Menu">☰</button>
-  <a class="brand-mini" href="#inicio"><img src="assets/logo.png" alt="Miguel Lanches"></a>
-  <button id="headerCart" class="cart-mini" type="button" aria-label="Abrir sacola">🛍<span id="headerCount">0</span></button>
-</header>
-
-<main id="inicio">
-  <section class="menu-home" id="cardapio">
-    <div class="search-wrap">
-      <span class="search-icon">⌕</span>
-      <input id="search" autocomplete="off" placeholder="Buscar em Miguel Lanches">
-      <button id="clearSearch" type="button" aria-label="Limpar busca">×</button>
-    </div>
-
-    <div id="categoriesWrap" class="categories-wrap">
-      <div id="categories" class="categories"></div>
-    </div>
-
-    <section id="featuredSection" class="home-section featured-section">
-      <div class="section-head"><h2>Destaques</h2><button type="button" class="see-all" onclick="document.querySelector('#products').scrollIntoView({behavior:'smooth'})">Ver todos</button></div>
-      <div id="featured" class="featured-slider"></div>
-    </section>
-
-    <section class="home-section popular-section">
-      <div class="section-head"><h2>Mais pedidos</h2><span class="section-accent">●</span></div>
-      <div id="productsTitle" class="sr-only">Cardápio</div>
-      <div id="products" class="catalog"></div>
-    </section>
-  </section>
-</main>
-
-<div id="bagBar" class="bag-bar">
-  <div class="bag-info"><span class="bag-icon">🛍</span><div><b id="bagStatus">Sua sacola está vazia</b><small>Mínimo R$ 45,00</small></div></div>
-  <button id="navCart" type="button">Ver sacola <span>›</span><em id="navCount">0</em></button>
-</div>
-
-<!-- Sacola -->
-<div id="shade" class="shade"></div>
-<aside id="cartDrawer" class="cart-drawer">
-  <div class="drawer-head"><div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div><button id="closeCart" type="button">×</button></div>
-  <div id="cartItems" class="drawer-items"></div>
-  <div id="emptyCart" class="empty-cart">Sua sacola está vazia.<br>Escolha um produto acima.</div>
-  <div class="drawer-bottom">
-    <div class="drawer-total"><span>Total</span><b id="cartTotal">R$ 0,00</b></div>
-    <div class="drawer-actions"><button id="clearCart" class="ghost" type="button">Limpar</button><button id="checkoutBtn" class="primary" type="button">Continuar</button></div>
-  </div>
-</aside>
-
-<!-- Modal de produto -->
-<div id="productModal" class="modal hidden"><div class="modal-card product-modal"><button id="productClose" class="modal-close" type="button">×</button><div id="productBody"></div></div></div>
-
-<!-- Checkout -->
-<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal"><button id="checkoutClose" class="modal-close" type="button">×</button>
-  <div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você quer receber?</h2></div>
-  <form id="checkoutForm">
-    <div class="receive-grid"><button class="receive" data-method="entrega" type="button"><b>🚴 Entrega</b><small>Receba em casa</small></button><button class="receive" data-method="retirada" type="button"><b>🏪 Retirada</b><small>Busque na loja</small></button></div>
-    <div id="savedBox" class="saved-box hidden"><b>Endereço salvo</b><span id="savedText"></span><button id="changeAddress" type="button">Alterar</button></div>
-    <div id="deliveryBox" class="delivery-box">
-      <div class="field-grid"><input id="customerName" required placeholder="Nome *"><input id="customerPhone" required placeholder="WhatsApp / telefone *"></div>
-      <select id="neighborhood"><option value="">Bairro *</option></select>
-      <input id="address" placeholder="Endereço completo"><input id="reference" placeholder="Ponto de referência">
-    </div>
-    <textarea id="orderNote" placeholder="Observações do pedido"></textarea>
-    <select id="payment"><option value="">Forma de pagamento *</option><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select>
-    <div id="cashBox" class="cash-box hidden"><input id="cashValue" type="number" step="0.01" placeholder="Valor pago"><b id="change"></b></div>
-    <div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div>
-    <button class="primary full" type="submit">Enviar pedido</button>
-  </form>
-</div></div>
-
-<!-- Sucesso -->
-<div id="successModal" class="modal hidden"><div class="modal-card success-card"><div class="success-icon">✓</div><small>PEDIDO ENVIADO</small><h2 id="orderNumber">Pedido #0000</h2><p>Seu pedido já foi recebido. Acompanhe pelo número do pedido.</p><button id="successClose" class="primary full" type="button">Entendi</button></div></div>
-
-<div class="sr-only" aria-hidden="true">
-  <button id="shopNow" type="button"></button><button id="navCategories" type="button"></button><button id="navOrders" type="button"></button>
-  <span id="cartSubtotal"></span><span id="cartFee"></span>
-</div>
+<header class="mobile-header"><button class="menu-btn" type="button">☰</button><a class="brand-mini" href="#inicio"><img src="assets/logo.png" alt="Miguel Lanches"></a><button id="headerCart" class="cart-mini" type="button">🛍<span id="headerCount">0</span></button></header>
+<main id="inicio"><section class="menu-home" id="cardapio">
+<div class="search-wrap"><span class="search-icon">⌕</span><input id="search" autocomplete="off" placeholder="Buscar em Miguel Lanches"><button id="clearSearch" type="button">×</button></div>
+<div id="categoriesWrap" class="categories-wrap"><div id="categories" class="categories"></div></div>
+<section id="featuredSection" class="home-section featured-section"><div class="section-head"><h2>Destaques</h2><button type="button" class="see-all" onclick="document.querySelector('#products').scrollIntoView({behavior:'smooth'})">Ver todos</button></div><div id="featured" class="featured-slider"></div></section>
+<section class="home-section popular-section"><div id="productsTitle" class="sr-only">Cardápio</div><div id="products" class="catalog"></div></section>
+</section></main>
+<div id="bagBar" class="bag-bar"><div class="bag-info"><span class="bag-icon">🛍</span><div><b id="bagStatus">Sua sacola está vazia</b><small>Mínimo R$ 45,00</small></div></div><button id="navCart" type="button">Ver sacola › <em id="navCount">0</em></button></div>
+<div id="shade" class="shade"></div><aside id="cartDrawer" class="cart-drawer"><div class="drawer-head"><div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div><button id="closeCart" type="button">×</button></div><div id="cartItems" class="drawer-items"></div><div id="emptyCart" class="empty-cart">Sua sacola está vazia.<br>Escolha um produto acima.</div><div class="drawer-bottom"><div class="drawer-total"><span>Total</span><b id="cartTotal">R$ 0,00</b></div><div class="drawer-actions"><button id="clearCart" class="ghost" type="button">Limpar</button><button id="checkoutBtn" class="primary" type="button">Continuar</button></div></div></aside>
+<div id="productModal" class="modal hidden"><div class="modal-card"><button id="productClose" class="modal-close" type="button">×</button><div id="productBody"></div></div></div>
+<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal"><button id="checkoutClose" class="modal-close" type="button">×</button><div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você quer receber?</h2></div><form id="checkoutForm"><div class="receive-grid"><button class="receive" data-method="entrega" type="button"><b>🚴 Entrega</b><small>Receba em casa</small></button><button class="receive" data-method="retirada" type="button"><b>🏪 Retirada</b><small>Busque na loja</small></button></div><div id="savedBox" class="saved-box hidden"><b>Endereço salvo</b><span id="savedText"></span><button id="changeAddress" type="button">Alterar</button></div><div id="deliveryBox" class="delivery-box"><div class="field-grid"><input id="customerName" required placeholder="Nome *"><input id="customerPhone" required placeholder="WhatsApp / telefone *"></div><select id="neighborhood"><option value="">Bairro *</option></select><input id="address" placeholder="Endereço completo"><input id="reference" placeholder="Ponto de referência"></div><textarea id="orderNote" placeholder="Observações do pedido"></textarea><select id="payment"><option value="">Forma de pagamento *</option><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select><div id="cashBox" class="cash-box hidden"><input id="cashValue" type="number" step="0.01" placeholder="Valor pago"><b id="change"></b></div><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
+<div id="successModal" class="modal hidden"><div class="modal-card success-card"><div class="success-icon">✓</div><small>PEDIDO ENVIADO</small><h2 id="orderNumber">Pedido #0000</h2><p>Seu pedido já foi recebido.</p><button id="successClose" class="primary full" type="button">Entendi</button></div></div>
+<div class="sr-only" aria-hidden="true"><button id="shopNow" type="button"></button><button id="navCategories" type="button"></button><button id="navOrders" type="button"></button><span id="cartSubtotal"></span><span id="cartFee"></span></div>
 <div id="toast" class="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
-<script src="js/client.js"></script>
-<script src="js/home-v2.js"></script>
+<script src="js/config.js"></script><script src="js/client.js"></script><script src="js/home-v2.js"></script>
 <script>window.addEventListener('load',()=>setTimeout(()=>{document.getElementById('splash').classList.add('hide');document.getElementById('site').classList.remove('site-hidden')},1500));</script>
-</body>
-</html>
+</body></html>
