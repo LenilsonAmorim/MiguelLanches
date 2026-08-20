@@ -2,101 +2,86 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#b71924">
-<title>Miguel Lanches</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="web/pedidos-comandas.css">
+<link rel="manifest" href="manifest.json">
+<title>Miguel Lanches — Cardápio</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="app">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="brand-miguel">MIGUEL</div><div class="brand-lanches">LANCHES</div><small>Sistema de pedidos</small></div>
-    <nav>
-      <button class="nav-item active" data-page="pedido">🛒 <span>Novo Pedido</span></button>
-      <button class="nav-item" data-page="comandas">📋 <span>Comandas</span><b id="openCount">0</b></button>
-      <button class="nav-item" data-page="historico">📊 <span>Histórico</span></button>
-      <button class="nav-item" data-page="clientes">👥 <span>Clientes</span></button>
-      <button class="nav-item" data-page="admin">⚙️ <span>Administração</span></button>
-    </nav>
-    <div class="sidebar-foot">Miguel Lanches<br><small>Cardápio integrado ao Supabase</small></div>
-  </aside>
-  <main class="main">
-    <header class="topbar">
-      <button class="icon-btn" id="menuBtn">☰</button>
-      <div><strong id="pageTitle">Novo Pedido</strong><small id="pageSubtitle">Monte o pedido rapidamente</small></div>
-      <div class="top-actions"><span class="sync" id="syncStatus">● conectando</span></div>
-    </header>
+<header class="mobile-header">
+  <a class="brand-mini" href="index.html"><img src="assets/logo.png" alt="Miguel Lanches"></a>
+  <a class="cart-mini" href="#carrinho">🛒 <span id="cartBadge">0</span></a>
+</header>
 
-    <section class="page active" id="page-pedido">
-      <div class="page-head"><div><h1>Novo Pedido</h1><p>Escolha os produtos e monte a comanda.</p></div></div>
-      <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
-      <div class="category-tabs" id="categoryTabs"></div>
-      <button class="view-cart" id="viewCart">🛒 <span>Ver comanda</span> <b id="viewCartCount">0 itens</b> <strong id="viewCartTotal">R$ 0,00</strong></button>
-      <div class="cart-overlay" id="cartOverlay"></div>
-      <div class="order-layout">
-        <div class="catalog"><div class="product-grid" id="productGrid"></div></div>
-        <aside class="cart" id="cart">
-          <div class="cart-title"><div><h2>Comanda</h2><small id="cartCount">0 itens</small></div><div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div></div>
-          <div class="customer-mini">
-            <div class="customer-row"><input id="cliente" placeholder="Nome do cliente"><button id="findClient" title="Buscar cliente">👤</button></div>
-            <input id="telefone" placeholder="WhatsApp / telefone">
-            <input id="endereco" placeholder="Endereço">
-            <input id="referencia" placeholder="Ponto de referência">
-          </div>
-          <div id="cartItems" class="cart-items"></div>
-          <div class="note"><label>Observação do pedido</label><textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></div>
-          <div class="summary">
-            <div><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div>
-            <div><span>Entrega</span><div class="inline-money"><input id="taxaEntrega" type="number" step="0.01" value="0"><b id="deliveryShow">R$ 0,00</b></div></div>
-            <div class="total"><span>TOTAL</span><strong id="total">R$ 0,00</strong></div>
-          </div>
-          <button class="primary big" id="finish">✓ Finalizar Pedido</button>
-        </aside>
+<main>
+<section class="hero">
+  <div class="hero-inner">
+    <img class="hero-logo" src="assets/logo.png" alt="Miguel Lanches">
+    <div>
+      <span class="eyebrow">PEDIDO ONLINE</span>
+      <h1>Seu lanche favorito,<br><b>do seu jeito.</b></h1>
+      <p>Escolha, monte seu pedido e acompanhe tudo em tempo real.</p>
+      <a class="btn btn-red" href="#cardapio">Ver cardápio</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="cardapio">
+  <div class="section-title">
+    <div><span class="eyebrow">CARDÁPIO</span><h2>O que você vai pedir?</h2></div>
+    <input id="search" class="search" placeholder="Buscar produto...">
+  </div>
+  <div id="categories" class="chips"></div>
+  <div id="products" class="product-grid"></div>
+</section>
+
+<section class="section cart-section" id="carrinho">
+  <div class="section-title"><div><span class="eyebrow">SEU PEDIDO</span><h2>Carrinho</h2></div></div>
+  <div class="checkout-grid">
+    <div class="panel">
+      <div id="cartItems"></div>
+      <div class="empty" id="emptyCart">Seu carrinho está vazio.<br>Escolha um produto acima.</div>
+    </div>
+    <div class="panel checkout">
+      <h3>Dados da entrega</h3>
+      <input id="customerName" placeholder="Seu nome">
+      <input id="customerPhone" placeholder="WhatsApp / telefone">
+      <input id="customerAddress" placeholder="Endereço completo">
+      <input id="customerReference" placeholder="Ponto de referência">
+      <textarea id="customerNotes" placeholder="Observações do pedido"></textarea>
+      <select id="payment">
+        <option value="pix">Pix</option>
+        <option value="dinheiro">Dinheiro</option>
+        <option value="cartao">Cartão</option>
+      </select>
+      <input id="changeFor" type="number" step="0.01" placeholder="Troco para quanto? (se necessário)">
+      <div class="totals">
+        <span>Subtotal <b id="subtotal">R$ 0,00</b></span>
+        <span>Entrega <b id="delivery">R$ 0,00</b></span>
+        <strong>Total <b id="total">R$ 0,00</b></strong>
       </div>
-    </section>
+      <button id="placeOrder" class="btn btn-red full">Finalizar pedido</button>
+      <small class="muted">Ao finalizar, o pedido será enviado para a cozinha.</small>
+    </div>
+  </div>
+</section>
 
-    <section class="page" id="page-comandas">
-      <div class="page-head"><div><h1>Comandas</h1><p>Pedidos novos, em preparo e para entrega.</p></div></div>
-      <div id="novosComandasBox"></div>
-      <div class="status-columns">
-        <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
-        <div class="status-col"><div class="col-head delivery"><span>🛵 Saiu para entrega</span><b id="countDelivery">0</b></div><div id="deliveryList"></div></div>
-      </div>
-    </section>
+<section class="section tracking" id="acompanhar">
+  <div class="section-title"><div><span class="eyebrow">ACOMPANHAMENTO</span><h2>Onde está meu pedido?</h2></div></div>
+  <div class="track-box">
+    <input id="trackNumber" placeholder="Digite o número do pedido">
+    <button id="trackBtn" class="btn btn-dark">Acompanhar</button>
+    <div id="trackResult"></div>
+  </div>
+</section>
+</main>
 
-    <section class="page" id="page-historico">
-      <div class="page-head"><div><h1>Histórico</h1><p>Vendas reais e pedidos cancelados separados.</p></div></div>
-      <div class="stats" id="stats"></div>
-      <div class="filters"><button class="filter active" data-history="todos">Todos</button><button class="filter" data-history="entregue">Entregues</button><button class="filter" data-history="cancelado">Cancelados</button></div>
-      <div class="panel"><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead><tbody id="history"></tbody></table></div></div>
-    </section>
+<footer><img src="assets/logo.png" alt=""> <span>© 2026 Miguel Lanches</span><a href="admin.html">Área administrativa</a></footer>
 
-    <section class="page" id="page-clientes">
-      <div class="page-head"><div><h1>Clientes</h1><p>Salve clientes para preencher pedidos mais rápido.</p></div><button class="primary" id="newClient">+ Novo cliente</button></div>
-      <div class="search"><span>⌕</span><input id="clientSearch" placeholder="Buscar por nome ou telefone..."></div>
-      <div class="client-grid" id="clientGrid"></div>
-    </section>
-
-    <section class="page" id="page-admin">
-      <div class="page-head"><div><h1>Administração</h1><p>Gerencie o cardápio sem mexer no código.</p></div></div>
-      <div class="admin-tabs">
-        <button class="admin-tab active" data-admin="produtos">🍔 Produtos</button>
-        <button class="admin-tab" data-admin="categorias">📂 Categorias</button>
-        <button class="admin-tab" data-admin="adicionais">🧀 Adicionais</button>
-        <button class="admin-tab" data-admin="tamanhos">📏 Tamanhos</button>
-        <button class="admin-tab" data-admin="combos">🎁 Combos</button>
-        <button class="admin-tab" data-admin="entrega">🚚 Entrega</button>
-        <button class="admin-tab" data-admin="pagamento">💰 Pagamento</button>
-      </div>
-      <div id="adminContent"></div>
-    </section>
-  </main>
-</div>
-
-<div class="modal hidden" id="modal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
-
+<div id="toast" class="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="web/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/client.js"></script>
 </body>
 </html>
