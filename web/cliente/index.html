@@ -1,157 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Miguel Lanches</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#171717}
-    header{background:#111;color:#fff;padding:16px;text-align:center;position:sticky;top:0;z-index:5}
-    header img{max-width:170px;max-height:80px;object-fit:contain}
-    h1{margin:8px 0 0;font-size:22px}
-    .cats{display:flex;gap:8px;overflow:auto;padding:12px;background:#fff;position:sticky;top:113px;z-index:4}
-    .cat{border:1px solid #ddd;border-radius:20px;padding:9px 14px;background:#fff;white-space:nowrap}
-    .cat.active{background:#b40000;color:#fff;border-color:#b40000}
-    main{padding:14px;max-width:900px;margin:auto}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px #0001}
-    .card img{width:100%;height:150px;object-fit:cover;background:#eee}
-    .info{padding:12px}.name{font-weight:700;font-size:16px}.price{margin-top:6px;font-weight:700}
-    button{cursor:pointer}.add{margin-top:10px;width:100%;border:0;border-radius:10px;background:#b40000;color:#fff;padding:11px;font-weight:700}
-    #empty{padding:30px;text-align:center;color:#777}
-    .modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:flex-end}
-    .modal.show{display:flex}.sheet{background:#fff;width:100%;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px}
-    .sheet h2{margin-top:0}.option{display:flex;justify-content:space-between;align-items:center;border:1px solid #ddd;padding:12px;border-radius:10px;margin:8px 0}
-    .actions{display:flex;gap:8px;margin-top:14px}.actions button{flex:1;padding:12px;border:0;border-radius:10px;font-weight:700}
-    .cancel{background:#eee}.confirm{background:#b40000;color:#fff}
-    .cart{position:fixed;right:16px;bottom:16px;background:#b40000;color:#fff;border:0;border-radius:30px;padding:14px 18px;font-weight:700;box-shadow:0 4px 16px #0004;z-index:10}
-    @media(min-width:700px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.modal{align-items:center;justify-content:center}.sheet{max-width:520px;border-radius:20px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#b71924">
+<title>Miguel Lanches</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <img id="logo" src="assets/logo.png" alt="Miguel Lanches">
-  <h1>Miguel Lanches</h1>
+<header class="header">
+  <div class="brand"><strong>MIGUEL</strong><span>LANCHES</span></div>
+  <button id="headerCart" class="header-cart" aria-label="Abrir sacola">🛍️<b id="headerCount">0</b></button>
 </header>
 
-<div class="cats" id="cats"></div>
-<main><div class="grid" id="products"></div><div id="empty" hidden>Nenhum produto encontrado.</div></main>
-<button class="cart" id="cartBtn">Comanda (0)</button>
-
-<div class="modal" id="modal">
-  <div class="sheet">
-    <h2 id="modalTitle"></h2>
-    <div id="modalOptions"></div>
-    <div class="actions">
-      <button class="cancel" onclick="closeModal()">Cancelar</button>
-      <button class="confirm" onclick="confirmProduct()">Adicionar</button>
+<main>
+  <section class="hero">
+    <div>
+      <small>MIGUEL LANCHES</small>
+      <h1>Peça do seu jeito.</h1>
+      <p>Escolha, personalize e receba seu pedido com facilidade.</p>
     </div>
+    <span>🍔</span>
+  </section>
+
+  <label class="search">
+    <span>⌕</span><input id="search" autocomplete="off" placeholder="Buscar produto...">
+  </label>
+
+  <section>
+    <div class="section-title"><h2>Categorias</h2></div>
+    <nav id="categories" class="categories"></nav>
+  </section>
+
+  <section id="featuredSection">
+    <div class="section-title"><h2>Mais pedidos</h2><button id="clearSearch">Ver todos</button></div>
+    <div id="featured" class="featured"></div>
+  </section>
+
+  <section>
+    <div class="section-title"><h2 id="productsTitle">Cardápio</h2></div>
+    <div id="products" class="products"></div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-active">⌂<small>Início</small></button>
+  <button id="navCategories">☷<small>Categorias</small></button>
+  <button id="navCart">🛍️<small>Sacola</small><i id="navCount">0</i></button>
+  <button id="navOrders">▣<small>Pedidos</small></button>
+  <button>♙<small>Perfil</small></button>
+</nav>
+
+<div id="shade" class="shade"></div>
+
+<aside id="cartDrawer" class="drawer">
+  <div class="drawer-head"><div><small>SUA SACOLA</small><h2>Seu pedido</h2></div><button class="close" id="closeCart">×</button></div>
+  <div id="cartItems"></div>
+  <div id="emptyCart" class="empty hidden">Sua sacola está vazia.<button id="shopNow">Escolher produtos</button></div>
+  <div class="cart-bottom">
+    <button id="clearCart" class="danger-light">LIMPAR SACOLA</button>
+    <div class="totals"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div>
+    <div class="totals"><span>Taxa de entrega</span><b id="cartFee">R$ 0,00</b></div>
+    <div class="totals total"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+    <button id="checkoutBtn" class="primary">FINALIZAR PEDIDO</button>
   </div>
-</div>
+</aside>
 
-<script>
-/*
-  CONFIGURE AQUI OS DADOS DO SEU PROJETO SUPABASE.
-  Não coloque a service_role key. Use apenas a chave anon/public.
-*/
-const SUPABASE_URL = "https://lifsxhyeqwppfvajvhpn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
+<div id="productModal" class="modal hidden"><div class="modal-card"><button class="modal-close" id="productClose">×</button><div id="productBody"></div></div></div>
 
-const sb = (SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20)
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-card">
+  <button class="modal-close" id="checkoutClose">×</button>
+  <div class="checkout-head"><small>FINALIZAÇÃO</small><h2>Como você quer receber?</h2><p>Preencha seus dados e escolha a forma de pagamento.</p></div>
 
-let categories=[], products=[], cart=[], selectedProduct=null, selectedOptions=[];
+  <div class="receive-grid">
+    <button class="receive" data-method="entrega"><span>🛵</span><b>Entrega</b><small>Receba em casa</small></button>
+    <button class="receive" data-method="retirada"><span>🚶</span><b>Retirada</b><small>Retire no local</small></button>
+  </div>
 
-async function loadData(){
-  if(!sb){
-    document.getElementById("empty").hidden=false;
-    document.getElementById("empty").textContent="Configure a URL e a chave anon do Supabase no index.html.";
-    return;
-  }
-  const [c,p] = await Promise.all([
-    sb.from("categorias").select("*").eq("ativo",true).order("ordem"),
-    sb.from("produtos").select("*").eq("ativo",true).order("ordem")
-  ]);
-  if(c.error || p.error){ console.error(c.error||p.error); return; }
-  categories=c.data||[]; products=p.data||[];
-  renderCategories();
-  // Abre automaticamente a primeira categoria que realmente possui produtos.
-  const firstWithProducts = categories.find(c => products.some(p => p.categoria_id === c.id));
-  if (firstWithProducts) {
-    const buttons = document.querySelectorAll(".cat");
-    const index = categories.findIndex(c => c.id === firstWithProducts.id);
-    buttons.forEach(x => x.classList.remove("active"));
-    if (buttons[index]) buttons[index].classList.add("active");
-    renderProducts(firstWithProducts.id);
-  } else {
-    renderProducts(categories[0]?.id);
-  }
-}
+  <div id="savedBox" class="saved hidden"><div><small>ENDEREÇO SALVO</small><b id="savedText"></b></div><button id="changeAddress">Trocar</button></div>
 
-function renderCategories(){
-  const el=document.getElementById("cats");
-  el.innerHTML=categories.map((c,i)=>`<button class="cat ${i===0?'active':''}" onclick="selectCat('${c.id}',this)">${esc(c.nome)}</button>`).join("");
-}
-function selectCat(id,btn){
-  document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
-  btn.classList.add("active"); renderProducts(id);
-}
-function renderProducts(catId){
-  const list=products.filter(p=>p.categoria_id===catId);
-  const el=document.getElementById("products"), empty=document.getElementById("empty");
-  empty.hidden=list.length>0;
-  el.innerHTML=list.map(p=>`
-    <article class="card">
-      ${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="">`:""}
-      <div class="info">
-        <div class="name">${esc(p.nome)}</div>
-        <div class="price">R$ ${money(p.preco)}</div>
-        <button class="add" onclick="openProduct('${p.id}')">Adicionar</button>
-      </div>
-    </article>`).join("");
-}
-async function openProduct(id){
-  selectedProduct=products.find(p=>p.id===id); selectedOptions=[];
-  document.getElementById("modalTitle").textContent=selectedProduct.nome;
-  const box=document.getElementById("modalOptions");
-  box.innerHTML="<p>Carregando opções...</p>"; document.getElementById("modal").classList.add("show");
+  <form id="checkoutForm">
+    <h3>Seus dados</h3>
+    <input id="customerName" required placeholder="Nome completo *">
+    <input id="customerPhone" required inputmode="tel" placeholder="WhatsApp (DDD + celular) *">
 
-  const {data,error}=await sb.from("produto_opcoes_grupos").select("*").eq("produto_id",id).order("ordem");
-  if(error||!data?.length){box.innerHTML="<p>Este produto não possui opções.</p>";return;}
+    <div id="deliveryBox" class="hidden">
+      <select id="neighborhood"><option value="">Bairro *</option></select>
+      <input id="address" placeholder="Endereço *">
+      <input id="reference" placeholder="Ponto de referência *">
+    </div>
 
-  let html="";
-  for(const g of data){
-    const r=await sb.from("produto_opcoes").select("*").eq("grupo_id",g.id).order("ordem");
-    html+=`<h3>${esc(g.nome)} <small>(escolha ${g.minimo||0} a ${g.maximo||1})</small></h3>`;
-    html+= (r.data||[]).map(o=>`
-      <label class="option">
-        <span>${esc(o.nome)} ${Number(o.preco)>0?`+ R$ ${money(o.preco)}`:""}</span>
-        <input type="${g.maximo===1?'radio':'checkbox'}" name="g_${g.id}" value="${o.id}" data-group="${g.id}" data-price="${o.preco||0}" onchange="optionChanged(this,${g.maximo||1})">
-      </label>`).join("");
-  }
-  box.innerHTML=html;
-}
-function optionChanged(input,max){
-  if(input.type==="checkbox"){
-    const group=input.dataset.group;
-    const checked=[...document.querySelectorAll(`input[data-group="${group}"]:checked`)];
-    if(checked.length>max){input.checked=false;alert(`Escolha no máximo ${max} opções.`)}
-  }
-}
-function confirmProduct(){
-  if(!selectedProduct)return;
-  const opts=[...document.querySelectorAll("#modalOptions input:checked")].map(i=>({id:i.value,price:Number(i.dataset.price||0)}));
-  cart.push({product:selectedProduct,options:opts});
-  updateCart();closeModal();
-}
-function closeModal(){document.getElementById("modal").classList.remove("show")}
-function updateCart(){document.getElementById("cartBtn").textContent=`Comanda (${cart.length})`;}
-function money(v){return Number(v||0).toFixed(2).replace(".",",")}
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-document.getElementById("cartBtn").onclick=()=>alert(cart.length?cart.map(x=>x.product.nome).join("\\n"):"Comanda vazia");
-loadData();
-</script>
+    <label class="label">Forma de pagamento *</label>
+    <select id="payment" required>
+      <option value="">Selecione *</option>
+      <option value="PIX">PIX</option>
+      <option value="Cartão de crédito">Cartão de crédito</option>
+      <option value="Cartão de débito">Cartão de débito</option>
+      <option value="Dinheiro">Dinheiro</option>
+    </select>
+
+    <div id="cashBox" class="cash hidden">
+      <input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *">
+      <div id="change" class="change"></div>
+    </div>
+
+    <label class="label">Observação do pedido</label>
+    <textarea id="orderNote" rows="3" placeholder="Alguma observação?"></textarea>
+
+    <div class="checkout-summary">
+      <div><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></div>
+      <div><span>Taxa</span><b id="checkoutFee">R$ 0,00</b></div>
+      <div class="grand"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
+    </div>
+    <button class="primary" type="submit">CONFIRMAR PEDIDO</button>
+  </form>
+</div></div>
+
+<div id="successModal" class="modal hidden"><div class="modal-card success">
+  <div class="success-icon">✓</div><h2>Pedido realizado!</h2><p>Obrigado pela preferência.</p><strong id="orderNumber"></strong>
+  <button id="successClose" class="primary">VOLTAR AO CARDÁPIO</button>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
 </body>
 </html>
