@@ -45,9 +45,10 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}img{max-width:10
 .card-body{padding:9px 10px 13px}.card-body h3{margin:0 0 5px;font-size:14px;line-height:1.2}.desc{margin:0 0 8px;color:#777;font-size:10px;line-height:1.3}
 .card-foot{display:flex;align-items:center;justify-content:space-between}.price{font-weight:900;color:#d71920}
 .plus{width:32px;height:32px;border:0;border-radius:50%;background:var(--gold);color:#111;font-size:21px;font-weight:900}
-.bag-bar{position:fixed;left:8px;right:8px;bottom:8px;height:58px;background:#090909;color:#fff;border-radius:12px;z-index:90;display:flex;align-items:center;justify-content:space-between;padding:5px 6px 5px 11px;box-shadow:0 8px 25px #0004}
-.bag-info{display:flex;align-items:center;gap:8px}.bag-icon{font-size:22px}.bag-info b{display:block;font-size:10px}.bag-info small{display:block;color:#aaa;font-size:8px;margin-top:2px}
-.bag-bar>button{height:45px;border:0;border-radius:9px;background:var(--gold);color:#111;font-weight:900;font-size:12px;padding:0 14px}
+.bag-bar{position:fixed;left:12px;right:12px;bottom:12px;height:68px;background:#101010;color:#fff;border:1px solid #292929;border-radius:18px;z-index:90;display:flex;align-items:center;justify-content:space-between;padding:7px 7px 7px 13px;box-shadow:0 12px 35px #0005;backdrop-filter:blur(10px);transform:translateY(0);opacity:1;transition:transform .22s ease,opacity .22s ease}
+.bag-bar.empty{transform:translateY(130%);opacity:0;pointer-events:none}
+.bag-info{display:flex;align-items:center;gap:10px;min-width:0}.bag-icon{width:42px;height:42px;border-radius:13px;background:#242424;display:grid;place-items:center;flex:0 0 42px;color:var(--gold)}.bag-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.bag-copy{min-width:0}.bag-copy b{display:block;font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bag-copy small{display:block;color:#a9a9a9;font-size:10px;margin-top:3px;white-space:nowrap}.bag-bar>button{height:52px;min-width:124px;border:0;border-radius:14px;background:var(--gold);color:#111;font-weight:900;font-size:13px;padding:0 16px;box-shadow:0 3px 0 #c39100;transition:transform .12s ease,box-shadow .12s ease}.bag-bar>button:active{transform:translateY(2px);box-shadow:0 1px 0 #c39100}
+@media(max-width:420px){.bag-bar{left:10px;right:10px;bottom:10px;height:66px;border-radius:17px}.bag-icon{width:40px;height:40px;flex-basis:40px}.bag-copy b{font-size:11px}.bag-copy small{font-size:9px}.bag-bar>button{min-width:118px;height:50px;font-size:12px}}
 .shade{position:fixed;inset:0;background:#0009;z-index:100;opacity:0;visibility:hidden}.shade.open{opacity:1;visibility:visible}
 .cart-drawer{position:fixed;left:0;right:0;bottom:0;z-index:110;max-height:86vh;transform:translateY(110%);transition:.28s;background:#fff;border-radius:22px 22px 0 0;display:flex;flex-direction:column}
 .cart-drawer.open{transform:translateY(0)}.drawer-head{padding:18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
@@ -112,12 +113,12 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}img{max-width:10
   </main>
 </div>
 
-<div id="bagBar" class="bag-bar">
+<div id="bagBar" class="bag-bar empty" aria-live="polite">
   <div class="bag-info">
-    <span class="bag-icon">🛍️</span>
-    <div><b id="bagText">Sua sacola está vazia</b><small id="bagMinimum">Mínimo R$ 45,00</small></div>
+    <span class="bag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg></span>
+    <div class="bag-copy"><b id="bagText">Sua sacola</b><small id="bagMinimum">0 itens</small></div>
   </div>
-  <button type="button" onclick="openCart()">Ver sacola ›</button>
+  <button type="button" onclick="openCart()">Ver sacola</button>
 </div>
 
 <div id="shade" class="shade" onclick="closeCart()"></div>
@@ -145,95 +146,177 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}img{max-width:10
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>window.openCheckout=window.openCheckout||function(){ if(typeof window.checkout==="function") return window.checkout(); alert("Sistema ainda está carregando. Tente novamente."); };</script>
+
 <script>
 (function(){
-'use strict';
-const SUPABASE_URL='https://lifsxhyeqwppfvajvhpn.supabase.co';
-const SUPABASE_KEY='sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ';
-let db,products=[],categories=[],cart=[],receiveMethod=null,neighborhoods=[];
-const ADDRESS_KEY='miguel_lanches_cliente_v1';
-const $=id=>document.getElementById(id);
-const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
-const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
-const fallback=[{id:'fb-l',nome:'Lanches',emoji:'🍔',ordem:1},{id:'fb-p',nome:'Pizzas',emoji:'🍕',ordem:2},{id:'fb-po',nome:'Porções',emoji:'🍟',ordem:3},{id:'fb-c',nome:'Churrasco',emoji:'🥩',ordem:4},{id:'fb-d',nome:'Dogão',emoji:'🌭',ordem:5},{id:'fb-b',nome:'Bebidas',emoji:'🥤',ordem:6}];
-function hideSplash(){setTimeout(()=>{$('splash')?.classList.add('hide');$('site')?.classList.remove('site-hidden')},1500)}
-function saved(){try{return JSON.parse(localStorage.getItem(ADDRESS_KEY)||'null')}catch{return null}}
-function loadCart(){try{cart=JSON.parse(localStorage.getItem('miguel_cart_v2')||'[]')}catch{cart=[]}}
-function saveCart(){localStorage.setItem('miguel_cart_v2',JSON.stringify(cart));renderCart()}
-async function load(){
- try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){console.error(e);return renderEmpty('Não foi possível iniciar o cardápio.')}
- try{
-   const [c,p]=await Promise.all([
-    db.from('categorias').select('*').eq('ativo',true).order('ordem'),
-    db.from('produtos').select('*,categorias(nome,emoji,imagem_url)').eq('ativo',true).order('ordem')
-   ]);
-   categories=(!c.error&&c.data?.length?c.data:fallback).filter(x=>norm(x.nome)!=='todos');
-   products=(!p.error&&p.data?p.data:[]);
-   renderCategories();renderFeatured();renderProducts();renderCart();loadNeighborhoods();
- }catch(e){console.error(e);renderEmpty('Erro ao carregar o cardápio.');}
-}
-async function loadNeighborhoods(){try{const r=await db.from('bairros').select('*').eq('ativo',true).order('nome');neighborhoods=r.data||[]}catch{} }
-function renderEmpty(msg){$('featured').innerHTML='';$('products').innerHTML='<div style="padding:30px 14px;text-align:center;color:#777">'+esc(msg)+'</div>'}
-function renderCategories(){
- $('categories').innerHTML=categories.map(c=>`<button data-cat="${esc(c.id)}"><span style="display:none">${esc(c.emoji||'')}</span>${esc(c.nome)}</button>`).join('');
- document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{const el=document.getElementById('cat-'+String(b.dataset.cat).replace(/[^a-zA-Z0-9_-]/g,'-'));el?.scrollIntoView({behavior:'smooth',block:'start'});});
-}
-function renderFeatured(){
- const list=products.filter(p=>p.destaque===true||p.destaque===1||p.destaque==='true').slice(0,10);
- $('featured').innerHTML=list.length?list.map(p=>`<button class="highlight-card" onclick="openProduct('${esc(p.id)}')"><div class="highlight-photo">${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||'🍔')}</span>`}<span class="highlight-badge">DESTAQUE</span></div><div class="highlight-body"><small>${esc(p.categorias?.nome||'Mais pedido')}</small><strong>${esc(p.nome)}</strong><span class="highlight-price">${money(p.preco)}</span></div></button>`).join(''):'<div style="padding:10px 2px;color:#777">Nenhum destaque cadastrado.</div>';
-}
-function renderProducts(){
- const q=norm($('search')?.value||'');
- const list=products.filter(p=>!q||norm(p.nome).includes(q)||norm(p.descricao).includes(q));
- const html=categories.map(c=>{const items=list.filter(p=>String(p.categoria_id)===String(c.id));if(!items.length)return '';return `<section class="category-block" id="cat-${String(c.id).replace(/[^a-zA-Z0-9_-]/g,'-')}"><div class="category-heading"><h2>${esc(c.nome)}</h2></div><div class="products">${items.map(card).join('')}</div></section>`}).join('');
- const unc=list.filter(p=>!categories.some(c=>String(c.id)===String(p.categoria_id)));
- $('products').innerHTML=html+(unc.length?`<section class="category-block"><div class="category-heading"><h2>Outros</h2></div><div class="products">${unc.map(card).join('')}</div></section>`:'')||'<div style="padding:30px 14px;text-align:center;color:#777">Nenhum produto encontrado.</div>';
-}
-function card(p){return `<article class="card" onclick="openProduct('${esc(p.id)}')"><div class="photo">${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||'🍔')}</span>`}</div><div class="card-body"><h3>${esc(p.nome)}</h3><div class="desc">${esc(p.descricao||'Toque para ver as opções.')}</div><div class="card-foot"><span class="price">${money(p.preco)}</span><button class="plus" onclick="event.stopPropagation();openProduct('${esc(p.id)}')">+</button></div></div></article>`}
-function isPizza(p){return norm(p.categorias?.nome).includes('pizza')||norm(p.nome).includes('pizza')}
-function isPastel(p){return norm(p.categorias?.nome).includes('pastel')||norm(p.nome).includes('pastel')}
-function isAcai(p){return norm(p.categorias?.nome).includes('acai')||norm(p.nome).includes('acai')}
-function openProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;let body=`<div class="product-main"><div class="ml-product-hero">${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:`<div class="ml-product-placeholder">${esc(p.emoji||p.categorias?.emoji||'🍔')}</div>`}<button class="ml-product-close" onclick="closeProduct()">×</button></div><h2 class="ml-product-title">${esc(p.nome)}</h2><div class="ml-product-price">${money(p.preco)}</div><p class="ml-product-desc">${esc(p.descricao||'')}</p>`;
- if(isPizza(p)){const two=norm(p.nome).includes('2 sabores')||norm(p.nome).includes('2 sabor')||norm(p.nome).includes('duas');const flavors=products.filter(x=>isPizza(x)&&String(x.id)!==String(p.id)).slice(0,20);body+=`<div class="ml-section-title">Escolha ${two?'2 sabores':'1 sabor'}</div><div class="ml-options">${flavors.map(f=>`<button type="button" class="ml-option pizza-opt" data-price="${Number(f.preco||0)}" data-name="${esc(f.nome)}" onclick="pickPizza(this,${two})"><b>${esc(f.nome)}</b><strong>${money(f.preco)}</strong></button>`).join('')}</div>`}
- else if(isPastel(p)){const sabores=products.filter(x=>isPastel(x)&&String(x.id)!==String(p.id)).slice(0,30);body+=`<div class="ml-section-title">Tamanho</div><div class="ml-options"><button class="ml-option size-opt selected" data-size="M" data-price="${Number(p.preco||0)}" onclick="pickOne('.size-opt',this)"><b>Pastel M</b><strong>${money(p.preco)}</strong></button><button class="ml-option size-opt" data-size="G" data-price="${Number(p.preco||0)}" onclick="pickOne('.size-opt',this)"><b>Pastel G</b><strong>${money(p.preco)}</strong></button></div><div class="ml-section-title">Sabor</div><div class="ml-options">${sabores.map(f=>`<button class="ml-option flavor-opt" data-name="${esc(f.nome)}" data-price="${Number(f.preco||0)}" onclick="pickOne('.flavor-opt',this)"><b>${esc(f.nome)}</b><strong>${money(f.preco)}</strong></button>`).join('')}</div>`}
- else if(isAcai(p)){body+=`<div class="ml-section-title">Tamanho</div><div class="ml-options">${['200 ml','300 ml','500 ml','1 litro'].map((s,i)=>`<button class="ml-option acai-size ${i===0?'selected':''}" data-size="${s}" onclick="pickOne('.acai-size',this)"><b>${s}</b><strong>${i===0?money(p.preco):'Consultar'}</strong></button>`).join('')}</div><div class="ml-section-title">Coberturas (até 3)</div><div class="ml-options">${['Leite em pó','Leite condensado','Paçoca','Granola','Morango','Banana','Ovomaltine','Confete'].map(n=>`<button class="ml-option top-opt" data-name="${esc(n)}" onclick="toggleTop(this)"><b>${n}</b></button>`).join('')}</div>`}
- body+=`<label class="ml-label">Observação (opcional)</label><textarea id="mlNote" class="ml-note" placeholder="Ex.: sem cebola..."></textarea><div class="ml-qty-row"><span class="ml-qty-title">Quantidade</span><div class="ml-stepper"><button onclick="changeModalQty(-1)">−</button><span id="mlQty" class="ml-qty">1</span><button onclick="changeModalQty(1)">+</button></div></div><button class="ml-add" onclick="addCurrent('${esc(p.id)}')">ADICIONAR À SACOLA</button></div>`;
- $('productBody').innerHTML=body;$('productModal').classList.remove('hidden');window._modalQty=1;
-}
-function changeModalQty(d){window._modalQty=Math.max(1,Math.min(99,(window._modalQty||1)+d));$('mlQty').textContent=window._modalQty}
-function pickOne(sel,el){document.querySelectorAll(sel).forEach(x=>x.classList.remove('selected'));el.classList.add('selected')}
-function pickPizza(el,two){if(!two)document.querySelectorAll('.pizza-opt').forEach(x=>x.classList.remove('selected'));if(two&&!el.classList.contains('selected')&&document.querySelectorAll('.pizza-opt.selected').length>=2)return;el.classList.toggle('selected')}
-function toggleTop(el){const n=document.querySelectorAll('.top-opt.selected').length;if(!el.classList.contains('selected')&&n>=3)return;el.classList.toggle('selected')}
-function closeProduct(){$('productModal').classList.add('hidden')}
-function addCurrent(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;const qty=window._modalQty||1,note=($('mlNote')?.value||'').trim();let item={id:uid(),nome:p.nome,preco:Number(p.preco||0),obs:note,quantidade:qty,config:{tipo:'normal'}};
- if(isPizza(p)){const two=norm(p.nome).includes('2 sabores')||norm(p.nome).includes('2 sabor')||norm(p.nome).includes('duas');const o=[...document.querySelectorAll('.pizza-opt.selected')];if(o.length!==(two?2:1))return alert(two?'Escolha 2 sabores.':'Escolha 1 sabor.');item.nome=`${p.nome} — ${o.map(x=>x.dataset.name).join(' + ')}`;item.preco=Math.max(Number(p.preco||0),...o.map(x=>Number(x.dataset.price||0)));item.config={tipo:two?'pizza-2-sabores':'pizza-1-sabor',sabores:o.map(x=>x.dataset.name)}}
- else if(isPastel(p)){const s=document.querySelector('.size-opt.selected'),f=document.querySelector('.flavor-opt.selected');if(!s||!f)return alert('Escolha o tamanho e 1 sabor.');item={...item,nome:`Pastel ${s.dataset.size} — ${f.dataset.name}`,preco:Math.max(Number(s.dataset.price||0),Number(f.dataset.price||0)),config:{tipo:'pastel',tamanho:s.dataset.size,sabor:f.dataset.name}}}
- else if(isAcai(p)){const s=document.querySelector('.acai-size.selected'),tops=[...document.querySelectorAll('.top-opt.selected')].map(x=>x.dataset.name);if(!s)return alert('Escolha o tamanho.');item={...item,nome:`Açaí ${s.dataset.size}${tops.length?' — '+tops.join(', '):''}`,config:{tipo:'acai',tamanho:s.dataset.size,coberturas:tops}}}
- cart.push(item);saveCart();closeProduct();openCart()}
-function openCart(){$('cartDrawer').classList.add('open');$('shade').classList.add('open')}
-function closeCart(){$('cartDrawer').classList.remove('open');$('shade').classList.remove('open')}
-function renderCart(){const count=cart.reduce((a,x)=>a+Number(x.quantidade||0),0),sub=cart.reduce((a,x)=>a+Number(x.preco||0)*Number(x.quantidade||0),0);$('cartItems').innerHTML=cart.length?cart.map(x=>`<div class="drawer-item"><div><b>${x.quantidade}x ${esc(x.nome)}</b>${x.config?.coberturas?.length?`<small>Coberturas: ${esc(x.config.coberturas.join(', '))}</small>`:''}${x.config?.sabores?.length?`<small>Sabores: ${esc(x.config.sabores.join(' + '))}</small>`:''}${x.obs?`<small>Obs.: ${esc(x.obs)}</small>`:''}</div><strong>${money(x.preco*x.quantidade)}</strong><div class="qty"><button onclick="changeQty('${x.id}',-1)">−</button><span>${x.quantidade}</span><button onclick="changeQty('${x.id}',1)">+</button><button onclick="removeItem('${x.id}')">Excluir</button></div></div>`).join(''):'<div class="empty-cart">Sua sacola está vazia.</div>';$('cartTotal').textContent=money(sub);$('bagText').textContent=count?`${count} item${count>1?'s':''} na sacola`:'Sua sacola está vazia'}
-function changeQty(id,d){const x=cart.find(i=>String(i.id)===String(id));if(!x)return;x.quantidade+=d;if(x.quantidade<1)cart=cart.filter(i=>i!==x);saveCart()}
-function removeItem(id){cart=cart.filter(i=>String(i.id)!==String(id));saveCart()}
-function closeCheckout(){$('checkoutModal').classList.add('hidden')}
-function openCheckout(){if(!cart.length)return alert('Sua sacola está vazia.');closeCart();renderCheckout();$('checkoutModal').classList.remove('hidden')}
-function renderCheckout(){const d=saved(),sub=cart.reduce((a,x)=>a+Number(x.preco||0)*Number(x.quantidade||0),0);$('checkoutBody').innerHTML=`<h2>Como você quer receber?</h2><div class="receive-grid"><button class="receive" data-method="entrega" onclick="selectReceive('entrega')"><b>Entrega</b><small>Receba em casa</small></button><button class="receive" data-method="retirada" onclick="selectReceive('retirada')"><b>Retirada</b><small>Busque na loja</small></button></div><div class="customer-box"><label>Nome *</label><input id="customerName" value="${esc(d?.nome||'')}" placeholder="Seu nome"><label>WhatsApp *</label><input id="customerPhone" value="${esc(d?.telefone||'')}" placeholder="(00) 00000-0000"></div><div id="deliveryBox" class="delivery-box hidden"><label>Bairro *</label><select id="neighborhood"><option value="">Bairro *</option>${neighborhoods.map(n=>`<option>${esc(n.nome)}</option>`).join('')}</select><label>Endereço *</label><input id="address" value="${esc(d?.endereco||'')}" placeholder="Rua, número"><label>Referência</label><input id="reference" value="${esc(d?.referencia||'')}" placeholder="Ponto de referência"></div><label style="display:block;font-size:11px;font-weight:800;margin-top:12px">Forma de pagamento *</label><select id="payment" onchange="updatePayment()"><option value="">Forma de pagamento *</option><option>Dinheiro</option><option>Pix</option><option>Cartão</option></select><div id="cashBox" class="cash-box hidden"><label>Valor pago</label><input id="cashValue" type="number" step="0.01" placeholder="Ex.: 50,00" oninput="updateChange()"><div class="change-row"><span>Troco</span><strong id="change"></strong></div></div><label style="display:block;font-size:11px;font-weight:800;margin-top:12px">Observações</label><textarea id="orderNote" placeholder="Alguma observação?"></textarea><div class="checkout-totals"><span><span>Subtotal</span><b>${money(sub)}</b></span><span><span>Entrega</span><b>R$ 0,00</b></span><strong><span>Total</span><b id="checkoutTotal">${money(sub)}</b></strong></div><button class="primary full" style="min-height:52px" onclick="sendOrder()">Enviar pedido</button>`;if(d){} }
-function selectReceive(m){receiveMethod=m;document.querySelectorAll('.receive').forEach(x=>x.classList.toggle('selected',x.dataset.method===m));$('deliveryBox').classList.toggle('hidden',m!=='entrega')}
-function updatePayment(){const cash=$('payment').value==='Dinheiro';$('cashBox').classList.toggle('hidden',!cash);if(!cash){$('cashValue').value='';$('change').textContent=''}else updateChange()}
-function updateChange(){const paid=Number($('cashValue')?.value||0),total=cart.reduce((a,x)=>a+Number(x.preco||0)*Number(x.quantidade||0),0);$('change').textContent=paid>=total&&paid?money(paid-total):''}
-async function sendOrder(){
- if(!receiveMethod)return alert('Escolha Entrega ou Retirada.');if(!$('customerName').value.trim()||!$('customerPhone').value.trim())return alert('Informe nome e WhatsApp.');if(!$('payment').value)return alert('Escolha a forma de pagamento.');const delivery=receiveMethod==='entrega';if(delivery&&!$('address').value.trim())return alert('Informe o endereço.');const total=cart.reduce((a,x)=>a+Number(x.preco||0)*Number(x.quantidade||0),0);if($('payment').value==='Dinheiro'&&Number($('cashValue').value||0)<total)return alert('O valor pago precisa ser igual ou maior que o total.');
- const payload={cliente:$('customerName').value.trim(),telefone:$('customerPhone').value.trim(),forma_recebimento:receiveMethod,bairro:delivery?$('neighborhood').value:'',endereco:delivery?$('address').value.trim():'',referencia:delivery?$('reference').value.trim():'',pagamento:$('payment').value,valor_pago:$('payment').value==='Dinheiro'?Number($('cashValue').value||0):null,total,observacoes:$('orderNote').value.trim(),itens:cart};
- const r=await db.from('pedidos').insert(payload).select('id').maybeSingle();if(r.error){console.error(r.error);return alert('Não foi possível enviar o pedido. Tente novamente.')}
- if(delivery)localStorage.setItem(ADDRESS_KEY,JSON.stringify({nome:payload.cliente,telefone:payload.telefone,bairro:payload.bairro,endereco:payload.endereco,referencia:payload.referencia}));
- cart=[];saveCart();closeCheckout();alert('Pedido enviado com sucesso! Nº '+String(r.data?.id||'').slice(-5));
-}
-window.openCheckout=openCheckout;window.openCart=openCart;window.closeCart=closeCart;window.closeProduct=closeProduct;window.openProduct=openProduct;window.changeQty=changeQty;window.removeItem=removeItem;window.selectReceive=selectReceive;window.updatePayment=updatePayment;window.updateChange=updateChange;window.sendOrder=sendOrder;window.pickOne=pickOne;window.pickPizza=pickPizza;window.toggleTop=toggleTop;window.changeModalQty=changeModalQty;window.addCurrent=addCurrent;
-document.addEventListener('DOMContentLoaded',()=>{loadCart();$('search').addEventListener('input',renderProducts);load();hideSplash()});
+  setTimeout(function(){
+    var s=document.getElementById('splash'),site=document.getElementById('site');
+    if(s)s.classList.add('hide'); if(site)site.classList.remove('site-hidden');
+  },1500);
+
+  const esc2=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+  const money2=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const norm2=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+  function productImage(p){
+    return p.imagem_url||p.imagem||p.image_url||'';
+  }
+  function isPizza2(p){return norm2(p.categorias?.nome||'').includes('pizza')||norm2(p.nome).includes('pizza')}
+  function isPastel2(p){return norm2(p.categorias?.nome||'').includes('pastel')||norm2(p.nome).includes('pastel')}
+  function isAcai2(p){return norm2(p.categorias?.nome||'').includes('acai')||norm2(p.nome).includes('acai')}
+
+  let mlCurrent=null,mlQty=1;
+
+  function closeProfessional(){
+    document.getElementById('productModal')?.classList.add('hidden');
+  }
+
+  function addObject(obj){
+    if(typeof window.addToCart!=='function'){
+      alert('A sacola ainda está carregando. Tente novamente.');
+      return false;
+    }
+    window.addToCart(obj);
+    if(typeof window.renderCart==='function')window.renderCart();
+    return true;
+  }
+
+  function openProfessional(pid){
+    const list=window.products||[];
+    const p=list.find(x=>String(x.id)===String(pid));
+    if(!p)return;
+    mlCurrent=p;mlQty=1;
+    let extra='';
+    if(isPizza2(p)) extra=renderPizzaOptions(p);
+    else if(isPastel2(p)) extra=renderPastelOptions(p);
+    else if(isAcai2(p)) extra=renderAcaiOptions(p);
+    renderProfessional(p,extra);
+  }
+
+  function renderProfessional(p,extra){
+    const body=document.getElementById('productBody'), modal=document.getElementById('productModal');
+    const u=productImage(p);
+    body.innerHTML=`
+      <div class="product-main">
+        <div class="ml-product-hero">
+          ${u?`<img src="${esc2(u)}" alt="${esc2(p.nome)}">`:`<div class="ml-product-placeholder">${esc2(p.emoji||p.categorias?.emoji||'🍔')}</div>`}
+          <button class="ml-product-close" type="button" aria-label="Fechar">×</button>
+        </div>
+        <h2 class="ml-product-title">${esc2(p.nome)}</h2>
+        <div class="ml-product-price">${money2(p.preco)}</div>
+        ${p.descricao?`<p class="ml-product-desc">${esc2(p.descricao)}</p>`:''}
+        ${extra}
+        <label class="ml-label">Observação <span style="color:#888;font-weight:500">(opcional)</span></label>
+        <textarea id="mlNote" class="ml-note" placeholder="Ex.: sem cebola, bem passado..."></textarea>
+        <div class="ml-qty-row">
+          <span class="ml-qty-title">Quantidade</span>
+          <div class="ml-stepper">
+            <button id="mlMinus" type="button">−</button>
+            <span id="mlQty" class="ml-qty">1</span>
+            <button id="mlPlus" type="button">+</button>
+          </div>
+        </div>
+        <button id="mlAdd" class="ml-add" type="button">ADICIONAR À SACOLA · ${money2(p.preco)}</button>
+      </div>`;
+    modal.classList.remove('hidden');
+
+    body.querySelector('.ml-product-close').onclick=closeProfessional;
+    const update=()=>{
+      document.getElementById('mlQty').textContent=mlQty;
+      document.getElementById('mlAdd').textContent=`ADICIONAR À SACOLA · ${money2(Number(p.preco||0)*mlQty)}`;
+    };
+    document.getElementById('mlMinus').onclick=()=>{mlQty=Math.max(1,mlQty-1);update()};
+    document.getElementById('mlPlus').onclick=()=>{mlQty=Math.min(99,mlQty+1);update()};
+    document.getElementById('mlAdd').onclick=()=>addCurrent();
+  }
+
+  function renderPizzaOptions(p){
+    const two=norm2(p.nome).includes('2 sabores')||norm2(p.nome).includes('2 sabor')||norm2(p.nome).includes('duas');
+    const flavors=(window.products||[]).filter(x=>isPizza2(x)&&String(x.id)!==String(p.id)).slice(0,20);
+    return `<div class="ml-section-title">Escolha ${two?'2':'1'} sabor${two?'es':''}</div>
+      <div id="mlPizzaOptions" class="ml-options">${flavors.map(f=>`
+        <button type="button" class="ml-option ml-pizza ${two?'two':''}" data-name="${esc2(f.nome)}" data-price="${Number(f.preco||0)}">
+          <span><b>${esc2(f.nome)}</b>${f.descricao?`<small>${esc2(f.descricao)}</small>`:''}</span><strong>${money2(f.preco)}</strong>
+        </button>`).join('')}</div>`;
+  }
+
+  function renderPastelOptions(p){
+    const sabores=(window.products||[]).filter(x=>isPastel2(x)&&String(x.id)!==String(p.id)).slice(0,30);
+    return `<div class="ml-section-title">Escolha o tamanho</div>
+      <div class="ml-options"><button type="button" class="ml-option ml-size selected" data-size="M" data-price="${Number(p.preco||0)}"><b>Pastel M</b><strong>${money2(p.preco)}</strong></button><button type="button" class="ml-option ml-size" data-size="G" data-price="${Number(p.preco||0)}"><b>Pastel G</b><strong>${money2(p.preco)}</strong></button></div>
+      <div class="ml-section-title">Escolha 1 sabor</div>
+      <div class="ml-options">${sabores.map(f=>`<button type="button" class="ml-option ml-flavor" data-name="${esc2(f.nome)}" data-price="${Number(f.preco||0)}"><b>${esc2(f.nome)}</b><strong>${money2(f.preco)}</strong></button>`).join('')}</div>`;
+  }
+
+  function renderAcaiOptions(p){
+    const sizes=[['200 ml',0],['300 ml',0],['500 ml',0],['1 litro',0]];
+    return `<div class="ml-section-title">Escolha o tamanho</div><div class="ml-options">${sizes.map((s,i)=>`<button type="button" class="ml-option ml-acai-size ${i===0?'selected':''}" data-size="${s[0]}" data-price="${s[1]}"><b>${s[0]}</b><strong>${money2(s[1])}</strong></button>`).join('')}</div>
+      <div class="ml-section-title">Coberturas <span style="font-weight:500;color:#777">(até 3)</span></div>
+      <div class="ml-options">${['Leite em pó','Leite condensado','Paçoca','Granola','Morango','Banana','Ovomaltine','Confete'].map(n=>`<button type="button" class="ml-option ml-top" data-name="${esc2(n)}"><b>${esc2(n)}</b></button>`).join('')}</div>`;
+  }
+
+  document.addEventListener('click',function(e){
+    const pizza=e.target.closest('.ml-pizza');
+    if(pizza){
+      const two=pizza.classList.contains('two');
+      if(!two)document.querySelectorAll('.ml-pizza').forEach(x=>x.classList.remove('selected'));
+      if(two && !pizza.classList.contains('selected') && document.querySelectorAll('.ml-pizza.selected').length>=2)return;
+      pizza.classList.toggle('selected');return;
+    }
+    const size=e.target.closest('.ml-size');
+    if(size){document.querySelectorAll('.ml-size').forEach(x=>x.classList.remove('selected'));size.classList.add('selected');return}
+    const fl=e.target.closest('.ml-flavor');
+    if(fl){document.querySelectorAll('.ml-flavor').forEach(x=>x.classList.remove('selected'));fl.classList.add('selected');return}
+    const ac=e.target.closest('.ml-acai-size');
+    if(ac){document.querySelectorAll('.ml-acai-size').forEach(x=>x.classList.remove('selected'));ac.classList.add('selected');return}
+    const top=e.target.closest('.ml-top');
+    if(top){const count=document.querySelectorAll('.ml-top.selected').length;if(!top.classList.contains('selected')&&count>=3)return;top.classList.toggle('selected')}
+  });
+
+  function addCurrent(){
+    const p=mlCurrent,note=(document.getElementById('mlNote')?.value||'').trim();
+    let item={nome:p.nome,preco:Number(p.preco||0),obs:note,quantidade:mlQty};
+    if(isPizza2(p)){
+      const opts=[...document.querySelectorAll('.ml-pizza.selected')];
+      const two=norm2(p.nome).includes('2 sabores')||norm2(p.nome).includes('2 sabor')||norm2(p.nome).includes('duas');
+      if(opts.length!==(two?2:1)){alert(two?'Escolha 2 sabores.':'Escolha 1 sabor.');return}
+      const names=opts.map(x=>x.dataset.name);const high=Math.max(Number(p.preco||0),...opts.map(x=>Number(x.dataset.price||0)));
+      item={nome:`${p.nome} — ${names.join(' + ')}`,preco:high,obs:note,quantidade:mlQty,config:{tipo:two?'pizza-2-sabores':'pizza-1-sabor',sabores:names}};
+    }else if(isPastel2(p)){
+      const s=document.querySelector('.ml-size.selected'),f=document.querySelector('.ml-flavor.selected');
+      if(!s||!f){alert('Escolha o tamanho e 1 sabor.');return}
+      item={nome:`Pastel ${s.dataset.size} — ${f.dataset.name}`,preco:Math.max(Number(s.dataset.price||0),Number(f.dataset.price||0)),obs:note,quantidade:mlQty,config:{tipo:'pastel',tamanho:s.dataset.size,sabor:f.dataset.name}};
+    }else if(isAcai2(p)){
+      const s=document.querySelector('.ml-acai-size.selected'),tops=[...document.querySelectorAll('.ml-top.selected')].map(x=>x.dataset.name);
+      if(!s){alert('Escolha o tamanho.');return}
+      item={nome:`Açaí ${s.dataset.size}${tops.length?' — '+tops.join(', '):''}`,preco:Number(p.preco||0)+Number(s.dataset.price||0),obs:note,quantidade:mlQty,config:{tipo:'acai',tamanho:s.dataset.size,coberturas:tops}};
+    }
+    if(addObject(item))closeProfessional();
+  }
+
+  // Substitui o ponto de entrada usado pelos cards atuais.
+  window.openProduct=openProfessional;
+
+  // Barra de sacola: aparece somente quando houver itens e mostra total em tempo real.
+  function syncProfessionalBag(){
+    const bar=document.getElementById('bagBar');
+    if(!bar)return;
+    const source=Array.isArray(window.cart)?window.cart:[];
+    const count=source.reduce((sum,item)=>sum+Math.max(0,Number(item.quantidade||item.quantity||1)),0);
+    const total=source.reduce((sum,item)=>sum+(Number(item.preco||item.price||0)*Math.max(0,Number(item.quantidade||item.quantity||1))),0);
+    const text=document.getElementById('bagText');
+    const sub=document.getElementById('bagMinimum');
+    if(!count){bar.classList.add('empty');return;}
+    bar.classList.remove('empty');
+    if(text)text.textContent=count===1?'1 item na sacola':`${count} itens na sacola`;
+    if(sub)sub.textContent=Number(total||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  }
+  setInterval(syncProfessionalBag,250);
+  document.addEventListener('visibilitychange',syncProfessionalBag);
+  syncProfessionalBag();
 })();
 </script>
-
 </body>
 </html>
