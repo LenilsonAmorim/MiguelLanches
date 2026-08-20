@@ -18,6 +18,17 @@
 .shade{position:fixed;inset:0;background:#0009;z-index:100;opacity:0;visibility:hidden}.shade.open{opacity:1;visibility:visible}.cart-drawer,.modal-card{background:#fff;border-radius:20px 20px 0 0}.cart-drawer{position:fixed;left:0;right:0;bottom:0;z-index:110;max-height:86vh;transform:translateY(110%);transition:.28s;display:flex;flex-direction:column}.cart-drawer.open{transform:translateY(0)}.drawer-head{padding:18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between}.drawer-head h2{margin:3px 0;font-size:22px}.drawer-head button,.modal-close{border:0;background:#eee;width:34px;height:34px;border-radius:50%;font-size:22px}.drawer-items{overflow:auto;padding:0 18px}.drawer-item{padding:12px 0;border-bottom:1px solid #eee;display:grid;grid-template-columns:1fr auto;gap:7px}.drawer-item small{display:block;color:#777;font-size:9px}.qty{grid-column:1/-1;display:flex;gap:7px}.qty button{height:28px;min-width:28px;border:1px solid #ddd;background:#fff;border-radius:7px}.empty-cart{text-align:center;padding:45px 15px;color:#777;font-size:13px}.drawer-bottom{padding:12px 18px 18px;border-top:1px solid #eee}.drawer-total{display:flex;justify-content:space-between;font-size:17px;margin-bottom:10px}.drawer-actions{display:grid;grid-template-columns:90px 1fr;gap:8px}.ghost,.primary{border:0;border-radius:10px;min-height:45px;font-weight:900}.ghost{background:#eee}.primary{background:var(--gold);color:#111}.full{width:100%}
 .modal{position:fixed;inset:0;background:#000b;z-index:200;display:flex;align-items:flex-end}.modal-card{position:relative;width:100%;max-height:92vh;overflow:auto;padding:22px 18px 25px}.modal-close{position:absolute;right:14px;top:12px}.product-main h2{font-size:22px}.big-price{font-size:20px;font-weight:900;color:#b71924}.checkout-modal input,.checkout-modal textarea,.checkout-modal select{width:100%;border:1px solid #ddd;border-radius:10px;padding:12px;margin-top:8px}.receive-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.receive{border:1px solid #ddd;background:#fff;border-radius:12px;text-align:left;padding:13px}.receive.selected{border-color:#e2b216;background:#fff8dc}.checkout-totals{display:grid;gap:7px;border-top:1px solid #eee;margin:15px 0;padding-top:12px}.checkout-totals span,.checkout-totals strong{display:flex;justify-content:space-between}
 @media(max-width:420px){.mobile-header{height:104px}.brand-mini{width:70px;height:70px;flex-basis:70px}.categories-wrap{top:104px}.category-products{grid-template-columns:repeat(2,minmax(0,1fr))}.menu-photo{height:112px}.top-search{height:48px}.top-search input{font-size:13px}}
+
+.receive-grid{margin-bottom:12px}
+.receive{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-height:78px;padding:14px 16px;border:1px solid #ddd;background:#fff;border-radius:14px;text-align:left;transition:.18s}
+.receive b{font-size:16px;line-height:1.1;font-weight:800}
+.receive small{font-size:11px;color:#777;line-height:1.2}
+.receive.selected{border-color:#e5b512;background:#fff9df;box-shadow:0 0 0 1px #e5b512 inset}
+.customer-box,.delivery-box{display:grid;gap:5px;margin-top:10px}
+.customer-box label,.delivery-box label{font-size:11px;font-weight:800;color:#555;margin-top:4px}
+.checkout-modal input,.checkout-modal textarea,.checkout-modal select{font-size:15px;min-height:48px}
+.checkout-modal textarea{min-height:82px;resize:none}
+.checkout-modal h2{font-size:27px;line-height:1.1;margin:4px 0 20px}
 </style>
 </head>
 <body>
@@ -36,7 +47,27 @@
 <div id="shade" class="shade"></div>
 <aside id="cartDrawer" class="cart-drawer"><div class="drawer-head"><div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div><button id="closeCart" type="button">×</button></div><div id="cartItems" class="drawer-items"></div><div id="emptyCart" class="empty-cart">Sua sacola está vazia.<br>Escolha um produto acima.</div><div class="drawer-bottom"><div class="drawer-total"><span>Total</span><b id="cartTotal">R$ 0,00</b></div><div class="drawer-actions"><button id="clearCart" class="ghost" type="button">Limpar</button><button id="checkoutBtn" class="primary" type="button">Continuar</button></div></div></aside>
 <div id="productModal" class="modal hidden"><div class="modal-card"><button id="productClose" class="modal-close" type="button">×</button><div id="productBody"></div></div></div>
-<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal"><button id="checkoutClose" class="modal-close" type="button">×</button><h2>Como você quer receber?</h2><form id="checkoutForm"><div class="receive-grid"><button class="receive" data-method="entrega" type="button"><b>🚴 Entrega</b><small>Receba em casa</small></button><button class="receive" data-method="retirada" type="button"><b>🏪 Retirada</b><small>Busque na loja</small></button></div><div id="deliveryBox"><input id="customerName" required placeholder="Nome *"><input id="customerPhone" required placeholder="WhatsApp / telefone *"><input id="address" placeholder="Endereço completo"><input id="reference" placeholder="Ponto de referência"></div><textarea id="orderNote" placeholder="Observações do pedido"></textarea><select id="payment"><option value="">Forma de pagamento *</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option></select><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
+<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal"><button id="checkoutClose" class="modal-close" type="button">×</button><h2>Como você quer receber?</h2><form id="checkoutForm"><div class="receive-grid">
+  <button class="receive" data-method="entrega" type="button">
+    <b>Entrega</b><small>Receba em casa</small>
+  </button>
+  <button class="receive" data-method="retirada" type="button">
+    <b>Retirada</b><small>Busque na loja</small>
+  </button>
+</div>
+<div class="customer-box">
+  <label for="customerName">Nome</label>
+  <input id="customerName" required placeholder="Nome completo">
+  <label for="customerPhone">WhatsApp / telefone</label>
+  <input id="customerPhone" required placeholder="WhatsApp / telefone">
+</div>
+<div id="deliveryBox">
+  <label for="address">Endereço</label>
+  <input id="address" placeholder="Endereço completo">
+  <label for="reference">Referência</label>
+  <input id="reference" placeholder="Ponto de referência">
+</div>
+<textarea id="orderNote" placeholder="Observações do pedido"></textarea><select id="payment"><option value="">Forma de pagamento *</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option></select><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
 <div id="successModal" class="modal hidden"><div class="modal-card"><div class="success-icon">✓</div><h2 id="orderNumber">Pedido #0000</h2><button id="successClose" class="primary full" type="button">Entendi</button></div></div>
 <div id="toast" class="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
