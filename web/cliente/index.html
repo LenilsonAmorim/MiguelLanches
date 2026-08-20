@@ -6,8 +6,10 @@
 <meta name="theme-color" content="#050505">
 <title>Miguel Lanches — Cardápio</title>
 <link rel="stylesheet" href="css/style.css?v=20260820-3">
+<link rel="stylesheet" href="css/checkout-polish.css?v=20260820-1">
 </head>
 <body>
+
 <section id="splash" class="splash"><div class="splash-inner">
 <img src="assets/logo.png" alt="Miguel Lanches">
 <div class="splash-brand">MIGUEL <span>LANCHES</span></div>
@@ -44,7 +46,7 @@
       <small>Total: <span id="bagTotal">R$ 0,00</span></small>
     </div>
   </div>
-  <button id="bagOpenButton" type="button" onclick="openCart()">
+  <button id="bagOpenButton" type="button" onclick="openCart">
     <span>Ver sacola</span>
     <em id="bagCount" aria-label="Quantidade de itens">0</em>
   </button>
@@ -100,7 +102,6 @@
 <script src="config.js?v=20260820-3"></script>
 <script src="app.js?v=20260820-3"></script>
 
-<!-- Ajuste: Entrega é a opção padrão e fica à esquerda. -->
 <script>
 (function () {
   const originalOpenCheckout = window.openCheckout;
