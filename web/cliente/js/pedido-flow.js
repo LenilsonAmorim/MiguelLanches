@@ -108,6 +108,7 @@
       // O Admin escuta realtime na tabela pedidos. Assim que este INSERT
       // acontece, o pedido aparece em Pedidos novos/Comandas.
       const num=r.data?.id||Math.floor(Math.random()*9000+1000);
+      window.dispatchEvent(new Event("miguel:pedido-enviado"));
       window.cart=[];
       if(typeof window.renderCart==="function")window.renderCart();
       if(typeof window.closeCheckout==="function")window.closeCheckout();
