@@ -1,181 +1,237 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080808">
-<title>Miguel Lanches — Pedido Online</title>
-<link rel="stylesheet" href="cliente/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>Miguel Lanches — Painel Admin</title>
+  <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="splash" class="splash">
-  <div class="splash-box">
-    <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
-    <p>Carregando cardápio...</p>
-    <div class="loader"><i></i></div>
-  </div>
-</div>
+<section id="login" class="login-screen">
+  <div class="login-card">
+    <div class="logo-mark">ML</div>
+    <h1>MIGUEL <span>LANCHES</span></h1>
+    <p>Painel administrativo</p>
 
-<div id="site" class="hidden">
-  <header class="header">
-    <div class="logo">
-      <img src="cliente/assets/logo.png" alt="Miguel Lanches"
-           onerror="this.parentElement.innerHTML='<b>MIGUEL<br>LANCHES</b>'">
-    </div>
-    <label class="search">
-      <span>⌕</span>
-      <input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off">
+    <label>Usuário
+      <input id="user" autocomplete="username" placeholder="Usuário">
     </label>
-  </header>
 
-  <nav id="categories" class="categories"></nav>
+    <label>Senha
+      <input id="pass" type="password" autocomplete="current-password" placeholder="Senha">
+    </label>
 
-  <main>
-    <section class="section highlights">
-      <div class="section-title"><h2>Destaques</h2></div>
-      <div id="featured" class="featured"></div>
+    <button id="loginBtn" class="btn primary wide" type="button">Entrar</button>
+    <div id="msg" class="message"></div>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+
+  <aside id="side" class="sidebar">
+    <div class="brand">
+      <div class="logo-mark small">ML</div>
+      <div>
+        <strong>MIGUEL LANCHES</strong>
+        <small>PAINEL ADMIN</small>
+      </div>
+    </div>
+
+    <nav>
+      <button class="nav-btn active" data-page="dashboard" type="button"><span>Dashboard</span></button>
+      <button class="nav-btn" data-page="pedidos" type="button"><span>Pedidos</span><b id="badge">0</b></button>
+      <button class="nav-btn" data-page="cardapio" type="button"><span>Cardápio</span></button>
+      <button class="nav-btn" data-page="categorias" type="button"><span>Categorias</span></button>
+      <button class="nav-btn" data-page="clientes" type="button"><span>Clientes</span></button>
+      <button class="nav-btn" data-page="promocoes" type="button"><span>Promoções</span></button>
+      <button class="nav-btn" data-page="relatorios" type="button"><span>Relatórios</span></button>
+      <button class="nav-btn" data-page="impressoras" type="button"><span>Impressoras</span></button>
+      <button class="nav-btn" data-page="config" type="button"><span>Configurações</span></button>
+    </nav>
+
+    <a class="client-link" href="cliente/index.html">Abrir site do cliente ↗</a>
+    <button id="logout" class="logout" type="button">Sair</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button id="menu" class="icon-btn" type="button">☰</button>
+      <div>
+        <strong id="title">Dashboard</strong>
+        <small id="connection">Verificando conexão...</small>
+      </div>
+      <button id="refresh" class="btn" type="button">Atualizar</button>
+    </header>
+
+    <section id="page-dashboard" class="page active">
+      <div class="page-head">
+        <div>
+          <h1>Resumo geral</h1>
+          <p>Acompanhe pedidos, faturamento e operação.</p>
+        </div>
+      </div>
+      <div id="stats" class="stats"></div>
+      <div class="panel">
+        <div class="panel-title">Pedidos recentes</div>
+        <div id="recent" class="mini-list"></div>
+      </div>
     </section>
 
-    <section class="section">
-      <div id="products"></div>
+    <section id="page-pedidos" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Pedidos</h1>
+          <p>Pedidos recebidos pelo site do cliente.</p>
+        </div>
+      </div>
+      <div id="orders" class="orders-board"></div>
+    </section>
+
+    <section id="page-cardapio" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Cardápio</h1>
+          <p>Gerencie produtos, destaques e opções.</p>
+        </div>
+        <button id="newProduct" class="btn primary" type="button">+ Novo produto</button>
+      </div>
+
+      <input id="ps" class="search" type="search" placeholder="Buscar produto...">
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th>Status</th>
+                <th>Destaque</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="products"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-categorias" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Categorias</h1>
+          <p>Organize o cardápio.</p>
+        </div>
+        <button id="newCat" class="btn primary" type="button">+ Nova categoria</button>
+      </div>
+      <div id="cats" class="category-admin-grid"></div>
+    </section>
+
+    <section id="page-clientes" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Clientes</h1>
+          <p>Clientes que fizeram pedidos.</p>
+        </div>
+      </div>
+      <input id="cs" class="search" type="search" placeholder="Buscar cliente...">
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Telefone</th>
+                <th>Pedidos</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="clients"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-promocoes" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Promoções</h1>
+          <p>Produtos marcados como destaque.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Produtos em destaque</div>
+        <div id="featuredProducts" class="mini-list"></div>
+      </div>
+    </section>
+
+    <section id="page-relatorios" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Relatórios</h1>
+          <p>Resumo da operação.</p>
+        </div>
+        <button id="csv" class="btn dark" type="button">Exportar CSV</button>
+      </div>
+      <div id="reports" class="stats"></div>
+    </section>
+
+    <section id="page-impressoras" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Impressoras</h1>
+          <p>Teste de impressão térmica 58 mm.</p>
+        </div>
+      </div>
+      <div class="panel print-test">
+        <div>
+          <h3>Impressão 58 mm</h3>
+          <p class="muted">Teste o formato antes de imprimir os pedidos.</p>
+          <button id="test" class="btn dark" type="button">Imprimir teste</button>
+        </div>
+        <div class="receipt-preview">
+          <div style="text-align:center"><b>MIGUEL LANCHES</b><br>TESTE 58 MM</div>
+          <hr>
+          Pedido #00001<br>
+          1x Produto de teste — R$ 10,00
+          <hr>
+          <b>TOTAL R$ 10,00</b>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-config" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Configurações</h1>
+          <p>Dados básicos da loja.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="form">
+          <label>Nome da loja
+            <input id="store" placeholder="Miguel Lanches">
+          </label>
+          <label>Telefone da loja
+            <input id="phoneStore" placeholder="(84) 99999-9999">
+          </label>
+          <label>Taxa de entrega padrão
+            <input id="fee" type="number" min="0" step="0.01" placeholder="0,00">
+          </label>
+          <button id="save" class="btn primary" type="button">Salvar configurações</button>
+        </div>
+      </div>
     </section>
   </main>
 </div>
 
-<div id="bagBar" class="bag-bar empty">
-  <div class="bag-info">
-    <div class="bag-icon">
-      <svg viewBox="0 0 24 24">
-        <path d="M6 8h12l-1 12H7L6 8Z"/>
-        <path d="M9 8a3 3 0 0 1 6 0"/>
-      </svg>
-    </div>
-    <div>
-      <b id="bagText">Sua sacola</b>
-      <small id="bagTotal">R$ 0,00</small>
-    </div>
-  </div>
-  <button type="button" onclick="openCart()">Ver sacola</button>
-</div>
-
-<div id="shade" class="shade" onclick="closeCart()"></div>
-
-<section id="cartDrawer" class="cart-drawer">
-  <div class="drawer-head">
-    <div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div>
-    <button class="round" type="button" onclick="closeCart()">×</button>
-  </div>
-
-  <div id="cartItems" class="cart-items"></div>
-
-  <div id="emptyCart" class="empty-cart">
-    <div class="empty-bag">□</div>
-    <b>Sua sacola está vazia</b>
-    <small>Adicione produtos para continuar.</small>
-  </div>
-
-  <div class="drawer-bottom">
-    <div class="line">
-      <span>Subtotal</span>
-      <strong id="cartSubtotal">R$ 0,00</strong>
-    </div>
-    <button id="addMoreBtn" class="secondary-btn" type="button" onclick="closeCart()">
-      Adicionar mais itens
-    </button>
-    <button id="checkoutBtn" class="main-btn" type="button" onclick="openCheckout()">
-      Finalizar o pedido
-    </button>
-  </div>
-</section>
-
-<div id="productModal" class="modal hidden">
-  <div class="product-card">
-    <button class="close-product" type="button" onclick="closeProduct()">×</button>
-    <div id="productBody"></div>
-  </div>
-</div>
-
-<div id="checkoutModal" class="modal hidden">
-  <div class="checkout-card">
-    <button class="round checkout-close" type="button" onclick="closeCheckout()">×</button>
-
-    <div class="checkout-head">
-      <small>FINALIZAR PEDIDO</small>
-      <h2>Como você quer receber?</h2>
-    </div>
-
-    <form id="checkoutForm">
-      <div class="receive-grid">
-        <button type="button" class="receive" data-method="entrega"
-                onclick="selectReceive('entrega')">
-          <b>Entrega</b><small>Receba em casa</small>
-        </button>
-        <button type="button" class="receive" data-method="retirada"
-                onclick="selectReceive('retirada')">
-          <b>Retirada</b><small>Busque na loja</small>
-        </button>
-      </div>
-
-      <div class="form-grid">
-        <label>Nome
-          <input id="customerName" required placeholder="Seu nome">
-        </label>
-        <label>WhatsApp
-          <input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999">
-        </label>
-      </div>
-
-      <div id="deliveryBox" class="delivery-box hidden">
-        <label>Bairro
-          <select id="neighborhood"><option value="">Bairro</option></select>
-        </label>
-        <label>Endereço
-          <input id="address" placeholder="Rua, número">
-        </label>
-        <label>Referência
-          <input id="reference" placeholder="Ex.: perto da praça">
-        </label>
-      </div>
-
-      <label>Forma de pagamento
-        <select id="payment">
-          <option value="">Escolha o pagamento</option>
-          <option>Dinheiro</option>
-          <option>Pix</option>
-          <option>Cartão</option>
-        </select>
-      </label>
-
-      <div id="cashBox" class="cash-box hidden">
-        <label>Valor pago
-          <input id="cashValue" type="number" min="0" step="0.01" placeholder="0,00">
-        </label>
-        <strong id="change"></strong>
-      </div>
-
-      <label>Observações (opcional)
-        <textarea id="orderNote" placeholder="Alguma observação sobre o pedido?"></textarea>
-      </label>
-
-      <div class="checkout-total">
-        <div><span>Subtotal</span><strong id="checkoutSubtotal">R$ 0,00</strong></div>
-        <div><span>Entrega</span><strong>R$ 0,00</strong></div>
-        <div class="grand"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
-      </div>
-
-      <button class="main-btn" type="submit">Enviar pedido</button>
-    </form>
-  </div>
-</div>
-
-<div id="successModal" class="modal hidden">
-  <div class="success-card">
-    <div class="success-icon">✓</div>
-    <h2>Pedido enviado!</h2>
-    <p id="orderNumber"></p>
-    <p>Seu pedido já foi enviado para a loja.</p>
-    <button class="main-btn" type="button" onclick="closeSuccess()">Continuar</button>
+<div id="modal" class="overlay hidden">
+  <div class="modal">
+    <button id="close" class="modal-close" type="button">×</button>
+    <div id="body"></div>
   </div>
 </div>
 
@@ -183,8 +239,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="cliente/config.js"></script>
-<script src="cliente/app.js"></script>
-<script src="cliente/client_opcoes.js"></script>
+<script src="admin.js"></script>
+<script src="admin_opcoes.js"></script>
 
 </body>
 </html>
