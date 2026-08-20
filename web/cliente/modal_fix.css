@@ -1,0 +1,43 @@
+
+/* CORREÇÃO DO MODAL DO CLIENTE */
+html.modal-lock,
+body.modal-lock {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+.modal {
+  z-index: 1000 !important;
+  touch-action: none !important;
+  overscroll-behavior: contain !important;
+}
+
+.product-card,
+.checkout-card,
+.success-card {
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* O rodapé fica atrás da subtela quando ela está aberta. */
+#ml-footer {
+  z-index: 600 !important;
+}
+
+.modal:not(.hidden) ~ #ml-footer,
+body.modal-open #ml-footer {
+  z-index: 50 !important;
+  pointer-events: none !important;
+}
+
+/* Evita que o gesto horizontal/vertical do conteúdo do modal seja repassado
+   para a página principal. */
+.product-content,
+.checkout-card,
+.success-card {
+  overscroll-behavior-y: contain;
+}
+
