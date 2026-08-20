@@ -372,3 +372,11 @@ img{display:block;max-width:100%}
   stroke-linecap:round;
   stroke-linejoin:round;
 }
+
+/* Sacola flutuante: só aparece quando houver pedido */
+.bag-bar.empty{
+  display:none !important;
+}
+.bag-bar:not(.empty){
+  display:flex;
+}
