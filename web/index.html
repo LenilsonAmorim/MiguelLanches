@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#080808">
   <title>Miguel Lanches — Painel Admin</title>
   <link rel="stylesheet" href="admin.css">
+  <style>.status-hidden{display:none!important}</style>
 </head>
 <body>
 
@@ -133,5 +134,59 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="cliente/config.js"></script>
 <script src="admin.js"></script>
+<script>
+/* Miguel Lanches — filtro de etapas sem arrastar a tela */
+(() => {
+  "use strict";
+
+  function showStatus(status) {
+    const board = document.getElementById("orders");
+    if (!board) return;
+
+    board.querySelectorAll(".column").forEach(col => {
+      col.classList.toggle("status-hidden", col.dataset.status !== status);
+    });
+
+    document.querySelectorAll("#statusTabs .status-tab").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.statusTab === status);
+    });
+
+    // Mantém o painel no lugar; só muda a coluna exibida.
+    board.scrollLeft = 0;
+  }
+
+  function handleTabClick(event) {
+    const btn = event.target.closest("[data-status-tab]");
+    if (!btn) return;
+
+    // Impede o listener antigo do admin.js de executar scrollIntoView().
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showStatus(btn.dataset.statusTab);
+  }
+
+  document.addEventListener("click", handleTabClick, true);
+
+  const start = () => {
+    const tabs = document.getElementById("statusTabs");
+    if (!tabs) return;
+    const observer = new MutationObserver(() => {
+      const active = tabs.querySelector(".status-tab.active");
+      if (active) showStatus(active.dataset.statusTab || "novo");
+      else showStatus("novo");
+    });
+    observer.observe(tabs, {childList:true, subtree:true});
+
+    setTimeout(() => showStatus("novo"), 0);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})();
+
+</script>
 </body>
 </html>
