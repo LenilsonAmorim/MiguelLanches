@@ -6,12 +6,14 @@
   <meta name="theme-color" content="#080808">
   <title>Miguel Lanches — Painel Admin</title>
   <link rel="stylesheet" href="admin.css">
-  <link rel="stylesheet" href="pedidos_fluxo.css">
 </head>
 <body>
+
 <section id="login" class="login-screen">
   <div class="login-card">
-    <div class="logo-mark">ML</div><h1>MIGUEL <span>LANCHES</span></h1><p>Painel administrativo</p>
+    <div class="logo-mark">ML</div>
+    <h1>MIGUEL <span>LANCHES</span></h1>
+    <p>Painel administrativo</p>
     <label>Usuário<input id="user" autocomplete="username" placeholder="Usuário"></label>
     <label>Senha<input id="pass" type="password" autocomplete="current-password" placeholder="Senha"></label>
     <button id="loginBtn" class="btn primary wide" type="button" style="margin-top:16px">Entrar</button>
@@ -21,7 +23,11 @@
 
 <div id="app" class="app hidden">
   <aside id="side" class="sidebar">
-    <div class="brand"><div class="logo-mark small">ML</div><div><strong>MIGUEL LANCHES</strong><small>PAINEL ADMIN</small></div></div>
+    <div class="brand">
+      <div class="logo-mark small">ML</div>
+      <div><strong>MIGUEL LANCHES</strong><small>PAINEL ADMIN</small></div>
+    </div>
+
     <nav>
       <button class="nav-btn active" data-page="dashboard"><span>⌂ Dashboard</span></button>
       <button class="nav-btn" data-page="pedidos"><span>▣ Pedidos</span><b id="badge">0</b></button>
@@ -33,6 +39,7 @@
       <button class="nav-btn" data-page="impressoras"><span>▥ Impressoras</span></button>
       <button class="nav-btn" data-page="config"><span>⚙ Configurações</span></button>
     </nav>
+
     <a class="client-link" href="cliente/index.html">Abrir site do cliente ↗</a>
     <button id="logout" class="logout" type="button">Sair</button>
   </aside>
@@ -58,17 +65,65 @@
     </section>
 
     <section id="page-cardapio" class="page">
-      <div class="page-head"><div><h1>Cardápio</h1><p>Produtos e categorias do banco atual.</p></div><button id="newProduct" class="btn primary" type="button">+ Novo produto</button></div>
+      <div class="page-head"><div><h1>Cardápio</h1><p>Produtos e categorias do banco atual.</p></div>
+        <button id="newProduct" class="btn primary" type="button">+ Novo produto</button>
+      </div>
       <input id="ps" class="search" type="search" placeholder="Buscar produto...">
-      <div class="panel"><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Destaque</th><th>Ação</th></tr></thead><tbody id="products"></tbody></table></div></div>
+      <div class="panel"><div class="table-wrap"><table>
+        <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Destaque</th><th>Ações</th></tr></thead>
+        <tbody id="products"></tbody>
+      </table></div></div>
     </section>
 
-    <section id="page-categorias" class="page"><div class="page-head"><div><h1>Categorias</h1><p>Organize as categorias do cardápio.</p></div><button id="newCat" class="btn primary" type="button">+ Nova categoria</button></div><div id="cats" class="category-admin-grid"></div></section>
-    <section id="page-clientes" class="page"><div class="page-head"><div><h1>Clientes</h1><p>Clientes que fizeram pedidos.</p></div></div><input id="cs" class="search" type="search" placeholder="Buscar cliente..."><div class="panel"><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Telefone</th><th>Pedidos</th><th>Total comprado</th></tr></thead><tbody id="clients"></tbody></table></div></div></section>
-    <section id="page-promocoes" class="page"><div class="page-head"><div><h1>Promoções</h1><p>Produtos marcados como destaque no site.</p></div></div><div class="panel"><div class="panel-title">Produtos em destaque</div><div id="featuredProductsPromo" class="mini-list"></div></div></section>
-    <section id="page-relatorios" class="page"><div class="page-head"><div><h1>Relatórios</h1><p>Resumo da operação.</p></div><button id="csv" class="btn dark" type="button">Exportar CSV</button></div><div id="reports" class="stats"></div></section>
-    <section id="page-impressoras" class="page"><div class="page-head"><div><h1>Impressoras</h1><p>Teste a impressão no formato térmico de 58 mm.</p></div></div><div class="panel print-test"><div><h3>Impressão 58 mm</h3><p class="muted">O botão abaixo abre a impressão do navegador.</p><button id="test" class="btn dark" type="button">Imprimir teste</button></div><div class="receipt-preview"><div style="text-align:center"><b>MIGUEL LANCHES</b><br>TESTE 58 MM</div><hr>Pedido #00001<br>1x Produto de teste — R$ 10,00<hr><b>TOTAL R$ 10,00</b></div></div></section>
-    <section id="page-config" class="page"><div class="page-head"><div><h1>Configurações</h1><p>Dados básicos usados pelo painel.</p></div></div><div class="panel"><div class="form"><label>Nome da loja<input id="store" placeholder="Miguel Lanches"></label><label>Telefone da loja<input id="phoneStore" placeholder="(84) 99999-9999"></label><label>Taxa de entrega padrão<input id="fee" type="number" min="0" step="0.01" placeholder="0,00"></label><button id="save" class="btn primary" type="button">Salvar configurações</button></div></div></section>
+    <section id="page-categorias" class="page">
+      <div class="page-head"><div><h1>Categorias</h1><p>Organize as categorias do cardápio.</p></div>
+        <button id="newCat" class="btn primary" type="button">+ Nova categoria</button>
+      </div>
+      <div id="cats" class="category-admin-grid"></div>
+    </section>
+
+    <section id="page-clientes" class="page">
+      <div class="page-head"><div><h1>Clientes</h1><p>Clientes que fizeram pedidos.</p></div></div>
+      <input id="cs" class="search" type="search" placeholder="Buscar cliente...">
+      <div class="panel"><div class="table-wrap"><table>
+        <thead><tr><th>Cliente</th><th>Telefone</th><th>Pedidos</th><th>Total comprado</th></tr></thead>
+        <tbody id="clients"></tbody>
+      </table></div></div>
+    </section>
+
+    <section id="page-promocoes" class="page">
+      <div class="page-head"><div><h1>Promoções</h1><p>Produtos marcados como destaque no site.</p></div></div>
+      <div class="panel"><div class="panel-title">Produtos em destaque</div><div id="featuredProductsPromo" class="mini-list"></div></div>
+    </section>
+
+    <section id="page-relatorios" class="page">
+      <div class="page-head"><div><h1>Relatórios</h1><p>Resumo da operação.</p></div>
+        <button id="csv" class="btn dark" type="button">Exportar CSV</button>
+      </div>
+      <div id="reports" class="stats"></div>
+    </section>
+
+    <section id="page-impressoras" class="page">
+      <div class="page-head"><div><h1>Impressoras</h1><p>Teste a impressão no formato térmico de 58 mm.</p></div></div>
+      <div class="panel print-test">
+        <div><h3>Impressão 58 mm</h3><p class="muted">O botão abre a impressão do navegador.</p>
+          <button id="test" class="btn dark" type="button">Imprimir teste</button>
+        </div>
+        <div class="receipt-preview"><div style="text-align:center"><b>MIGUEL LANCHES</b><br>TESTE 58 MM</div>
+          <hr>Pedido #00001<br>1x Produto de teste — R$ 10,00<hr><b>TOTAL R$ 10,00</b>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-config" class="page">
+      <div class="page-head"><div><h1>Configurações</h1><p>Dados básicos usados pelo painel.</p></div></div>
+      <div class="panel"><div class="form">
+        <label>Nome da loja<input id="store" placeholder="Miguel Lanches"></label>
+        <label>Telefone da loja<input id="phoneStore" placeholder="(84) 99999-9999"></label>
+        <label>Taxa de entrega padrão<input id="fee" type="number" min="0" step="0.01" placeholder="0,00"></label>
+        <button id="save" class="btn primary" type="button">Salvar configurações</button>
+      </div></div>
+    </section>
   </main>
 </div>
 
@@ -78,9 +133,5 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="cliente/config.js"></script>
 <script src="admin.js"></script>
-<script src="admin_fixes.js"></script>
-<script src="admin_som_realtime.js"></script>
-<script src="admin_opcoes.js"></script>
-<script src="pedidos_fluxo.js"></script>
 </body>
 </html>
