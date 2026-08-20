@@ -34,3 +34,22 @@ $("trackBtn").onclick=async()=>{
  $("trackResult").innerHTML=`<div class=track-card><b>Pedido #${n}</b><p>${nm[s]||s}</p><div class=steps>${["Recebido","Em preparo","Saiu para entrega","Entregue"].map((x,i)=>`<div class="step ${i<=idx?"done":""}">${i<=idx?"✓ ":""}${x}</div>`).join("")}</div></div>`;
 };
 load();
+
+/* Sacola flutuante mobile: aparece quando o primeiro produto é adicionado. */
+(function(){
+  const bag=document.getElementById('floatingBag');
+  const count=document.getElementById('floatingBagCount');
+  if(!bag) return;
+  const refresh=()=>{
+    let total=0;
+    try{
+      if(Array.isArray(window.cart)) total=window.cart.reduce((s,i)=>s+(Number(i.quantity||i.qty||1)),0);
+      else if(window.cart && typeof window.cart==='object') total=Object.values(window.cart).reduce((s,i)=>s+(Number(i.quantity||i.qty||1)),0);
+    }catch(e){}
+    if(total>0){ count.textContent=total; bag.classList.add('show'); }
+    else { count.textContent='0'; bag.classList.remove('show'); }
+  };
+  document.addEventListener('click',()=>setTimeout(refresh,120));
+  window.addEventListener('storage',refresh);
+  setTimeout(refresh,500);
+})();
