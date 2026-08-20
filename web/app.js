@@ -1,7 +1,12 @@
 const CFG=window.ML_CONFIG||{};
-const SUPABASE_URL=CFG.SUPABASE_URL||"https://lifsxhyeqwppfvajvhpn.supabase.co";
+const SUPABASE_URL=CFG.SUPABASE_URL||"";
 const SUPABASE_KEY=CFG.SUPABASE_KEY||"";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let db=null;
+try{
+  if(window.supabase?.createClient && SUPABASE_URL && SUPABASE_KEY){
+    db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  }
+}catch(e){console.error("Supabase não inicializou:",e)}
 
 let products=[],categories=[],cart=[],receiveMethod=null,neighborhoods=[];
 const $=id=>document.getElementById(id);
@@ -36,31 +41,47 @@ function isCreme(p){return catName(p).includes("creme")||norm(p?.nome).includes(
 function categoryId(p){return String(p.categoria_id||"")}
 
 async function load(){
- try{
-  const result=await Promise.race([
-   Promise.all([
-    db.from("categorias").select("*").eq("ativo",true).order("ordem"),
-    db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem")
-   ]),
-   new Promise((_,reject)=>setTimeout(()=>reject(new Error("Tempo limite ao carregar o cardápio")),8000))
-  ]);
-  const [c,p]=result;
-  categories=(!c.error&&c.data?.length)?c.data.filter(x=>norm(x.nome)!=="todos"):fallbackCats;
-  products=(!p.error&&p.data)?p.data:[];
- }catch(e){
-  console.error("Erro ao carregar cardápio:",e);
-  categories=fallbackCats;
-  products=[];
- }
- try{
-  renderCategories();renderFeatured();renderProducts();
- }catch(e){console.error("Erro ao renderizar cardápio:",e)}
- // Bairros são carregados separadamente e não podem travar o site.
- loadNeighborhoods().catch(e=>console.error("Erro bairros:",e));
- setTimeout(()=>{$("splash")?.classList.add("hide");$("site")?.classList.remove("hidden")},1500);
-}
+  const showSite=()=>{
+    const splash=$("splash"),site=$("site");
+    if(splash)splash.classList.add("hide");
+    if(site)site.classList.remove("hidden");
+  };
 
+  // Never leave the customer staring at the splash because a network request hangs.
+  const splashTimer=setTimeout(showSite,1500);
+
+  try{
+    if(!db){
+      categories=fallbackCats;
+      products=[];
+    }else{
+      const result=await Promise.race([
+        Promise.all([
+          db.from("categorias").select("*").eq("ativo",true).order("ordem"),
+          db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem")
+        ]),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error("timeout")),7000))
+      ]);
+      const [c,p]=result;
+      categories=(!c.error&&c.data?.length)?c.data.filter(x=>norm(x.nome)!=="todos"):fallbackCats;
+      products=(!p.error&&p.data)?p.data:[];
+    }
+  }catch(e){
+    console.error("Erro no carregamento:",e);
+    categories=fallbackCats;
+    products=[];
+  }
+
+  try{renderCategories()}catch(e){console.error(e)}
+  try{renderFeatured()}catch(e){console.error(e)}
+  try{renderProducts()}catch(e){console.error(e)}
+
+  if(db)loadNeighborhoods().catch(e=>console.error("Bairros:",e));
+  clearTimeout(splashTimer);
+  showSite();
+}
 async function loadNeighborhoods(){
+ if(!db)return;
  const r=await db.from("bairros").select("*").eq("ativo",true).order("nome");
  if(!r.error&&r.data)neighborhoods=r.data;
  if($("neighborhood"))$("neighborhood").innerHTML='<option value="">Bairro *</option>'+neighborhoods.map(n=>`<option value="${esc(n.nome)}">${esc(n.nome)}</option>`).join("");
@@ -97,20 +118,13 @@ function card(p){
  return `<article class="product" onclick="openProduct('${p.id}')"><div class="product-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="product-body"><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"Toque para ver as opções.")}</p><div class="product-foot"><strong>${money(p.preco)}</strong><button type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></div></div></article>`;
 }
 
-/* As opções agora vêm do mesmo cadastro usado pelo Admin. */
-async function getSavedOptions(pid){
- try{
-  const [c,o]=await Promise.all([
-   db.from("configuracao_opcoes").select("*").eq("produto_id",pid).maybeSingle(),
-   db.from("opcoes_produto").select("*").eq("produto_id",pid).eq("ativo",true).order("ordem")
-  ]);
-  if(c.error && o.error)return null;
-  return {config:c.data||null,options:o.data||[]};
- }catch(e){
-  console.error("Erro ao carregar opções:",e);
-  return null;
+/* Opções do produto: versão estável baseada no comportamento anterior. */
+function selectedSavedOptions(){return[]}
+function updateAddPrice(){
+ const base=Number(window.currentProduct?.preco||0);
+ const total=base*(window.currentQty||1);
+ if($("addPrice"))$("addPrice").textContent=money(total);
 }
-
 function fallbackOptions(p){
  if(isPizza(p))return pizzaOptions(p);
  if(isPastel(p))return pastelOptions(p);
@@ -200,19 +214,7 @@ function addCurrent(pid){
  const qty=window.currentQty||1,note=$("productNote").value.trim();
  let item={id:uid(),nome:p.nome,preco:Number(p.preco||0),quantidade:qty,obs:note,config:{tipo:"normal"}};
 
- const savedSelected=selectedSavedOptions();
- const savedBox=document.querySelector(".saved-options");
- if(savedBox){
-  const tipo=savedBox.dataset.type;
-  const limit=Math.max(1,Number(savedBox.dataset.limit||1));
-  if(!savedSelected.length)return alert("Escolha uma opção.");
-  if(savedSelected.length>limit)return alert(`Escolha no máximo ${limit} opções.`);
-  const names=savedSelected.map(x=>x.dataset.name);
-  const extra=savedSelected.reduce((s,x)=>s+Number(x.dataset.price||0),0);
-  item.nome=`${p.nome} — ${names.join(" + ")}`;
-  item.preco=Number(p.preco||0)+extra;
-  item.config={tipo,opcoes:names};
- }else if(isPizza(p)){
+ if(isPizza(p)){
   const opts=[...document.querySelectorAll(".pizza-option.selected")],two=/2\s*sabores?|duas/.test(norm(p.nome));
   if(opts.length!==(two?2:1))return alert(two?"Escolha 2 sabores.":"Escolha 1 sabor.");
   const flavors=opts.map(x=>x.dataset.name);item.nome=`${p.nome} — ${flavors.join(" + ")}`;
@@ -282,16 +284,13 @@ async function sendOrder(e){
 }
 function closeSuccess(){$("successModal").classList.add("hidden")}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+
 window.addEventListener("DOMContentLoaded",()=>{
- try{
-  $("search")?.addEventListener("input",renderProducts);
-  $("payment")?.addEventListener("change",updatePayment);
-  $("cashValue")?.addEventListener("input",updateChange);
-  $("checkoutForm")?.addEventListener("submit",sendOrder);
+  try{
+    $("search")?.addEventListener("input",renderProducts);
+    $("payment")?.addEventListener("change",updatePayment);
+    $("cashValue")?.addEventListener("input",updateChange);
+    $("checkoutForm")?.addEventListener("submit",sendOrder);
+  }catch(e){console.error("Eventos:",e)}
   load();
- }catch(e){
-  console.error("Erro ao iniciar cliente:",e);
-  $("splash")?.classList.add("hide");
-  $("site")?.classList.remove("hidden");
- }
 });
