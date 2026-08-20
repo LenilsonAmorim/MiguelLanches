@@ -351,3 +351,24 @@ img{display:block;max-width:100%}
   }
   .product-hero{height:340px}
 }
+/* Sacola — ícone monocromático da identidade Miguel Lanches */
+.bag-bar .bag-icon{
+  width:44px;
+  height:44px;
+  min-width:44px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(250,190,20,.10);
+  color:#fabe14;
+}
+.bag-bar .bag-icon svg{
+  width:25px;
+  height:25px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
