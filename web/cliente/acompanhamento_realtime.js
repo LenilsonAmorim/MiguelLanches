@@ -80,6 +80,8 @@ async function loadOrder(id){
   if(currentStatus && currentStatus!==statusOf(q.data)) beep();
   currentStatus=statusOf(q.data);
   setView(q.data);
+ }else{
+  showEmptyTracking();
  }
 }
 
@@ -93,14 +95,34 @@ function listen(id){
   }).subscribe();
 }
 
+function showEmptyTracking(){
+ const modal=document.getElementById("trackingModal");
+ const body=document.getElementById("trackingBody");
+ if(!modal||!body)return;
+ body.innerHTML=`
+  <div class="track-empty">
+    <div class="track-empty-icon">🛍️</div>
+    <h2>Você ainda não tem pedidos</h2>
+    <p>Quando você fizer um pedido, ele aparecerá aqui para você acompanhar o status em tempo real.</p>
+    <button class="main-btn" type="button" onclick="window.closeTracking();document.getElementById('mlHome')?.click();">Adicionar produtos</button>
+  </div>`;
+ modal.classList.remove("hidden");
+}
+
 window.openTracking=async function(id){
  currentId=id||localStorage.getItem("ml_last_order_id");
- if(!currentId){window.showToast?.("Nenhum pedido para acompanhar.");return;}
+ if(!currentId){
+   currentStatus=null;
+   if(channel){R.removeChannel(channel);channel=null;}
+   showEmptyTracking();
+   return;
+ }
  document.getElementById("trackingModal")?.classList.remove("hidden");
  currentStatus=null;
  await loadOrder(currentId);
  listen(currentId);
 };
+
 window.closeTracking=function(){
  document.getElementById("trackingModal")?.classList.add("hidden");
 };
@@ -127,14 +149,16 @@ footer();
 })();
 
 const st=document.createElement("style");st.textContent=`
-#ml-footer{position:fixed;bottom:0;left:0;right:0;height:66px;background:#080808;display:flex;z-index:300;box-shadow:0 -5px 20px #0003}
+#ml-footer{position:fixed;bottom:0;left:0;right:0;height:66px;background:#080808;display:flex;z-index:600;box-shadow:0 -5px 20px #0003}
 #ml-footer button{flex:1;border:0;background:none;color:#aaa;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:21px}
 #ml-footer button span{font-size:11px}.ml-footer button.active,#ml-footer button.active{color:#f4bd17}
-body{padding-bottom:80px}
-#trackingModal{position:fixed;inset:0;background:#000a;z-index:280;display:flex;align-items:flex-end}
+body{padding-bottom:88px}
+#bagBar{bottom:80px!important;z-index:550!important}
+#trackingModal{position:fixed;inset:0;background:#000a;z-index:700;display:flex;align-items:flex-end}
 #trackingModal.hidden{display:none}
 #trackingCard{background:#fff;width:100%;max-height:90vh;overflow:auto;border-radius:26px 26px 0 0;padding:22px}
 .track-head small{font-weight:900;color:#777}.track-head h2{margin:5px 0}.track-head strong{color:#16803a}.track-head strong.danger{color:#c62828}
 .track-line{display:grid;gap:12px;margin:24px 0}.track-step{display:grid;grid-template-columns:38px 1fr;align-items:center;gap:10px;color:#aaa}.track-step span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#eee;font-weight:900}.track-step.done{color:#222}.track-step.done span{background:#f4bd17;color:#111}.track-step.current b{color:#bd1f2b}
 .track-info{border-top:1px solid #eee;border-bottom:1px solid #eee;padding:12px 0;margin-bottom:16px}.track-info div{display:flex;justify-content:space-between;padding:6px 0}.track-cancel{background:#fff0f0;color:#c62828;padding:14px;border-radius:12px;margin:20px 0}
+.track-empty{text-align:center;padding:30px 8px 18px}.track-empty-icon{width:76px;height:76px;border-radius:50%;background:#fff7d6;display:grid;place-items:center;font-size:38px;margin:0 auto 18px}.track-empty h2{margin:0 0 10px;font-size:25px}.track-empty p{color:#777;line-height:1.5;margin:0 auto 22px;max-width:430px}
 `;document.head.appendChild(st);
