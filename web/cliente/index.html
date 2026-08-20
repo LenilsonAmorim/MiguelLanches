@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <div id="splash" class="splash">
     <div class="splash-box">
       <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
@@ -16,33 +17,119 @@
     </div>
   </div>
 
-  <header class="header">
-    <div class="logo"><img src="assets/logo.png" alt="Miguel Lanches"></div>
-    <div class="search"><span>⌕</span><input id="searchInput" placeholder="Buscar em Miguel Lanches"></div>
-  </header>
+  <!-- O app fica oculto apenas durante o carregamento. -->
+  <div id="site" class="hidden">
 
-  <nav id="categories" class="categories"></nav>
-  <main id="app"></main>
+    <header class="header">
+      <div class="logo">
+        <img src="assets/logo.png" alt="Miguel Lanches">
+      </div>
+      <div class="search">
+        <span>⌕</span>
+        <input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off">
+      </div>
+    </header>
 
-  <div id="bagBar" class="bag-bar empty"></div>
+    <nav id="categories" class="categories" aria-label="Categorias"></nav>
 
-  <div id="shade" class="shade"></div>
-  <div id="cartDrawer" class="cart-drawer">
-    <div class="drawer-head"><div><small>SUA SACOLA</small><h2>Seu pedido</h2></div><button id="closeCart" class="round">×</button></div>
-    <div id="cartItems" class="cart-items"></div>
-    <div class="drawer-bottom"><div class="line"><b>Total</b><strong id="cartTotal">R$ 0,00</strong></div><button id="checkoutBtn" class="main-btn">Finalizar o pedido</button></div>
+    <main class="section">
+      <section class="category-block">
+        <div class="section-title">
+          <h2>Destaques</h2>
+        </div>
+        <div id="featured" class="featured"></div>
+      </section>
+
+      <div id="products"></div>
+    </main>
+
+    <!-- Barra da sacola -->
+    <div id="bagBar" class="bag-bar empty">
+      <div class="bag-info">
+        <div class="bag-icon" aria-hidden="true">🛍️</div>
+        <div>
+          <b>Sua sacola</b>
+          <small id="bagText">Sua sacola está vazia</small>
+        </div>
+      </div>
+      <button id="openCart" type="button">
+        Ver sacola · <span id="bagTotal">R$ 0,00</span>
+      </button>
+    </div>
+
+    <!-- Sacola -->
+    <div id="shade" class="shade"></div>
+
+    <div id="cartDrawer" class="cart-drawer" aria-hidden="true">
+      <div class="drawer-head">
+        <div>
+          <small>SEU PEDIDO</small>
+          <h2>Sua sacola</h2>
+        </div>
+        <button id="closeCart" class="round" type="button">×</button>
+      </div>
+
+      <div id="cartItems" class="cart-items"></div>
+
+      <div class="drawer-bottom">
+        <div class="line">
+          <span>Subtotal</span>
+          <strong id="cartSubtotal">R$ 0,00</strong>
+        </div>
+
+        <button id="addMoreItems" class="main-btn" type="button"
+                style="margin-bottom:10px;background:#fff;border:1px solid #ddd;">
+          Adicionar mais itens
+        </button>
+
+        <button id="checkoutBtn" class="main-btn" type="button">
+          Finalizar o pedido
+        </button>
+      </div>
+    </div>
+
+    <!-- Produto -->
+    <div id="productModal" class="modal hidden">
+      <div id="productBody" class="product-card"></div>
+    </div>
+
+    <!-- Checkout -->
+    <div id="checkoutModal" class="modal hidden">
+      <div id="checkoutBody" class="checkout-card"></div>
+    </div>
+
+    <!-- Confirmação -->
+    <div id="successModal" class="modal hidden">
+      <div class="success-card">
+        <div class="success-icon">✓</div>
+        <h2>Pedido enviado!</h2>
+        <p id="orderNumber"></p>
+        <p>Seu pedido já foi enviado para a loja.</p>
+
+        <div style="display:grid;gap:10px;margin-top:22px;">
+          <button id="trackOrderBtn" class="main-btn" type="button">
+            Acompanhar pedido
+          </button>
+          <button id="newOrderBtn" class="main-btn" type="button"
+                  style="background:#fff;border:1px solid #ddd;">
+            Novo pedido
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acompanhamento -->
+    <div id="trackingModal" class="hidden">
+      <div id="trackingCard">
+        <div id="trackingBody"></div>
+      </div>
+    </div>
+
+    <!-- Campos/IDs auxiliares usados pelo checkout existente -->
+    <div id="checkoutSubtotal" class="hidden">R$ 0,00</div>
+    <div id="checkoutTotal" class="hidden" data-value="0">R$ 0,00</div>
+    <select id="neighborhood" class="hidden"></select>
   </div>
-
-  <div id="productModal" class="modal hidden"><div id="productBody" class="product-card"></div></div>
-  <div id="checkoutModal" class="modal hidden"><div id="checkoutBody" class="checkout-card"></div></div>
-  <div id="successModal" class="modal hidden"><div class="success-card">
-    <div class="success-icon">✓</div>
-    <h2>Pedido enviado!</h2>
-    <p id="orderNumber"></p>
-    <p>Seu pedido já foi enviado para a loja.</p>
-  </div></div>
-
-  <div id="trackingModal" class="hidden"><div id="trackingCard"><div id="trackingBody"></div></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
@@ -50,5 +137,28 @@
   <script src="cliente_opcoes.js"></script>
   <script src="acompanhamento_realtime.js"></script>
   <script src="integracao_acompanhamento.js"></script>
+
+  <!-- Fallback: garante que a tela não fique presa no splash. -->
+  <script>
+    window.addEventListener("load", function () {
+      setTimeout(function () {
+        var splash = document.getElementById("splash");
+        var site = document.getElementById("site");
+        if (splash) splash.classList.add("hide");
+        if (site) site.classList.remove("hidden");
+      }, 1600);
+    });
+
+    document.getElementById("addMoreItems")?.addEventListener("click", function () {
+      document.getElementById("cartDrawer")?.classList.remove("open");
+      document.getElementById("shade")?.classList.remove("open");
+    });
+
+    document.getElementById("newOrderBtn")?.addEventListener("click", function () {
+      document.getElementById("successModal")?.classList.add("hidden");
+      document.getElementById("trackingModal")?.classList.add("hidden");
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+  </script>
 </body>
 </html>
