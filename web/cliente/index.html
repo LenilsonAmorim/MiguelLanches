@@ -1,111 +1,147 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080808">
-  <meta name="description" content="Miguel Lanches — Hambúrgueria e Pizzaria">
-  <link rel="icon" href="assets/logo.png">
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Miguel Lanches</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#171717}
+    header{background:#111;color:#fff;padding:16px;text-align:center;position:sticky;top:0;z-index:5}
+    header img{max-width:170px;max-height:80px;object-fit:contain}
+    h1{margin:8px 0 0;font-size:22px}
+    .cats{display:flex;gap:8px;overflow:auto;padding:12px;background:#fff;position:sticky;top:113px;z-index:4}
+    .cat{border:1px solid #ddd;border-radius:20px;padding:9px 14px;background:#fff;white-space:nowrap}
+    .cat.active{background:#b40000;color:#fff;border-color:#b40000}
+    main{padding:14px;max-width:900px;margin:auto}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px #0001}
+    .card img{width:100%;height:150px;object-fit:cover;background:#eee}
+    .info{padding:12px}.name{font-weight:700;font-size:16px}.price{margin-top:6px;font-weight:700}
+    button{cursor:pointer}.add{margin-top:10px;width:100%;border:0;border-radius:10px;background:#b40000;color:#fff;padding:11px;font-weight:700}
+    #empty{padding:30px;text-align:center;color:#777}
+    .modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:flex-end}
+    .modal.show{display:flex}.sheet{background:#fff;width:100%;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px}
+    .sheet h2{margin-top:0}.option{display:flex;justify-content:space-between;align-items:center;border:1px solid #ddd;padding:12px;border-radius:10px;margin:8px 0}
+    .actions{display:flex;gap:8px;margin-top:14px}.actions button{flex:1;padding:12px;border:0;border-radius:10px;font-weight:700}
+    .cancel{background:#eee}.confirm{background:#b40000;color:#fff}
+    .cart{position:fixed;right:16px;bottom:16px;background:#b40000;color:#fff;border:0;border-radius:30px;padding:14px 18px;font-weight:700;box-shadow:0 4px 16px #0004;z-index:10}
+    @media(min-width:700px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.modal{align-items:center;justify-content:center}.sheet{max-width:520px;border-radius:20px}}
+  </style>
 </head>
 <body>
-  <div id="splash" class="splash">
-    <img src="assets/logo.png" alt="Miguel Lanches">
-    <div class="loader"></div>
-  </div>
+<header>
+  <img id="logo" src="assets/logo.png" alt="Miguel Lanches">
+  <h1>Miguel Lanches</h1>
+</header>
 
-  <header class="topbar">
-    <button class="circle-btn" id="backBtn" aria-label="Voltar">‹</button>
-    <div class="mini-brand"><img src="assets/logo.png" alt=""><div><b>Miguel Lanches</b><small id="storeStatus">● online</small></div></div>
-    <button class="circle-btn" id="headerCart" aria-label="Sacola">🛍️<span id="badge">0</span></button>
-  </header>
+<div class="cats" id="cats"></div>
+<main><div class="grid" id="products"></div><div id="empty" hidden>Nenhum produto encontrado.</div></main>
+<button class="cart" id="cartBtn">Comanda (0)</button>
 
-  <main>
-    <section id="homeView" class="view active">
-      <div class="store-card">
-        <div class="store-logo"><img src="assets/logo.png" alt="Logo"></div>
-        <div><h1>Miguel Lanches</h1><p>⭐ <b>5,0</b> • Hambúrgueria e Pizzaria</p><p class="muted">Entrega rápida • Pedido online</p></div>
-      </div>
-
-      <div class="search"><span>⌕</span><input id="search" placeholder="Busque por item ou categoria..."></div>
-      <div id="categoryTabs" class="chips"></div>
-
-      <section class="section">
-        <div class="section-head"><h2>Destaques</h2><button id="allProducts">Ver todos</button></div>
-        <div id="featured" class="featured-grid"></div>
-      </section>
-
-      <section id="catalog" class="section"></section>
-    </section>
-
-    <section id="categoryView" class="view">
-      <div class="page-title"><span id="categoryTitle">Categorias</span></div>
-      <div id="categoryGrid" class="category-grid"></div>
-    </section>
-
-    <section id="cartView" class="view">
-      <div class="page-title"><span>Sua sacola</span><button id="clearCart" class="text-btn">Limpar</button></div>
-      <div id="cartList"></div>
-      <div id="cartSummary" class="summary-card"></div>
-      <button class="primary wide" id="goCheckout">Continuar</button>
-    </section>
-
-    <section id="checkoutView" class="view">
-      <div class="page-title"><span>Finalizar pedido</span></div>
-      <form id="checkoutForm" class="form-card">
-        <h3>Seus dados</h3>
-        <label>Nome<input id="clientName" required placeholder="Seu nome"></label>
-        <label>WhatsApp<input id="phone" inputmode="tel" placeholder="(84) 99999-9999"></label>
-
-        <h3>Recebimento</h3>
-        <div class="segmented"><button type="button" data-mode="entrega" class="active">🛵 Entrega</button><button type="button" data-mode="retirada">🏪 Retirar</button></div>
-        <div id="addressFields">
-          <label>Endereço<input id="address" placeholder="Rua, número"></label>
-          <label>Bairro<select id="neighborhood"><option value="">Selecione o bairro</option></select></label>
-          <label>Ponto de referência<input id="reference" placeholder="Ex.: perto da praça"></label>
-        </div>
-
-        <h3>Pagamento</h3>
-        <div class="payment-grid">
-          <button type="button" data-payment="Dinheiro" class="pay active">💵 Dinheiro</button>
-          <button type="button" data-payment="Cartão" class="pay">💳 Cartão</button>
-          <button type="button" data-payment="Pix" class="pay">📱 Pix</button>
-        </div>
-        <label id="changeWrap">Troco para <input id="changeFor" inputmode="decimal" placeholder="Ex.: 50"></label>
-        <label>Observações<textarea id="notes" placeholder="Ex.: sem cebola..."></textarea></label>
-        <div id="checkoutTotal"></div>
-        <button class="primary wide" type="submit">Confirmar pedido</button>
-      </form>
-    </section>
-
-    <section id="trackingView" class="view">
-      <div class="page-title"><span>Meu pedido</span></div>
-      <div id="trackingCard" class="tracking-card"></div>
-    </section>
-  </main>
-
-  <div id="productModal" class="modal hidden">
-    <div class="modal-box">
-      <button class="modal-close" id="closeProduct">×</button>
-      <div id="productModalContent"></div>
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h2 id="modalTitle"></h2>
+    <div id="modalOptions"></div>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Cancelar</button>
+      <button class="confirm" onclick="confirmProduct()">Adicionar</button>
     </div>
   </div>
+</div>
 
-  <div id="cartBar" class="cart-bar hidden">
-    <button id="openCart"><span>🛍️ <b id="barCount">0</b></span><strong>Ver sacola</strong><b id="barTotal">R$ 0,00</b></button>
-  </div>
+<script>
+/*
+  CONFIGURE AQUI OS DADOS DO SEU PROJETO SUPABASE.
+  Não coloque a service_role key. Use apenas a chave anon/public.
+*/
+const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SEU_SUPABASE";
+const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_ANON_DO_SEU_SUPABASE";
 
-  <nav class="bottom-nav">
-    <button data-view="homeView" class="active">⌂<small>Início</small></button>
-    <button data-view="categoryView">☰<small>Categorias</small></button>
-    <button data-view="cartView">🛍️<small>Sacola</small></button>
-    <button data-view="trackingView">📦<small>Pedido</small></button>
-  </nav>
+const sb = (SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+let categories=[], products=[], cart=[], selectedProduct=null, selectedOptions=[];
+
+async function loadData(){
+  if(!sb){
+    document.getElementById("empty").hidden=false;
+    document.getElementById("empty").textContent="Configure a URL e a chave anon do Supabase no index.html.";
+    return;
+  }
+  const [c,p] = await Promise.all([
+    sb.from("categorias").select("*").eq("ativo",true).order("ordem"),
+    sb.from("produtos").select("*").eq("ativo",true).order("ordem")
+  ]);
+  if(c.error || p.error){ console.error(c.error||p.error); return; }
+  categories=c.data||[]; products=p.data||[];
+  renderCategories();
+  renderProducts(categories[0]?.id);
+}
+
+function renderCategories(){
+  const el=document.getElementById("cats");
+  el.innerHTML=categories.map((c,i)=>`<button class="cat ${i===0?'active':''}" onclick="selectCat('${c.id}',this)">${esc(c.nome)}</button>`).join("");
+}
+function selectCat(id,btn){
+  document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active"); renderProducts(id);
+}
+function renderProducts(catId){
+  const list=products.filter(p=>p.categoria_id===catId);
+  const el=document.getElementById("products"), empty=document.getElementById("empty");
+  empty.hidden=list.length>0;
+  el.innerHTML=list.map(p=>`
+    <article class="card">
+      ${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="">`:""}
+      <div class="info">
+        <div class="name">${esc(p.nome)}</div>
+        <div class="price">R$ ${money(p.preco)}</div>
+        <button class="add" onclick="openProduct('${p.id}')">Adicionar</button>
+      </div>
+    </article>`).join("");
+}
+async function openProduct(id){
+  selectedProduct=products.find(p=>p.id===id); selectedOptions=[];
+  document.getElementById("modalTitle").textContent=selectedProduct.nome;
+  const box=document.getElementById("modalOptions");
+  box.innerHTML="<p>Carregando opções...</p>"; document.getElementById("modal").classList.add("show");
+
+  const {data,error}=await sb.from("produto_opcoes_grupos").select("*").eq("produto_id",id).order("ordem");
+  if(error||!data?.length){box.innerHTML="<p>Este produto não possui opções.</p>";return;}
+
+  let html="";
+  for(const g of data){
+    const r=await sb.from("produto_opcoes").select("*").eq("grupo_id",g.id).order("ordem");
+    html+=`<h3>${esc(g.nome)} <small>(escolha ${g.minimo||0} a ${g.maximo||1})</small></h3>`;
+    html+= (r.data||[]).map(o=>`
+      <label class="option">
+        <span>${esc(o.nome)} ${Number(o.preco)>0?`+ R$ ${money(o.preco)}`:""}</span>
+        <input type="${g.maximo===1?'radio':'checkbox'}" name="g_${g.id}" value="${o.id}" data-group="${g.id}" data-price="${o.preco||0}" onchange="optionChanged(this,${g.maximo||1})">
+      </label>`).join("");
+  }
+  box.innerHTML=html;
+}
+function optionChanged(input,max){
+  if(input.type==="checkbox"){
+    const group=input.dataset.group;
+    const checked=[...document.querySelectorAll(`input[data-group="${group}"]:checked`)];
+    if(checked.length>max){input.checked=false;alert(`Escolha no máximo ${max} opções.`)}
+  }
+}
+function confirmProduct(){
+  if(!selectedProduct)return;
+  const opts=[...document.querySelectorAll("#modalOptions input:checked")].map(i=>({id:i.value,price:Number(i.dataset.price||0)}));
+  cart.push({product:selectedProduct,options:opts});
+  updateCart();closeModal();
+}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+function updateCart(){document.getElementById("cartBtn").textContent=`Comanda (${cart.length})`;}
+function money(v){return Number(v||0).toFixed(2).replace(".",",")}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+document.getElementById("cartBtn").onclick=()=>alert(cart.length?cart.map(x=>x.product.nome).join("\\n"):"Comanda vazia");
+loadData();
+</script>
 </body>
 </html>
