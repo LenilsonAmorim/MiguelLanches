@@ -272,4 +272,4 @@ async function sendOrder(e){
 function closeSuccess(){$("successModal").classList.add("hidden")}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
 $("search").addEventListener("input",renderProducts);$("payment").addEventListener("change",updatePayment);$("cashValue").addEventListener("input",updateChange);$("checkoutForm").addEventListener("submit",sendOrder);
-load();
+window.addEventListener("DOMContentLoaded",()=>{  setTimeout(()=>{    const splash=document.getElementById("splash");    const site=document.getElementById("site");    if(splash) splash.classList.add("hide");    if(site) site.classList.remove("hidden");  },1500);  try{ load(); }catch(e){ console.error(e); }});
