@@ -1,0 +1,231 @@
+
+/* Miguel Lanches — acabamento do CHECKOUT
+   NÃO altera o sistema de scroll da página.
+   Apenas melhora a janela de finalização do pedido.
+*/
+#checkoutModal{
+  align-items:flex-end;
+  padding:0;
+}
+
+#checkoutModal .checkout-modal{
+  width:min(720px,100%);
+  max-height:92vh;
+  overflow-y:auto;
+  overflow-x:hidden;
+  border-radius:26px 26px 0 0;
+  padding:24px 20px 28px;
+  box-shadow:0 -12px 40px rgba(0,0,0,.22);
+}
+
+#checkoutModal .modal-close{
+  width:44px;
+  height:44px;
+  right:16px;
+  top:16px;
+  background:#f2f2f2;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
+  font-weight:700;
+}
+
+#checkoutModal .modal-title{
+  padding:0 58px 4px 2px;
+}
+
+#checkoutModal .modal-title small{
+  display:block;
+  color:var(--red);
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.4px;
+  margin-bottom:5px;
+}
+
+#checkoutModal .modal-title h2{
+  font-size:28px;
+  line-height:1.1;
+  margin:0 0 20px;
+}
+
+#checkoutModal .receive-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+#checkoutModal .receive{
+  min-height:82px;
+  padding:16px;
+  border:1.5px solid #dedede;
+  border-radius:16px;
+  background:#fff;
+  transition:.18s ease;
+}
+
+#checkoutModal .receive:hover{
+  border-color:#cfcfcf;
+}
+
+#checkoutModal .receive.selected{
+  border:2px solid var(--gold);
+  background:#fff9df;
+  box-shadow:0 3px 12px rgba(246,189,24,.12);
+}
+
+#checkoutModal .receive b{
+  font-size:19px;
+  line-height:1.1;
+}
+
+#checkoutModal .receive small{
+  font-size:12px;
+  margin-top:7px;
+}
+
+#checkoutModal #checkoutForm{
+  display:grid;
+  gap:0;
+}
+
+#checkoutModal #checkoutForm > label{
+  font-size:13px;
+  font-weight:900;
+  margin:10px 0 0;
+}
+
+#checkoutModal #checkoutForm input,
+#checkoutModal #checkoutForm select,
+#checkoutModal #checkoutForm textarea{
+  width:100%;
+  min-height:54px;
+  margin:7px 0 0;
+  padding:14px 15px;
+  border:1px solid #ddd;
+  border-radius:14px;
+  background:#fff;
+  color:#171717;
+  font-size:16px;
+  outline:0;
+  transition:.18s;
+}
+
+#checkoutModal #checkoutForm textarea{
+  min-height:92px;
+  resize:vertical;
+}
+
+#checkoutModal #checkoutForm input:focus,
+#checkoutModal #checkoutForm select:focus,
+#checkoutModal #checkoutForm textarea:focus{
+  border-color:#c8c8c8;
+  box-shadow:0 0 0 3px rgba(246,189,24,.12);
+}
+
+#checkoutModal .delivery-box{
+  display:grid;
+  gap:0;
+  padding:2px 0;
+}
+
+#checkoutModal .cash-box{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  margin-top:8px;
+}
+
+#checkoutModal .cash-box input{
+  margin:0!important;
+}
+
+#checkoutModal #change{
+  min-width:150px;
+  padding:0 4px;
+  color:#198754;
+  font-size:16px;
+  font-weight:950;
+  text-align:right;
+}
+
+#checkoutModal .checkout-totals{
+  margin:20px 0 14px;
+  padding:16px 2px 0;
+  border-top:1px solid #e8e8e8;
+  display:grid;
+  gap:9px;
+}
+
+#checkoutModal .checkout-totals span,
+#checkoutModal .checkout-totals strong{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+
+#checkoutModal .checkout-totals span{
+  color:#555;
+  font-size:16px;
+}
+
+#checkoutModal .checkout-totals span b{
+  color:#171717;
+}
+
+#checkoutModal .checkout-totals strong{
+  font-size:22px;
+  margin-top:3px;
+}
+
+#checkoutModal #checkoutTotal{
+  color:var(--red);
+  font-size:24px;
+}
+
+#checkoutModal button.primary.full{
+  min-height:58px;
+  border:0;
+  border-radius:15px;
+  background:var(--gold);
+  color:#111;
+  font-size:18px;
+  font-weight:950;
+  box-shadow:0 5px 15px rgba(246,189,24,.18);
+}
+
+#checkoutModal button.primary.full:active{
+  transform:translateY(1px);
+}
+
+@media(max-width:560px){
+  #checkoutModal .checkout-modal{
+    max-height:91vh;
+    border-radius:24px 24px 0 0;
+    padding:22px 18px 24px;
+  }
+
+  #checkoutModal .modal-title h2{
+    font-size:25px;
+  }
+
+  #checkoutModal .receive{
+    min-height:78px;
+    padding:14px;
+  }
+
+  #checkoutModal .receive b{
+    font-size:18px;
+  }
+
+  #checkoutModal .cash-box{
+    grid-template-columns:1fr;
+  }
+
+  #checkoutModal #change{
+    min-width:0;
+    text-align:left;
+    padding:0 3px;
+  }
+}
