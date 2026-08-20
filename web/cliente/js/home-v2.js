@@ -50,3 +50,5 @@ document.addEventListener('click',function(e){
  const target=document.getElementById('cat-'+String(id).replace(/[^a-zA-Z0-9_-]/g,'-'));
  if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}
 });
+
+window.addEventListener('load',()=>setTimeout(()=>{if(typeof load==='function')load()},25));
