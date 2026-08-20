@@ -1,0 +1,5 @@
+
+#usbPrinterBtn{margin-left:8px}
+@media(max-width:600px){
+  #usbPrinterBtn{padding:9px 12px;font-size:12px}
+}
