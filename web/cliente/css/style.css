@@ -344,3 +344,9 @@ body{background:#050505}
   .pbody h3{font-size:15px}
   .price{font-size:16px}
 }
+
+/* CORREÇÃO FINAL: nenhum carrinho na parte superior/hero */
+.hero-cart{display:none!important}
+.topbar-ref{display:none!important}
+/* O único carrinho visível é o do cabeçalho do Cardápio */
+.menu-cart{display:inline-flex!important}
