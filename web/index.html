@@ -1,137 +1,117 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080808">
-  <title>Miguel Lanches — Painel Admin</title>
-  <link rel="stylesheet" href="admin.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>Miguel Lanches — Cardápio</title>
+<link rel="stylesheet" href="css/style.css?v=20260820-3">
+<link rel="stylesheet" href="css/checkout-polish.css?v=20260820-1">
 </head>
 <body>
 
-<section id="login" class="login-screen">
-  <div class="login-card">
-    <div class="logo-mark">ML</div>
-    <h1>MIGUEL <span>LANCHES</span></h1>
-    <p>Painel administrativo</p>
-    <label>Usuário<input id="user" autocomplete="username" placeholder="Usuário"></label>
-    <label>Senha<input id="pass" type="password" autocomplete="current-password" placeholder="Senha"></label>
-    <button id="loginBtn" class="btn primary wide" type="button" style="margin-top:16px">Entrar</button>
-    <div id="msg" class="message"></div>
-  </div>
+<section id="splash" class="splash"><div class="splash-inner">
+<img src="assets/logo.png" alt="Miguel Lanches">
+<div class="splash-brand">MIGUEL <span>LANCHES</span></div>
+<p>Carregando cardápio...</p><div class="loader"><i></i></div>
+</div></section>
+
+<div id="site" class="hidden">
+<header class="mobile-header">
+<div class="brand-mini"><img src="assets/logo.png" alt="Miguel Lanches"></div>
+<div class="header-search">
+<span class="search-icon" aria-hidden="true">⌕</span>
+<input id="search" type="search" autocomplete="off" placeholder="Buscar em Miguel Lanches">
+<button type="button" onclick="document.getElementById('search').value='';renderProducts()">×</button>
+</div>
+</header>
+
+<main class="menu-home">
+<nav class="categories-wrap" aria-label="Categorias"><div id="categories" class="categories"></div></nav>
+<section class="home-section featured-section">
+<div class="section-head"><h2>Destaques</h2><span class="section-accent">★</span></div>
+<div id="featured" class="featured-slider"></div>
 </section>
+<section id="popular" class="popular-block"></section>
+<section id="products"></section>
+</main>
 
-<div id="app" class="app hidden">
-  <aside id="side" class="sidebar">
-    <div class="brand">
-      <div class="logo-mark small">ML</div>
-      <div><strong>MIGUEL LANCHES</strong><small>PAINEL ADMIN</small></div>
+<div id="bagBar" class="bag-bar empty">
+  <div class="bag-info">
+    <span class="bag-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" focusable="false"><path d="M6 8h12l1 13H5L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+</span>
+    <div class="bag-copy">
+      <b id="bagText">Sua sacola está vazia</b>
+      <small>Total: <span id="bagTotal">R$ 0,00</span></small>
     </div>
-
-    <nav>
-      <button class="nav-btn active" data-page="dashboard"><span>⌂ Dashboard</span></button>
-      <button class="nav-btn" data-page="pedidos"><span>▣ Pedidos</span><b id="badge">0</b></button>
-      <button class="nav-btn" data-page="cardapio"><span>☷ Cardápio</span></button>
-      <button class="nav-btn" data-page="categorias"><span>◇ Categorias</span></button>
-      <button class="nav-btn" data-page="clientes"><span>♙ Clientes</span></button>
-      <button class="nav-btn" data-page="promocoes"><span>% Promoções</span></button>
-      <button class="nav-btn" data-page="relatorios"><span>▤ Relatórios</span></button>
-      <button class="nav-btn" data-page="impressoras"><span>▥ Impressoras</span></button>
-      <button class="nav-btn" data-page="config"><span>⚙ Configurações</span></button>
-    </nav>
-
-    <a class="client-link" href="cliente/index.html">Abrir site do cliente ↗</a>
-    <button id="logout" class="logout" type="button">Sair</button>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <button id="menu" class="icon-btn" type="button">☰</button>
-      <div><strong id="title">Dashboard</strong><small id="connection">Verificando conexão...</small></div>
-      <button id="refresh" class="btn" type="button">Atualizar</button>
-    </header>
-
-    <section id="page-dashboard" class="page active">
-      <div class="page-head"><div><h1>Resumo geral</h1><p>Acompanhe pedidos, faturamento e operação.</p></div></div>
-      <div id="stats" class="stats"></div>
-      <div class="panel"><div class="panel-title">Pedidos recentes</div><div id="recent" class="mini-list"></div></div>
-      <div class="panel"><div class="panel-title">Mais vendidos / destaques</div><div id="featuredProducts" class="mini-list"></div></div>
-    </section>
-
-    <section id="page-pedidos" class="page">
-      <div class="page-head"><div><h1>Pedidos</h1><p>Atualização automática em tempo real.</p></div></div>
-      <div id="statusTabs" class="status-tabs" aria-label="Etapas dos pedidos"></div>
-      <div id="orders" class="orders-board"></div>
-    </section>
-
-    <section id="page-cardapio" class="page">
-      <div class="page-head"><div><h1>Cardápio</h1><p>Produtos e categorias do banco atual.</p></div>
-        <button id="newProduct" class="btn primary" type="button">+ Novo produto</button>
-      </div>
-      <input id="ps" class="search" type="search" placeholder="Buscar produto...">
-      <div class="panel"><div class="table-wrap"><table>
-        <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Destaque</th><th>Ações</th></tr></thead>
-        <tbody id="products"></tbody>
-      </table></div></div>
-    </section>
-
-    <section id="page-categorias" class="page">
-      <div class="page-head"><div><h1>Categorias</h1><p>Organize as categorias do cardápio.</p></div>
-        <button id="newCat" class="btn primary" type="button">+ Nova categoria</button>
-      </div>
-      <div id="cats" class="category-admin-grid"></div>
-    </section>
-
-    <section id="page-clientes" class="page">
-      <div class="page-head"><div><h1>Clientes</h1><p>Clientes que fizeram pedidos.</p></div></div>
-      <input id="cs" class="search" type="search" placeholder="Buscar cliente...">
-      <div class="panel"><div class="table-wrap"><table>
-        <thead><tr><th>Cliente</th><th>Telefone</th><th>Pedidos</th><th>Total comprado</th></tr></thead>
-        <tbody id="clients"></tbody>
-      </table></div></div>
-    </section>
-
-    <section id="page-promocoes" class="page">
-      <div class="page-head"><div><h1>Promoções</h1><p>Produtos marcados como destaque no site.</p></div></div>
-      <div class="panel"><div class="panel-title">Produtos em destaque</div><div id="featuredProductsPromo" class="mini-list"></div></div>
-    </section>
-
-    <section id="page-relatorios" class="page">
-      <div class="page-head"><div><h1>Relatórios</h1><p>Resumo da operação.</p></div>
-        <button id="csv" class="btn dark" type="button">Exportar CSV</button>
-      </div>
-      <div id="reports" class="stats"></div>
-    </section>
-
-    <section id="page-impressoras" class="page">
-      <div class="page-head"><div><h1>Impressoras</h1><p>Teste a impressão no formato térmico de 58 mm.</p></div></div>
-      <div class="panel print-test">
-        <div><h3>Impressão 58 mm</h3><p class="muted">O botão abre a impressão do navegador.</p>
-          <button id="test" class="btn dark" type="button">Imprimir teste</button>
-        </div>
-        <div class="receipt-preview"><div style="text-align:center"><b>MIGUEL LANCHES</b><br>TESTE 58 MM</div>
-          <hr>Pedido #00001<br>1x Produto de teste — R$ 10,00<hr><b>TOTAL R$ 10,00</b>
-        </div>
-      </div>
-    </section>
-
-    <section id="page-config" class="page">
-      <div class="page-head"><div><h1>Configurações</h1><p>Dados básicos usados pelo painel.</p></div></div>
-      <div class="panel"><div class="form">
-        <label>Nome da loja<input id="store" placeholder="Miguel Lanches"></label>
-        <label>Telefone da loja<input id="phoneStore" placeholder="(84) 99999-9999"></label>
-        <label>Taxa de entrega padrão<input id="fee" type="number" min="0" step="0.01" placeholder="0,00"></label>
-        <button id="save" class="btn primary" type="button">Salvar configurações</button>
-      </div></div>
-    </section>
-  </main>
+  </div>
+  <button id="bagOpenButton" type="button" onclick="openCart">
+    <span>Ver sacola</span>
+    <em id="bagCount" aria-label="Quantidade de itens">0</em>
+  </button>
 </div>
 
-<div id="modal" class="overlay hidden"><div class="modal"><button id="close" class="modal-close" type="button">×</button><div id="body"></div></div></div>
+<div id="shade" class="shade" onclick="closeCart()"></div>
+<aside id="cartDrawer" class="cart-drawer" aria-label="Sacola">
+<div class="drawer-head"><div><small>SUA COMPRA</small><h2>Sacola</h2></div><button type="button" onclick="closeCart()">×</button></div>
+<div id="cartItems" class="drawer-items"></div>
+<div id="emptyCart" class="empty-cart">Sua sacola está vazia.</div>
+<div class="drawer-bottom"><div class="drawer-total"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div>
+<div class="drawer-actions"><button type="button" class="add-more" onclick="closeCart()">Adicionar mais itens</button>
+<button id="checkoutBtn" type="button" class="finish-order" onclick="openCheckout()" disabled>Finalizar pedido</button></div></div>
+</aside>
+
+<div id="productModal" class="modal hidden"><div id="productBody" class="modal-card product-modal"></div></div>
+
+<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal">
+<button class="modal-close" type="button" onclick="closeCheckout()">×</button>
+<div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você vai receber?</h2></div>
+<div class="receive-grid">
+<button class="receive" data-method="entrega" type="button" onclick="selectReceive('entrega')">
+  <b>Entrega</b>
+  <small>Receber no endereço</small>
+</button>
+<button class="receive" data-method="retirada" type="button" onclick="selectReceive('retirada')">
+  <b>Retirada</b>
+  <small>Vou buscar na lanchonete</small>
+</button>
+</div>
+<form id="checkoutForm">
+<label>Nome *</label><input id="customerName" required placeholder="Seu nome">
+<label>WhatsApp *</label><input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999">
+<div id="deliveryBox" class="delivery-box hidden"><label>Bairro *</label><select id="neighborhood"><option value="">Bairro *</option></select>
+<label>Endereço *</label><input id="address" placeholder="Rua, número"><label>Referência</label><input id="reference" placeholder="Ponto de referência"></div>
+<label>Forma de pagamento *</label><select id="payment"><option value="">Escolha uma opção</option><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select>
+<div id="cashBox" class="cash-box hidden"><input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor pago"><b id="change"></b></div>
+<label>Observação</label><textarea id="orderNote" placeholder="Alguma observação?"></textarea>
+<div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b>R$ 0,00</b></span><strong>Total <span id="checkoutTotal" data-value="0">R$ 0,00</span></strong></div>
+<button class="primary full" type="submit">Enviar pedido</button>
+</form></div></div>
+
+<div id="successModal" class="modal hidden"><div class="modal-card success-card"><div class="success-icon">✓</div><small>PEDIDO RECEBIDO</small><h2>Obrigado!</h2><p>Seu pedido foi enviado para a Miguel Lanches.</p><h3 id="orderNumber">Pedido recebido</h3><button class="primary full" type="button" onclick="closeSuccess()">Voltar ao cardápio</button></div></div>
+
+<nav class="bottom-nav" aria-label="Navegação">
+<button type="button" class="bottom-nav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bottom-icon">⌂</span><b>Início</b></button>
+<button type="button" class="bottom-nav-item" onclick="openCart()"><span class="bottom-icon">▣</span><b>Acompanhar Pedidos</b></button>
+</nav>
 <div id="toast" class="toast"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="cliente/config.js"></script>
-<script src="admin.js"></script>
+<script src="config.js?v=20260820-3"></script>
+<script src="app.js?v=20260820-3"></script>
+
+<script>
+(function () {
+  const originalOpenCheckout = window.openCheckout;
+  window.openCheckout = function () {
+    originalOpenCheckout();
+    if (typeof window.selectReceive === "function") {
+      window.selectReceive("entrega");
+    }
+  };
+})();
+</script>
 </body>
 </html>
