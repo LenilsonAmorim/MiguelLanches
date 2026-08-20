@@ -6,8 +6,7 @@
 <meta name="theme-color" content="#b71924">
 <title>Miguel Lanches</title>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="web/novos-comandas.css">
-<link rel="stylesheet" href="web/new-orders.css">
+<link rel="stylesheet" href="web/pedidos-comandas.css">
 </head>
 <body>
 <div id="app">
@@ -58,7 +57,7 @@
     </section>
 
     <section class="page" id="page-comandas">
-      <div class="page-head"><div><h1>Comandas</h1><p>Acompanhe os pedidos em tempo real.</p></div></div>
+      <div class="page-head"><div><h1>Comandas</h1><p>Pedidos novos, em preparo e para entrega.</p></div></div>
       <div id="novosComandasBox"></div>
       <div class="status-columns">
         <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
@@ -99,6 +98,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="web/app.js"></script>
-<script src="web/new-orders.js"></script>
+<script src="web/pedidos-comandas.js"></script>
 </body>
 </html>
