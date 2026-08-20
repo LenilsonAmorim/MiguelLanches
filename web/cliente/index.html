@@ -77,7 +77,17 @@ async function loadData(){
   if(c.error || p.error){ console.error(c.error||p.error); return; }
   categories=c.data||[]; products=p.data||[];
   renderCategories();
-  renderProducts(categories[0]?.id);
+  // Abre automaticamente a primeira categoria que realmente possui produtos.
+  const firstWithProducts = categories.find(c => products.some(p => p.categoria_id === c.id));
+  if (firstWithProducts) {
+    const buttons = document.querySelectorAll(".cat");
+    const index = categories.findIndex(c => c.id === firstWithProducts.id);
+    buttons.forEach(x => x.classList.remove("active"));
+    if (buttons[index]) buttons[index].classList.add("active");
+    renderProducts(firstWithProducts.id);
+  } else {
+    renderProducts(categories[0]?.id);
+  }
 }
 
 function renderCategories(){
