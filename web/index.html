@@ -2,108 +2,127 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#b71924">
 <title>Miguel Lanches</title>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="novos-comandas.css">
 </head>
 <body>
-<div id="app">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="brand-miguel">MIGUEL</div><div class="brand-lanches">LANCHES</div><small>Sistema de pedidos</small></div>
-    <nav>
-      <button class="nav-item active" data-page="pedido">🛒 <span>Novo Pedido</span><b id="openCount">0</b></button>
-      <button class="nav-item" data-page="comandas">📋 <span>Comandas</span><b id="openCount2">0</b></button>
-      <button class="nav-item" data-page="historico">📊 <span>Histórico</span></button>
-      <button class="nav-item" data-page="clientes">👥 <span>Clientes</span></button>
-      <button class="nav-item" data-page="admin">⚙️ <span>Administração</span></button>
-    </nav>
-    <div class="sidebar-foot">Miguel Lanches<br><small>Cardápio integrado ao Supabase</small></div>
-  </aside>
+<header class="header">
+  <div class="brand"><strong>MIGUEL</strong><span>LANCHES</span></div>
+  <button id="headerCart" class="header-cart" aria-label="Abrir sacola">🛍️<b id="headerCount">0</b></button>
+</header>
 
-  <main class="main">
-    <header class="topbar">
-      <button class="icon-btn" id="menuBtn">☰</button>
-      <div><strong id="pageTitle">Novo Pedido</strong><small id="pageSubtitle">Monte o pedido rapidamente</small></div>
-      <div class="top-actions"><span class="sync" id="syncStatus">● conectando</span></div>
-    </header>
+<main>
+  <section class="hero">
+    <div>
+      <small>MIGUEL LANCHES</small>
+      <h1>Peça do seu jeito.</h1>
+      <p>Escolha, personalize e receba seu pedido com facilidade.</p>
+    </div>
+    <span>🍔</span>
+  </section>
 
-    <section class="page active" id="page-pedido">
-      <div class="page-head"><div><h1>Novo Pedido</h1><p>Monte o pedido rapidamente.</p></div></div>
-      <!-- Pedidos recebidos NÃO aparecem aqui. Eles ficam em Comandas. -->
-      <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
-      <div class="category-tabs" id="categoryTabs"></div>
-      <button class="view-cart" id="viewCart">🛒 <span>Ver comanda</span> <b id="viewCartCount">0 itens</b> <strong id="viewCartTotal">R$ 0,00</strong></button>
-      <div class="cart-overlay" id="cartOverlay"></div>
-      <div class="order-layout">
-        <div class="catalog"><div class="product-grid" id="productGrid"></div></div>
-        <aside class="cart" id="cart">
-          <div class="cart-title"><div><h2>Comanda</h2><small id="cartCount">0 itens</small></div><div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div></div>
-          <div class="customer-mini">
-            <div class="customer-row"><input id="cliente" placeholder="Nome do cliente"><button id="findClient" title="Buscar cliente">👤</button></div>
-            <input id="telefone" placeholder="WhatsApp / telefone">
-            <input id="endereco" placeholder="Endereço">
-            <input id="referencia" placeholder="Ponto de referência">
-          </div>
-          <div id="cartItems" class="cart-items"></div>
-          <div class="note"><label>Observação do pedido</label><textarea id="observacoes" placeholder="Ex.: sem cebola, pouco sal..."></textarea></div>
-          <div class="summary">
-            <div><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div>
-            <div><span>Entrega</span><div class="inline-money"><input id="taxaEntrega" type="number" step="0.01" value="0"><b id="deliveryShow">R$ 0,00</b></div></div>
-            <div class="total"><span>TOTAL</span><strong id="total">R$ 0,00</strong></div>
-          </div>
-          <button class="primary big" id="finish">✓ Finalizar Pedido</button>
-        </aside>
-      </div>
-    </section>
+  <label class="search">
+    <span>⌕</span><input id="search" autocomplete="off" placeholder="Buscar produto...">
+  </label>
 
-    <section class="page" id="page-comandas">
-      <div class="page-head"><div><h1>Comandas</h1><p>Acompanhe os pedidos em tempo real.</p></div></div>
+  <section>
+    <div class="section-title"><h2>Categorias</h2></div>
+    <nav id="categories" class="categories"></nav>
+  </section>
 
-      <!-- NOVOS PEDIDOS APARECEM AQUI -->
-      <div id="novosComandasBox"></div>
+  <section id="featuredSection">
+    <div class="section-title"><h2>Mais pedidos</h2><button id="clearSearch">Ver todos</button></div>
+    <div id="featured" class="featured"></div>
+  </section>
 
-      <div class="status-columns">
-        <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
-        <div class="status-col"><div class="col-head delivery"><span>🛵 Saiu para entrega</span><b id="countDelivery">0</b></div><div id="deliveryList"></div></div>
-      </div>
-    </section>
+  <section>
+    <div class="section-title"><h2 id="productsTitle">Cardápio</h2></div>
+    <div id="products" class="products"></div>
+  </section>
+</main>
 
-    <section class="page" id="page-historico">
-      <div class="page-head"><div><h1>Histórico</h1><p>Vendas reais e pedidos cancelados separados.</p></div></div>
-      <div class="stats" id="stats"></div>
-      <div class="filters"><button class="filter active" data-history="todos">Todos</button><button class="filter" data-history="entregue">Entregues</button><button class="filter" data-history="cancelado">Cancelados</button></div>
-      <div class="panel"><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead><tbody id="history"></tbody></table></div></div>
-    </section>
+<nav class="bottom-nav">
+  <button class="nav-active">⌂<small>Início</small></button>
+  <button id="navCategories">☷<small>Categorias</small></button>
+  <button id="navCart">🛍️<small>Sacola</small><i id="navCount">0</i></button>
+  <button id="navOrders">▣<small>Pedidos</small></button>
+  <button>♙<small>Perfil</small></button>
+</nav>
 
-    <section class="page" id="page-clientes">
-      <div class="page-head"><div><h1>Clientes</h1><p>Salve clientes para preencher pedidos mais rápido.</p></div><button class="primary" id="newClient">+ Novo cliente</button></div>
-      <div class="search"><span>⌕</span><input id="clientSearch" placeholder="Buscar por nome ou telefone..."></div>
-      <div class="client-grid" id="clientGrid"></div>
-    </section>
+<div id="shade" class="shade"></div>
 
-    <section class="page" id="page-admin">
-      <div class="page-head"><div><h1>Administração</h1><p>Gerencie o cardápio sem mexer no código.</p></div></div>
-      <div class="admin-tabs">
-        <button class="admin-tab active" data-admin="produtos">🍔 Produtos</button>
-        <button class="admin-tab" data-admin="categorias">📂 Categorias</button>
-        <button class="admin-tab" data-admin="adicionais">🧀 Adicionais</button>
-        <button class="admin-tab" data-admin="tamanhos">📏 Tamanhos</button>
-        <button class="admin-tab" data-admin="combos">🎁 Combos</button>
-        <button class="admin-tab" data-admin="entrega">🚚 Entrega</button>
-        <button class="admin-tab" data-admin="pagamento">💰 Pagamento</button>
-      </div>
-      <div id="adminContent"></div>
-    </section>
-  </main>
-</div>
+<aside id="cartDrawer" class="drawer">
+  <div class="drawer-head"><div><small>SUA SACOLA</small><h2>Seu pedido</h2></div><button class="close" id="closeCart">×</button></div>
+  <div id="cartItems"></div>
+  <div id="emptyCart" class="empty hidden">Sua sacola está vazia.<button id="shopNow">Escolher produtos</button></div>
+  <div class="cart-bottom">
+    <button id="clearCart" class="danger-light">LIMPAR SACOLA</button>
+    <div class="totals"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div>
+    <div class="totals"><span>Taxa de entrega</span><b id="cartFee">R$ 0,00</b></div>
+    <div class="totals total"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+    <button id="checkoutBtn" class="primary">FINALIZAR PEDIDO</button>
+  </div>
+</aside>
 
-<div class="modal hidden" id="modal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
+<div id="productModal" class="modal hidden"><div class="modal-card"><button class="modal-close" id="productClose">×</button><div id="productBody"></div></div></div>
+
+<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-card">
+  <button class="modal-close" id="checkoutClose">×</button>
+  <div class="checkout-head"><small>FINALIZAÇÃO</small><h2>Como você quer receber?</h2><p>Preencha seus dados e escolha a forma de pagamento.</p></div>
+
+  <div class="receive-grid">
+    <button class="receive" data-method="entrega"><span>🛵</span><b>Entrega</b><small>Receba em casa</small></button>
+    <button class="receive" data-method="retirada"><span>🚶</span><b>Retirada</b><small>Retire no local</small></button>
+  </div>
+
+  <div id="savedBox" class="saved hidden"><div><small>ENDEREÇO SALVO</small><b id="savedText"></b></div><button id="changeAddress">Trocar</button></div>
+
+  <form id="checkoutForm">
+    <h3>Seus dados</h3>
+    <input id="customerName" required placeholder="Nome completo *">
+    <input id="customerPhone" required inputmode="tel" placeholder="WhatsApp (DDD + celular) *">
+
+    <div id="deliveryBox" class="hidden">
+      <select id="neighborhood"><option value="">Bairro *</option></select>
+      <input id="address" placeholder="Endereço *">
+      <input id="reference" placeholder="Ponto de referência *">
+    </div>
+
+    <label class="label">Forma de pagamento *</label>
+    <select id="payment" required>
+      <option value="">Selecione *</option>
+      <option value="PIX">PIX</option>
+      <option value="Cartão de crédito">Cartão de crédito</option>
+      <option value="Cartão de débito">Cartão de débito</option>
+      <option value="Dinheiro">Dinheiro</option>
+    </select>
+
+    <div id="cashBox" class="cash hidden">
+      <input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor que irá pagar *">
+      <div id="change" class="change"></div>
+    </div>
+
+    <label class="label">Observação do pedido</label>
+    <textarea id="orderNote" rows="3" placeholder="Alguma observação?"></textarea>
+
+    <div class="checkout-summary">
+      <div><span>Subtotal</span><b id="checkoutSubtotal">R$ 0,00</b></div>
+      <div><span>Taxa</span><b id="checkoutFee">R$ 0,00</b></div>
+      <div class="grand"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
+    </div>
+    <button class="primary" type="submit">CONFIRMAR PEDIDO</button>
+  </form>
+</div></div>
+
+<div id="successModal" class="modal hidden"><div class="modal-card success">
+  <div class="success-icon">✓</div><h2>Pedido realizado!</h2><p>Obrigado pela preferência.</p><strong id="orderNumber"></strong>
+  <button id="successClose" class="primary">VOLTAR AO CARDÁPIO</button>
+</div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="status-novo.js"></script>
 <script src="app.js"></script>
-<script src="new-orders.js"></script>
-<script src="novos-comandas.js"></script>
 </body>
 </html>
