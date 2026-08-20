@@ -11,7 +11,11 @@ function renderCats(){$("cats").innerHTML=`<button class="chip ${cat==="todos"?"
 function renderProducts(){let q=$("search").value.toLowerCase().trim(),list=products.filter(p=>(cat==="todos"||String(p.categoria_id)===String(cat))&&(!q||String(p.nome).toLowerCase().includes(q)));$("products").innerHTML=list.map(p=>`<article class=product><div class=photo>${p.imagem_url?`<img src="${esc(p.imagem_url)}" style="max-width:100%;max-height:100%;object-fit:cover" alt="">`:esc(p.emoji||"🍔")}</div><div class=pbody><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"")}</p><div class=pfoot><span class=price>${money(p.preco)}</span><button class=plus data-add="${p.id}">+</button></div></div></article>`).join("")||"<div class=empty>Nenhum produto encontrado.</div>";document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add))}
 function add(id){let p=products.find(x=>String(x.id)===String(id));if(!p)return;let r=cart.find(x=>x.id===id);r?r.qty++:cart.push({id:p.id,name:p.nome,price:Number(p.preco),qty:1});renderCart();toast("Adicionado ao pedido")}
 function change(id,d){let r=cart.find(x=>x.id===id);if(!r)return;r.qty+=d;if(r.qty<1)cart=cart.filter(x=>x.id!==id);renderCart()}
-function renderCart(){let n=cart.reduce((a,x)=>a+x.qty,0),sub=cart.reduce((a,x)=>a+x.price*x.qty,0),fee=Number(window.DELIVERY_FEE||0);$("cartBadge").textContent=n;$("empty").style.display=cart.length?"none":"block";$("cartItems").innerHTML=cart.map(x=>`<div class=cart-row><div><b>${x.name}</b><br><small>${money(x.price)} cada</small></div><div class=qty><button data-q="${x.id}" data-d="-1">−</button><b>${x.qty}</b><button data-q="${x.id}" data-d="1">+</button></div><b>${money(x.price*x.qty)}</b></div>`).join("");$("subtotal").textContent=money(sub);$("delivery").textContent=money(fee);$("total").textContent=money(sub+fee);document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>change(b.dataset.q,Number(b.dataset.d)))}
+function renderCart(){let n=cart.reduce((a,x)=>a+x.qty,0),sub=cart.reduce((a,x)=>a+x.price*x.qty,0),fee=Number(window.DELIVERY_FEE||0);const badge=$("cartBadge"); if(badge) badge.textContent=n;
+const bag=$("floatingBag"),bagCount=$("floatingBagCount");
+if(bagCount) bagCount.textContent=n;
+if(bag) bag.classList.toggle("show",n>0);
+$("empty").style.display=cart.length?"none":"block";$("cartItems").innerHTML=cart.map(x=>`<div class=cart-row><div><b>${x.name}</b><br><small>${money(x.price)} cada</small></div><div class=qty><button data-q="${x.id}" data-d="-1">−</button><b>${x.qty}</b><button data-q="${x.id}" data-d="1">+</button></div><b>${money(x.price*x.qty)}</b></div>`).join("");$("subtotal").textContent=money(sub);$("delivery").textContent=money(fee);$("total").textContent=money(sub+fee);document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>change(b.dataset.q,Number(b.dataset.d)))}
 $("search").oninput=renderProducts;
 $("send").onclick=async()=>{
  if(!cart.length)return toast("Adicione produtos ao pedido");
@@ -35,21 +39,3 @@ $("trackBtn").onclick=async()=>{
 };
 load();
 
-/* Sacola flutuante mobile: aparece quando o primeiro produto é adicionado. */
-(function(){
-  const bag=document.getElementById('floatingBag');
-  const count=document.getElementById('floatingBagCount');
-  if(!bag) return;
-  const refresh=()=>{
-    let total=0;
-    try{
-      if(Array.isArray(window.cart)) total=window.cart.reduce((s,i)=>s+(Number(i.quantity||i.qty||1)),0);
-      else if(window.cart && typeof window.cart==='object') total=Object.values(window.cart).reduce((s,i)=>s+(Number(i.quantity||i.qty||1)),0);
-    }catch(e){}
-    if(total>0){ count.textContent=total; bag.classList.add('show'); }
-    else { count.textContent='0'; bag.classList.remove('show'); }
-  };
-  document.addEventListener('click',()=>setTimeout(refresh,120));
-  window.addEventListener('storage',refresh);
-  setTimeout(refresh,500);
-})();
