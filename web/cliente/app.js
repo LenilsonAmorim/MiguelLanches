@@ -1,255 +1,262 @@
-const SUPABASE_URL="https://lifsxhyeqwppfvajvhpn.supabase.co";
-const SUPABASE_KEY="sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
+const CFG=window.ML_CONFIG||{};
+const SUPABASE_URL=CFG.SUPABASE_URL||"https://lifsxhyeqwppfvajvhpn.supabase.co";
+const SUPABASE_KEY=CFG.SUPABASE_KEY||"";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let products=[],categories=[],cart=[],selectedCategory=null,receiveMethod=null,neighborhoods=[];
-const ADDRESS_KEY="miguel_lanches_cliente_v1";
+let products=[],categories=[],cart=[],receiveMethod=null,neighborhoods=[];
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-const id=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
+const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 
 const fallbackCats=[
- {id:"fallback-lanches",nome:"Lanches",emoji:"🍔",ordem:1},
- {id:"fallback-pizzas",nome:"Pizzas",emoji:"🍕",ordem:2},
- {id:"fallback-pasteis",nome:"Pastéis",emoji:"🥟",ordem:3},
- {id:"fallback-porcoes",nome:"Porções",emoji:"🍟",ordem:4},
- {id:"fallback-bebidas",nome:"Bebidas",emoji:"🥤",ordem:5},
- {id:"fallback-acai",nome:"Açaí",emoji:"🍧",ordem:6}
+ {id:"fallback-lanches",nome:"Lanches",ordem:1},
+ {id:"fallback-porcoes",nome:"Porções",ordem:2},
+ {id:"fallback-churrasco",nome:"Churrasco",ordem:3},
+ {id:"fallback-dogao",nome:"Dogão",ordem:4},
+ {id:"fallback-petiscos",nome:"Petiscos",ordem:5},
+ {id:"fallback-bebidas",nome:"Bebidas",ordem:6},
+ {id:"fallback-pizzas",nome:"Pizzas",ordem:7},
+ {id:"fallback-pasteis",nome:"Pastéis",ordem:8},
+ {id:"fallback-acai",nome:"Açaí",ordem:9}
 ];
 
+function productImage(p){return p?.imagem_url||p?.imagem||p?.image_url||""}
+function isPizza(p){return norm(p?.categorias?.nome||"").includes("pizza")||norm(p?.nome).includes("pizza")}
+function isPastel(p){return norm(p?.categorias?.nome||"").includes("pastel")||norm(p?.nome).includes("pastel")}
+function isAcai(p){return norm(p?.categorias?.nome||"").includes("acai")||norm(p?.nome).includes("acai")}
+
 async function load(){
- const c=await db.from("categorias").select("*").eq("ativo",true).order("ordem");
- const p=await db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem");
- if(!c.error&&c.data?.length)categories=c.data.filter(c=>norm(c.nome)!=="todos"); else categories=fallbackCats;
- if(!p.error&&p.data)products=p.data; else products=[];
- renderCategories();renderFeatured();renderProducts();renderCart();
- loadNeighborhoods();
+  try{
+    const [c,p]=await Promise.all([
+      db.from("categorias").select("*").eq("ativo",true).order("ordem"),
+      db.from("produtos").select("*,categorias(nome,emoji,imagem_url)").eq("ativo",true).order("ordem")
+    ]);
+    categories=(!c.error&&c.data?.length)?c.data.filter(x=>norm(x.nome)!=="todos"):fallbackCats;
+    products=(!p.error&&p.data)?p.data:[];
+    renderCategories();renderFeatured();renderProducts();
+    await loadNeighborhoods();
+  }catch(e){console.error(e)}
+  setTimeout(()=>{$("splash")?.classList.add("hide");$("site")?.classList.remove("hidden")},1500);
 }
 
 async function loadNeighborhoods(){
- const r=await db.from("bairros").select("*").eq("ativo",true).order("nome");
- if(!r.error&&r.data)neighborhoods=r.data;
- $("neighborhood").innerHTML='<option value="">Bairro *</option>'+neighborhoods.map(n=>`<option>${esc(n.nome)}</option>`).join("");
-}
-
-function categoryDomId(c){
- return "cat-"+String(c.id).replace(/[^a-zA-Z0-9_-]/g,"-");
+  const r=await db.from("bairros").select("*").eq("ativo",true).order("nome");
+  if(!r.error&&r.data)neighborhoods=r.data;
+  if($("neighborhood"))$("neighborhood").innerHTML='<option value="">Bairro *</option>'+neighborhoods.map(n=>`<option value="${esc(n.nome)}">${esc(n.nome)}</option>`).join("");
 }
 
 function renderCategories(){
- $("categories").innerHTML=categories.map(c=>`<button class="${String(selectedCategory)===String(c.id)?"active":""}" onclick="selectCategory('${esc(c.id)}')"><span class="cat-emoji">${esc(c.emoji||"📦")}</span>${esc(c.nome)}</button>`).join("");
+  $("categories").innerHTML=categories.map(c=>`<button type="button" data-id="${esc(c.id)}" onclick="goCategory('${esc(c.id)}')">${esc(c.nome)}</button>`).join("");
 }
-
-function selectCategory(c){
- selectedCategory=String(c);
- renderCategories();
- const el=document.getElementById(categoryDomId(categories.find(x=>String(x.id)===String(c))||{id:c}));
- if(el) el.scrollIntoView({behavior:"smooth",block:"start"});
+function goCategory(id){
+  const el=document.querySelector(`[data-category="${CSS.escape(String(id))}"]`);
+  if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
 }
+function categoryId(p){return String(p.categoria_id||"")}
 
-function productCategory(p){return String(p.categoria_id||"")}
-
-function listProducts(){
- const q=norm($("search").value);
- return products.filter(p=>{
-   const searchOk=!q||norm(p.nome).includes(q)||norm(p.descricao).includes(q);
-   return searchOk;
- });
+function renderFeatured(){
+  const list=products.slice(0,6);
+  $("featured").innerHTML=list.length?list.map(p=>{
+    const img=productImage(p);
+    return `<button class="highlight" onclick="openProduct('${p.id}')">
+      <div class="highlight-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div>
+      <div class="highlight-body"><small>Mais pedido</small><b>${esc(p.nome)}</b><strong>${money(p.preco)}</strong></div>
+    </button>`
+  }).join(""):"<p class='muted'>Nenhum destaque cadastrado.</p>";
 }
 
 function renderProducts(){
- const list=listProducts();
- const grouped=categories.map(c=>({cat:c,items:list.filter(p=>productCategory(p)===String(c.id)).sort((a,b)=>Number(a.ordem??99999)-Number(b.ordem??99999)||String(a.nome).localeCompare(String(b.nome)))})).filter(g=>g.items.length);
- const uncategorized=list.filter(p=>!categories.some(c=>String(c.id)===productCategory(p)));
- let html=grouped.map(g=>`<section class="category-block" id="${categoryDomId(g.cat)}" data-category-id="${esc(g.cat.id)}"><div class="category-heading"><span>${esc(g.cat.emoji||"📦")}</span><h2>${esc(g.cat.nome)}</h2></div><div class="products">${g.items.map(card).join("")}</div></section>`).join("");
- if(uncategorized.length) html+=`<section class="category-block" id="cat-sem-categoria"><div class="category-heading"><span>📦</span><h2>Outros</h2></div><div class="products">${uncategorized.map(card).join("")}</div></section>`;
- $("productsTitle").textContent="Cardápio";
- $("products").innerHTML=html||'<div class="empty">Nenhum produto encontrado.</div>';
- setupCategoryObserver();
- if(selectedCategory){
-   const exists=document.getElementById(categoryDomId(categories.find(x=>String(x.id)===String(selectedCategory))||{id:selectedCategory}));
-   if(!exists) selectedCategory=null;
- }
+  const q=norm($("search").value);
+  const list=products.filter(p=>!q||norm(p.nome).includes(q)||norm(p.descricao).includes(q));
+  let html="";
+  for(const c of categories){
+    const items=list.filter(p=>categoryId(p)===String(c.id));
+    if(!items.length)continue;
+    html+=`<section class="category-block" data-category="${esc(c.id)}"><h2>${esc(c.nome)}</h2><div class="products">${items.map(card).join("")}</div></section>`;
+  }
+  const other=list.filter(p=>!categories.some(c=>String(c.id)===categoryId(p)));
+  if(other.length)html+=`<section class="category-block"><h2>Outros</h2><div class="products">${other.map(card).join("")}</div></section>`;
+  $("products").innerHTML=html||"<div class='no-results'>Nenhum produto encontrado.</div>";
 }
-
 function card(p){
- return `<article class="card" onclick="openProduct('${p.id}')"><div class="photo">${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="${esc(p.nome)}">`:esc(p.emoji||p.categorias?.emoji||"🍔")}</div><div class="card-body"><h3>${esc(p.nome)}</h3><div class="desc">${esc(p.descricao||"Toque para ver as opções.")}</div><div class="card-foot"><span class="price">${money(p.preco)}</span><button class="plus" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></div></div></article>`;
+  const img=productImage(p);
+  return `<article class="product" onclick="openProduct('${p.id}')">
+    <div class="product-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div>
+    <div class="product-body"><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"Toque para ver as opções.")}</p>
+      <div class="product-foot"><strong>${money(p.preco)}</strong><button type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></div>
+    </div>
+  </article>`;
 }
 
-function setupCategoryObserver(){
- const sections=[...document.querySelectorAll(".category-block")];
- if(!sections.length||!window.IntersectionObserver)return;
- if(window._mlCategoryObserver)window._mlCategoryObserver.disconnect();
- window._mlCategoryObserver=new IntersectionObserver(entries=>{
-   const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-   if(!visible)return;
-   const id=visible.target.dataset.categoryId;
-   if(!id)return;
-   if(String(selectedCategory)!==String(id)){selectedCategory=String(id);renderCategories();}
- },{rootMargin:"-90px 0px -55% 0px",threshold:[0.15,0.4,0.7]});
- sections.forEach(s=>window._mlCategoryObserver.observe(s));
+function openProduct(pid){
+  const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
+  let extra="";
+  if(isPizza(p))extra=pizzaOptions(p);
+  else if(isPastel(p))extra=pastelOptions(p);
+  else if(isAcai(p))extra=acaiOptions(p);
+  const img=productImage(p);
+  $("productBody").innerHTML=`<div class="product-main">
+    <div class="product-hero">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}<button class="hero-close" onclick="closeProduct()">×</button></div>
+    <div class="product-content"><h2>${esc(p.nome)}</h2><div class="modal-price">${money(p.preco)}</div>
+    ${p.descricao?`<p class="modal-desc">${esc(p.descricao)}</p>`:""}${extra}
+    <label class="field-label">Observação <small>(opcional)</small></label>
+    <textarea id="productNote" class="field" placeholder="Ex.: sem cebola, bem passado..."></textarea>
+    <div class="qty-row"><b>Quantidade</b><div class="stepper"><button onclick="stepQty(-1)">−</button><span id="productQty">1</span><button onclick="stepQty(1)">+</button></div></div>
+    <button class="main-btn" onclick="addCurrent('${p.id}')">Adicionar à sacola · <span id="addPrice">${money(p.preco)}</span></button>
+    </div></div>`;
+  $("productModal").classList.remove("hidden");
+  window.currentProduct=p;window.currentQty=1;
 }
-
-function renderFeatured(){
- const list=[...products].slice(0,6);
- $("featured").innerHTML=list.length?list.map(p=>`<button class="mini" onclick="openProduct('${p.id}')"><b>${esc(p.nome)}</b><small>${esc(p.descricao||"Mais pedido")}</small><span class="price">${money(p.preco)}</span></button>`).join(""):'<div class="empty">Os produtos aparecerão aqui.</div>';
+function stepQty(d){window.currentQty=Math.max(1,Math.min(99,(window.currentQty||1)+d));$("productQty").textContent=window.currentQty}
+function closeProduct(){$("productModal").classList.add("hidden")}
+function pizzaOptions(p){
+  const two=/2\s*sabores?|duas/.test(norm(p.nome));
+  const flavors=products.filter(x=>isPizza(x)&&String(x.id)!==String(p.id)).slice(0,30);
+  return `<div class="option-title">Escolha ${two?"2 sabores":"1 sabor"}</div><div class="options">${flavors.map(f=>`<button class="option pizza-option ${two?"two":""}" data-name="${esc(f.nome)}" data-price="${Number(f.preco||0)}" onclick="pickPizza(this)"><span>${esc(f.nome)}</span><strong>${money(f.preco)}</strong></button>`).join("")}</div>`;
 }
-
-function isPizza(p){return norm(p.categorias?.nome||"").includes("pizza")||norm(p.nome).includes("pizza")}
-function isPastel(p){return norm(p.categorias?.nome||"").includes("pastel")}
-function isAcai(p){return norm(p.categorias?.nome||"").includes("acai")||norm(p.nome).includes("acai")}
-
-async function openProduct(pid){
- const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
- if(isPizza(p))return openPizza(p);
- if(isPastel(p))return openPastel(p);
- if(isAcai(p))return openAcai(p);
- openGeneric(p);
+function pickPizza(el){
+  const two=el.classList.contains("two");
+  if(!two)document.querySelectorAll(".pizza-option").forEach(x=>x.classList.remove("selected"));
+  if(two&&!el.classList.contains("selected")&&document.querySelectorAll(".pizza-option.selected").length>=2)return;
+  el.classList.toggle("selected");
 }
-
-function showModal(html){$("productBody").innerHTML=html;$("productModal").classList.remove("hidden")}
-
-function baseOptions(p){
- return `<div class="product-main"><h2>${esc(p.nome)}</h2><div class="big-price">${money(p.preco)}</div>${p.descricao?`<p>${esc(p.descricao)}</p>`:""}<div class="option-title">Observação (opcional)</div><textarea class="modal-field" id="optNote" rows="3" placeholder="Ex.: sem cebola..."></textarea><div class="option-title">Quantidade</div><input class="modal-field" id="optQty" type="number" min="1" value="1"><div class="modal-actions"><button class="primary" onclick="addSimple('${p.id}')">ADICIONAR À SACOLA · ${money(p.preco)}</button></div></div>`;
+function pastelOptions(p){
+  const flavors=products.filter(x=>isPastel(x)&&String(x.id)!==String(p.id)).slice(0,30);
+  return `<div class="option-title">Tamanho</div><div class="options"><button class="option pastel-size selected" data-size="M" data-price="${Number(p.preco||0)}" onclick="pickOne('.pastel-size',this)">Pastel M <strong>${money(p.preco)}</strong></button><button class="option pastel-size" data-size="G" data-price="${Number(p.preco||0)}" onclick="pickOne('.pastel-size',this)">Pastel G <strong>${money(p.preco)}</strong></button></div>
+  <div class="option-title">Escolha 1 sabor</div><div class="options">${flavors.map(f=>`<button class="option pastel-flavor" data-name="${esc(f.nome)}" data-price="${Number(f.preco||0)}" onclick="pickOne('.pastel-flavor',this)">${esc(f.nome)} <strong>${money(f.preco)}</strong></button>`).join("")}</div>`;
 }
-
-function openGeneric(p){showModal(baseOptions(p))}
-
-function openPizza(p){
- const two=norm(p.nome).includes("2 sabores")||norm(p.nome).includes("2 sabor")||norm(p.nome).includes("duas");
- const flavors=products.filter(x=>isPizza(x)&&String(x.id)!==String(p.id)).slice(0,20);
- showModal(`<div class="product-main"><h2>🍕 ${esc(p.nome)}</h2><div class="big-price">A partir de ${money(p.preco)}</div><p>${two?"Escolha exatamente 2 sabores. O maior preço permanece no pedido.":"Escolha exatamente 1 sabor."}</p><div class="option-title">Escolha o sabor ${two?"(2 opções)":"(1 opção)"}</div><div class="options" id="pizzaOptions">${flavors.map(f=>`<button class="option pizza-opt" data-price="${Number(f.preco||0)}" data-name="${esc(f.nome)}" onclick="pickPizza(this,${two})"><span><b>${esc(f.nome)}</b><small>${esc(f.descricao||"")}</small></span><strong>${money(f.preco)}</strong></button>`).join("")}</div><div class="option-title">Observação</div><textarea class="modal-field" id="optNote" rows="3" placeholder="Ex.: borda, sem cebola..."></textarea><div class="option-title">Quantidade</div><input class="modal-field" id="optQty" type="number" min="1" value="1"><div class="modal-actions"><button class="primary" onclick="addPizza('${p.id}',${two})">ADICIONAR À SACOLA</button></div></div>`);
-}
-
-function pickPizza(el,two){
- const all=[...document.querySelectorAll(".pizza-opt")];
- if(!two)all.forEach(x=>x.classList.remove("selected"));
- if(two&&el.classList.contains("selected")){el.classList.remove("selected");return}
- if(two&&document.querySelectorAll(".pizza-opt.selected").length>=2)return;
- el.classList.add("selected");
-}
-
-function addPizza(pid,two){
- const p=products.find(x=>String(x.id)===String(pid)), opts=[...document.querySelectorAll(".pizza-opt.selected")];
- if(opts.length!==(two?2:1))return alert(two?"Escolha 2 sabores.":"Escolha 1 sabor.");
- const highest=Math.max(...opts.map(x=>Number(x.dataset.price||0)),Number(p.preco||0));
- const names=opts.map(x=>x.dataset.name);
- addToCart({nome:`${p.nome} — ${names.join(" + ")}`,preco:highest,obs:$("optNote").value.trim(),quantidade:Number($("optQty").value||1),config:{tipo:two?"pizza-2-sabores":"pizza-1-sabor",sabores:names}});
- closeProduct();
-}
-
-function openPastel(p){
- const sabores=products.filter(x=>isPastel(x)&&String(x.id)!==String(p.id)).slice(0,30);
- showModal(`<div class="product-main"><h2>🥟 ${esc(p.nome)}</h2><div class="big-price">Escolha o tamanho</div><div class="option-title">Tamanho</div><div class="options"><button class="option pastel-size selected" data-size="M" data-price="${Number(p.preco||0)}" onclick="pickOne('.pastel-size',this)"><b>Pastel M</b><strong>${money(p.preco)}</strong></button><button class="option pastel-size" data-size="G" data-price="${Number(p.preco||0)}" onclick="pickOne('.pastel-size',this)"><b>Pastel G</b><strong>${money(p.preco)}</strong></button></div><div class="option-title">Escolha 1 sabor</div><div class="options" id="pastelFlavors">${sabores.map(s=>`<button class="option pastel-flavor" data-name="${esc(s.nome)}" data-price="${Number(s.preco||0)}" onclick="pickOne('.pastel-flavor',this)"><b>${esc(s.nome)}</b><strong>${money(s.preco)}</strong></button>`).join("")}</div><div class="option-title">Observação</div><textarea class="modal-field" id="optNote" rows="3" placeholder="Alguma observação?"></textarea><div class="option-title">Quantidade</div><input class="modal-field" id="optQty" type="number" min="1" value="1"><div class="modal-actions"><button class="primary" onclick="addPastel('${p.id}')">ADICIONAR À SACOLA</button></div></div>`);
+function acaiOptions(){
+  return `<div class="option-title">Tamanho</div><div class="options">${["200 ml","300 ml","500 ml","1 litro"].map((s,i)=>`<button class="option acai-size ${i===0?"selected":""}" data-size="${s}" onclick="pickOne('.acai-size',this)">${s}</button>`).join("")}</div>
+  <div class="option-title">Coberturas <small>(até 3)</small></div><div class="options">${["Leite em pó","Leite condensado","Paçoca","Granola","Morango","Banana","Ovomaltine","Confete"].map(x=>`<button class="option topping" data-name="${x}" onclick="toggleTopping(this)">${x}</button>`).join("")}</div>`;
 }
 function pickOne(sel,el){document.querySelectorAll(sel).forEach(x=>x.classList.remove("selected"));el.classList.add("selected")}
+function toggleTopping(el){const n=document.querySelectorAll(".topping.selected").length;if(!el.classList.contains("selected")&&n>=3)return;el.classList.toggle("selected")}
 
-function addPastel(pid){
- const p=products.find(x=>String(x.id)===String(pid)),size=document.querySelector(".pastel-size.selected"),fl=document.querySelector(".pastel-flavor.selected");
- if(!size||!fl)return alert("Escolha o tamanho e 1 sabor.");
- const price=Math.max(Number(size.dataset.price||0),Number(fl.dataset.price||0));
- addToCart({nome:`Pastel ${size.dataset.size} — ${fl.dataset.name}`,preco:price,obs:$("optNote").value.trim(),quantidade:Number($("optQty").value||1),config:{tipo:"pastel",tamanho:size.dataset.size,sabor:fl.dataset.name}});
- closeProduct();
+function addCurrent(pid){
+  const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
+  const qty=window.currentQty||1,note=$("productNote").value.trim();
+  let item={id:uid(),nome:p.nome,preco:Number(p.preco||0),quantidade:qty,obs:note,config:{tipo:"normal"}};
+
+  if(isPizza(p)){
+    const opts=[...document.querySelectorAll(".pizza-option.selected")],two=/2\s*sabores?|duas/.test(norm(p.nome));
+    if(opts.length!==(two?2:1))return alert(two?"Escolha 2 sabores.":"Escolha 1 sabor.");
+    const flavors=opts.map(x=>x.dataset.name);
+    item.nome=`${p.nome} — ${flavors.join(" + ")}`;
+    item.preco=Math.max(Number(p.preco||0),...opts.map(x=>Number(x.dataset.price||0)));
+    item.config={tipo:two?"pizza-2-sabores":"pizza-1-sabor",sabores:flavors};
+  }else if(isPastel(p)){
+    const s=document.querySelector(".pastel-size.selected"),f=document.querySelector(".pastel-flavor.selected");
+    if(!s||!f)return alert("Escolha o tamanho e 1 sabor.");
+    item.nome=`Pastel ${s.dataset.size} — ${f.dataset.name}`;
+    item.preco=Math.max(Number(s.dataset.price||0),Number(f.dataset.price||0));
+    item.config={tipo:"pastel",tamanho:s.dataset.size,sabor:f.dataset.name};
+  }else if(isAcai(p)){
+    const s=document.querySelector(".acai-size.selected"),tops=[...document.querySelectorAll(".topping.selected")].map(x=>x.dataset.name);
+    if(!s)return alert("Escolha o tamanho.");
+    item.nome=`Açaí ${s.dataset.size}${tops.length?" — "+tops.join(", "):""}`;
+    item.config={tipo:"acai",tamanho:s.dataset.size,coberturas:tops};
+  }
+  cart.push(item);renderCart();closeProduct();openCart();
 }
-
-function openAcai(p){
- const sizes=[{nome:"200 ml",preco:0},{nome:"300 ml",preco:0},{nome:"500 ml",preco:0},{nome:"1 litro",preco:0}];
- showModal(`<div class="product-main"><h2>🍧 ${esc(p.nome)}</h2><div class="big-price">Escolha seu açaí</div><div class="option-title">Tamanho</div><div class="options">${sizes.map((s,i)=>`<button class="option acai-size ${i===0?"selected":""}" data-size="${s.nome}" data-price="${s.preco}" onclick="pickOne('.acai-size',this)"><b>${s.nome}</b><strong>${money(s.preco)}</strong></button>`).join("")}</div><div class="option-title">Coberturas <small>(até 3)</small></div><div class="options" id="toppings">${["Leite em pó","Leite condensado","Paçoca","Granola","Morango","Banana","Ovomaltine","Confete"].map(n=>`<button class="option topping" data-name="${n}" onclick="toggleTop(this)"><b>${n}</b></button>`).join("")}</div><div class="option-title">Observação</div><textarea class="modal-field" id="optNote" rows="3" placeholder="Alguma observação?"></textarea><div class="option-title">Quantidade</div><input class="modal-field" id="optQty" type="number" min="1" value="1"><div class="modal-actions"><button class="primary" onclick="addAcai('${p.id}')">ADICIONAR À SACOLA</button></div></div>`);
-}
-function toggleTop(el){const selected=document.querySelectorAll(".topping.selected");if(!el.classList.contains("selected")&&selected.length>=3)return alert("Você pode escolher no máximo 3 coberturas.");el.classList.toggle("selected")}
-
-function addAcai(pid){
- const p=products.find(x=>String(x.id)===String(pid)),s=document.querySelector(".acai-size.selected"),tops=[...document.querySelectorAll(".topping.selected")];
- if(!s)return alert("Escolha o tamanho.");
- addToCart({nome:`Açaí ${s.dataset.size}`,preco:Number(p.preco||0)+Number(s.dataset.price||0),obs:$("optNote").value.trim(),quantidade:Number($("optQty").value||1),config:{tipo:"acai",tamanho:s.dataset.size,coberturas:tops.map(x=>x.dataset.name)}});
- closeProduct();
-}
-
-function addSimple(pid){
- const p=products.find(x=>String(x.id)===String(pid));addToCart({nome:p.nome,preco:Number(p.preco||0),obs:$("optNote").value.trim(),quantidade:Number($("optQty").value||1),config:{tipo:"normal"}});closeProduct();
-}
-
-function addToCart(item){cart.push({id:id(),...item});renderCart();openCart();}
 
 function renderCart(){
- const count=cart.reduce((s,x)=>s+x.quantidade,0),sub=cart.reduce((s,x)=>s+Number(x.preco||0)*x.quantidade,0);
- $("headerCount").textContent=count;$("navCount").textContent=count;$("headerCount").style.display=count?"block":"none";
- $("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cart-item"><div class="cart-row"><span class="cart-name">${x.quantidade}x ${esc(x.nome)}</span><b>${money(x.preco*x.quantidade)}</b></div>${x.config?.coberturas?.length?`<div class="cart-sub">Coberturas: ${esc(x.config.coberturas.join(", "))}</div>`:""}${x.config?.sabores?.length?`<div class="cart-sub">Sabores: ${esc(x.config.sabores.join(" + "))}</div>`:""}${x.obs?`<div class="cart-sub">Obs.: ${esc(x.obs)}</div>`:""}<div class="qty"><button onclick="changeQty('${x.id}',-1)">−</button><b>${x.quantidade}</b><button onclick="changeQty('${x.id}',1)">+</button><button class="remove" onclick="removeItem('${x.id}')">Excluir</button></div></div>`).join(""):'';
- $("emptyCart").classList.toggle("hidden",cart.length>0);$("cartItems").classList.toggle("hidden",!cart.length);
- $("cartSubtotal").textContent=money(sub);$("cartFee").textContent="R$ 0,00";$("cartTotal").textContent=money(sub);
- $("checkoutSubtotal").textContent=money(sub);$("checkoutFee").textContent="R$ 0,00";$("checkoutTotal").textContent=money(sub);$("checkoutTotal").dataset.value=sub;
+  const count=cart.reduce((s,x)=>s+Number(x.quantidade||1),0);
+  const total=cart.reduce((s,x)=>s+Number(x.preco||0)*Number(x.quantidade||1),0);
+  const bar=$("bagBar");
+  bar.classList.toggle("empty",count===0);
+  $("bagText").textContent=count===1?"1 item na sacola":`${count} itens na sacola`;
+  $("bagTotal").textContent=money(total);
+  $("cartSubtotal").textContent=money(total);
+  $("checkoutSubtotal").textContent=money(total);
+  $("checkoutTotal").textContent=money(total);
+  $("cartItems").innerHTML=cart.map(x=>`<div class="cart-item">
+    <div class="cart-item-top"><b>${x.quantidade}× ${esc(x.nome)}</b><strong>${money(x.preco*x.quantidade)}</strong></div>
+    ${x.config?.coberturas?.length?`<small>Coberturas: ${esc(x.config.coberturas.join(", "))}</small>`:""}
+    ${x.config?.sabores?.length?`<small>Sabores: ${esc(x.config.sabores.join(" + "))}</small>`:""}
+    ${x.obs?`<small>Obs.: ${esc(x.obs)}</small>`:""}
+    <div class="item-actions"><button onclick="changeQty('${x.id}',-1)">−</button><span>${x.quantidade}</span><button onclick="changeQty('${x.id}',1)">+</button><button class="remove" onclick="removeItem('${x.id}')">Remover</button></div>
+  </div>`).join("");
+  $("emptyCart").classList.toggle("hidden",cart.length>0);
+  $("checkoutBtn").disabled=!cart.length;
 }
-
-function changeQty(k,d){const x=cart.find(i=>i.id===k);if(!x)return;x.quantidade+=d;if(x.quantidade<1)cart=cart.filter(i=>i.id!==k);renderCart()}
-function removeItem(k){cart=cart.filter(i=>i.id!==k);renderCart()}
-function clearCart(){if(confirm("Deseja realmente limpar a sacola?")){cart=[];renderCart()}}
+function changeQty(id,d){const x=cart.find(i=>i.id===id);if(!x)return;x.quantidade+=d;if(x.quantidade<1)cart=cart.filter(i=>i.id!==id);renderCart()}
+function removeItem(id){cart=cart.filter(x=>x.id!==id);renderCart()}
 function openCart(){$("cartDrawer").classList.add("open");$("shade").classList.add("open")}
 function closeCart(){$("cartDrawer").classList.remove("open");$("shade").classList.remove("open")}
-function closeProduct(){$("productModal").classList.add("hidden")}
-function closeCheckout(){$("checkoutModal").classList.add("hidden")}
-
-function getSaved(){try{return JSON.parse(localStorage.getItem(ADDRESS_KEY)||"null")}catch{return null}}
-function renderSaved(){
- const d=getSaved(),valid=!!d?.endereco?.trim()&&receiveMethod==="entrega";
- $("savedBox").classList.toggle("hidden",!valid);
- $("savedText").textContent=valid?[d.bairro,d.endereco,d.referencia].filter(Boolean).join(" • "):"";
+function openCheckout(){
+  if(!cart.length)return alert("Sua sacola está vazia.");
+  closeCart();$("checkoutModal").classList.remove("hidden");
+  if(!receiveMethod)selectReceive("retirada"); updatePayment();
 }
-function selectReceive(method){
- receiveMethod=method;
- document.querySelectorAll(".receive").forEach(b=>b.classList.toggle("selected",b.dataset.method===method));
- const delivery=method==="entrega";
- $("deliveryBox").classList.toggle("hidden",!delivery);
- renderSaved();
- const d=getSaved();
- if(delivery&&d){$("customerName").value ||= d.nome||"";$("customerPhone").value ||= d.telefone||"";$("neighborhood").value=d.bairro||"";$("address").value=d.endereco||"";$("reference").value=d.referencia||""}
+function closeCheckout(){$("checkoutModal").classList.add("hidden")}
+function selectReceive(m){
+  receiveMethod=m;
+  document.querySelectorAll(".receive").forEach(b=>b.classList.toggle("selected",b.dataset.method===m));
+  const delivery=m==="entrega";$("deliveryBox").classList.toggle("hidden",!delivery);
+  if(delivery)loadSavedAddress();
+}
+function loadSavedAddress(){
+  try{
+    const d=JSON.parse(localStorage.getItem("miguel_lanches_cliente_v1")||"null");
+    if(!d)return;
+    $("customerName").value ||= d.nome||"";$("customerPhone").value ||= d.telefone||"";
+    $("neighborhood").value=d.bairro||"";$("address").value=d.endereco||"";$("reference").value=d.referencia||"";
+  }catch{}
 }
 function updatePayment(){
- const cash=$("payment").value==="Dinheiro";
- $("cashBox").classList.toggle("hidden",!cash);
- if(!cash){$("cashValue").value="";$("change").textContent=""}else updateChange();
+  const cash=$("payment").value==="Dinheiro";
+  $("cashBox").classList.toggle("hidden",!cash);
+  if(!cash){$("cashValue").value="";$("change").textContent=""}else updateChange();
 }
 function updateChange(){
- const paid=Number($("cashValue").value||0),total=Number($("checkoutTotal").dataset.value||0);
- $("change").textContent=paid>=total&&paid?`Troco: ${money(paid-total)}`:"";
-}
-
-async function checkout(){
- if(!cart.length)return alert("Sua sacola está vazia.");
- $("checkoutModal").classList.remove("hidden");closeCart();
- selectReceive(receiveMethod||"entrega");updatePayment();
+  const paid=Number($("cashValue").value||0),total=Number($("checkoutTotal").dataset.value||$("checkoutTotal").textContent.replace(/[^\d,]/g,"").replace(".","").replace(",",".")||0);
+  $("change").textContent=paid>=total&&paid?`Troco: ${money(paid-total)}`:"";
 }
 
 async function sendOrder(e){
- e.preventDefault();
- if(!receiveMethod)return alert("Escolha Entrega ou Retirada.");
- if(!$("customerName").value.trim()||!$("customerPhone").value.trim())return alert("Informe nome e WhatsApp.");
- if(!$("payment").value)return alert("Escolha a forma de pagamento.");
- const delivery=receiveMethod==="entrega";
- if(delivery&&!$("address").value.trim())return alert("Informe o endereço.");
- if($("payment").value==="Dinheiro"&&Number($("cashValue").value||0)<Number($("checkoutTotal").dataset.value||0))return alert("O valor pago precisa ser igual ou maior que o total.");
+  e.preventDefault();
+  if(!cart.length)return alert("Sua sacola está vazia.");
+  if(!receiveMethod)return alert("Escolha Entrega ou Retirada.");
+  const name=$("customerName").value.trim(),phone=$("customerPhone").value.trim(),payment=$("payment").value;
+  const delivery=receiveMethod==="entrega";
+  if(!name||!phone)return alert("Informe nome e WhatsApp.");
+  if(!payment)return alert("Escolha a forma de pagamento.");
+  if(delivery&&!$("address").value.trim())return alert("Informe o endereço.");
+  const total=cart.reduce((s,x)=>s+Number(x.preco||0)*Number(x.quantidade||1),0);
+  if(payment==="Dinheiro"&&Number($("cashValue").value||0)<total)return alert("O valor pago precisa ser igual ou maior que o total.");
 
- if(delivery)localStorage.setItem(ADDRESS_KEY,JSON.stringify({nome:$("customerName").value.trim(),telefone:$("customerPhone").value.trim(),bairro:$("neighborhood").value,endereco:$("address").value.trim(),referencia:$("reference").value.trim()}));
+  const payload={
+    cliente:name,telefone:phone,forma_recebimento:receiveMethod,
+    bairro:delivery?$("neighborhood").value:"",
+    endereco:delivery?$("address").value.trim():"",
+    referencia:delivery?$("reference").value.trim():"",
+    pagamento:payment,
+    valor_pago:payment==="Dinheiro"?Number($("cashValue").value||0):null,
+    total,observacoes:$("orderNote").value.trim(),itens:cart
+  };
+  const r1=await db.from("pedidos").insert(payload).select("id").maybeSingle();
+  let r=r1;
+  if(r1.error){
+    const packed=`${payload.observacoes||""}\n[ML_ITENS]${encodeURIComponent(JSON.stringify(cart))}[/ML_ITENS]\n[ML_RECEBIMENTO]${receiveMethod}[/ML_RECEBIMENTO]\n[ML_PAGAMENTO]${payment}[/ML_PAGAMENTO]`;
+    r=await db.from("pedidos").insert({Cliente:name,telefone:phone,endereco:payload.endereco,referencia:payload.referencia,observacoes:packed,total}).select("id").maybeSingle();
+  }
+  if(r.error){console.error(r.error);return alert("Não foi possível enviar o pedido. Verifique a conexão com o sistema.");}
 
- const total=Number($("checkoutTotal").dataset.value||0);
- const payload={cliente:$("customerName").value.trim(),telefone:$("customerPhone").value.trim(),forma_recebimento:receiveMethod, bairro:delivery?$("neighborhood").value:"",endereco:delivery?$("address").value.trim():"",referencia:delivery?$("reference").value.trim():"",pagamento:$("payment").value,valor_pago:$("payment").value==="Dinheiro"?Number($("cashValue").value||0):null,total,observacoes:$("orderNote").value.trim(),itens:cart};
- let r=await db.from("pedidos").insert(payload).select("id").maybeSingle();
- if(r.error){
-   const packed=`${payload.observacoes}\n[ML_ITENS]${encodeURIComponent(JSON.stringify(cart))}[/ML_ITENS]\n[ML_RECEBIMENTO]${receiveMethod}[/ML_RECEBIMENTO]\n[ML_PAGAMENTO]${payload.pagamento}[/ML_PAGAMENTO]`;
-   r=await db.from("pedidos").insert({Cliente:payload.cliente,telefone:payload.telefone,endereco:payload.endereco,referencia:payload.referencia,observacoes:packed,total}).select("id").maybeSingle();
- }
- if(r.error)return alert("Não foi possível enviar o pedido. Verifique a conexão com o sistema.");
- const num=r.data?.id||Math.floor(Math.random()*9000+1000);
- cart=[];renderCart();closeCheckout();$("orderNumber").textContent=`Pedido #${num}`;$("successModal").classList.remove("hidden");
+  localStorage.setItem("miguel_lanches_cliente_v1",JSON.stringify({nome:name,telefone:phone,bairro:payload.bairro,endereco:payload.endereco,referencia:payload.referencia}));
+  const num=r.data?.id||"";
+  cart=[];renderCart();closeCheckout();
+  $("orderNumber").textContent=num?`Pedido #${num}`:"Pedido recebido";
+  $("successModal").classList.remove("hidden");
 }
 
-$("search").addEventListener("input",()=>{renderProducts();$("featuredSection").classList.toggle("hidden",!!$("search").value.trim())});
-$("clearSearch").onclick=()=>{$("search").value="";selectedCategory=null;renderCategories();renderProducts();$("featuredSection").classList.remove("hidden")};
-$("headerCart").onclick=openCart;$("navCart").onclick=openCart;$("closeCart").onclick=closeCart;$("shade").onclick=closeCart;$("clearCart").onclick=clearCart;$("shopNow").onclick=closeCart;
-$("checkoutBtn").onclick=checkout;$("productClose").onclick=closeProduct;$("checkoutClose").onclick=closeCheckout;$("successClose").onclick=()=>$("successModal").classList.add("hidden");
-document.querySelectorAll(".receive").forEach(b=>b.onclick=()=>selectReceive(b.dataset.method));
-$("changeAddress").onclick=()=>selectReceive("entrega");$("payment").onchange=updatePayment;$("cashValue").oninput=updateChange;$("checkoutForm").onsubmit=sendOrder;
-$("navCategories").onclick=()=>document.querySelector(".categories").scrollIntoView({behavior:"smooth",block:"start"});
-$("navOrders").onclick=()=>alert("A área de acompanhamento de pedidos será conectada ao Admin na próxima etapa.");
+function closeSuccess(){$("successModal").classList.add("hidden")}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+
+$("search").addEventListener("input",renderProducts);
+$("payment").addEventListener("change",updatePayment);
+$("cashValue").addEventListener("input",updateChange);
+$("checkoutForm").addEventListener("submit",sendOrder);
+
 load();
