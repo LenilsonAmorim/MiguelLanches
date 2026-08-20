@@ -25,9 +25,13 @@
     if(!host)return;
     const q=norm2(document.getElementById('search')?.value||'');
     const list=products.filter(p=>!q||norm2(p.nome).includes(q)||norm2(p.descricao).includes(q));
-    const popular=[...list].sort((a,b)=>Number(a.ordem??99999)-Number(b.ordem??99999)).slice(0,5);
+    const pizzaCatIds=categories.filter(c=>norm2(c.nome).includes('pizza')).map(c=>String(c.id));
+    let popular=list.filter(p=>pizzaCatIds.includes(String(p.categoria_id)));
+    if(!popular.length) popular=list.filter(p=>norm2(p.nome).includes('pizza'));
+    if(!popular.length) popular=[...list];
+    popular=popular.sort((a,b)=>Number(a.ordem??99999)-Number(b.ordem??99999)).slice(0,6);
     const grouped=categories.map(c=>({cat:c,items:list.filter(p=>String(p.categoria_id)===String(c.id)).sort((a,b)=>Number(a.ordem??99999)-Number(b.ordem??99999)||String(a.nome).localeCompare(String(b.nome)))})).filter(g=>g.items.length);
-    let html=`<section class="popular-block"><div class="section-head"><h2>Mais pedidos</h2><button class="see-all" type="button" onclick="document.querySelector('.catalog').scrollIntoView({behavior:'smooth'})">Ver todos</button></div>${popular.map(popularCard).join('')}</section>`;
+    let html=`<section class="popular-block"><div class="section-head"><h2>Mais pedidos</h2></div>${popular.map(popularCard).join('')}</section>`;
     html+=grouped.map(g=>`<section class="category-block" id="cat-${String(g.cat.id).replace(/[^a-zA-Z0-9_-]/g,'-')}" data-category-id="${esc2(g.cat.id)}"><div class="category-heading"><span>${esc2(g.cat.emoji||'📦')}</span><h2>${esc2(g.cat.nome)}</h2><button type="button">Ver todos</button></div><div class="category-products">${g.items.map(p=>`<article class="menu-row" onclick="openProduct('${p.id}')"><div class="menu-photo">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>${esc2(p.emoji||g.cat.emoji||'🍔')}</span>`}</div><div class="menu-info"><h3>${esc2(p.nome)}</h3><p>${esc2(p.descricao||'')}</p><b>${money2(p.preco)}</b></div><button class="plus" type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></article>`).join('')}</div></section>`).join('');
     const uncategorized=list.filter(p=>!categories.some(c=>String(c.id)===String(p.categoria_id)));
     if(uncategorized.length)html+=`<section class="category-block" id="cat-sem-categoria"><div class="category-heading"><span>📦</span><h2>Outros</h2></div><div class="category-products">${uncategorized.map(p=>`<article class="menu-row" onclick="openProduct('${p.id}')"><div class="menu-photo">${p.imagem_url?`<img src="${esc2(p.imagem_url)}" alt="${esc2(p.nome)}">`:`<span>📦</span>`}</div><div class="menu-info"><h3>${esc2(p.nome)}</h3><p>${esc2(p.descricao||'')}</p><b>${money2(p.preco)}</b></div><button class="plus" type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></article>`).join('')}</div></section>`;
@@ -38,8 +42,7 @@
   window.renderCart=function(){
     const count=cart.reduce((s,x)=>s+Number(x.quantidade||0),0);
     const sub=cart.reduce((s,x)=>s+Number(x.preco||0)*Number(x.quantidade||0),0);
-    const hc=document.getElementById('headerCount'),nc=document.getElementById('navCount');
-    if(hc){hc.textContent=count;hc.style.display=count?'inline-flex':'none'}
+    const nc=document.getElementById('navCount');
     if(nc)nc.textContent=count;
     const items=document.getElementById('cartItems'),empty=document.getElementById('emptyCart');
     if(items)items.innerHTML=cart.length?cart.map(x=>`<div class="drawer-item"><div><b>${x.quantidade}x ${esc2(x.nome)}</b>${x.config?.sabores?.length?`<small>Sabores: ${esc2(x.config.sabores.join(' + '))}</small>`:''}${x.config?.coberturas?.length?`<small>Coberturas: ${esc2(x.config.coberturas.join(', '))}</small>`:''}${x.obs?`<small>Obs.: ${esc2(x.obs)}</small>`:''}</div><strong>${money2(Number(x.preco)*Number(x.quantidade))}</strong><div class="qty"><button type="button" onclick="changeQty('${x.id}',-1)">−</button><b>${x.quantidade}</b><button type="button" onclick="changeQty('${x.id}',1)">+</button><button type="button" class="remove" onclick="removeItem('${x.id}')">Excluir</button></div></div>`).join(''):'';
@@ -69,7 +72,10 @@
 
   document.addEventListener('DOMContentLoaded',()=>{
     const search=document.getElementById('search');
-    if(search)search.addEventListener('input',()=>{if(window.renderProducts)renderProducts();if(window.renderFeatured)renderFeatured();document.getElementById('featuredSection')?.classList.toggle('hidden',!!search.value.trim())});
+    if(search){
+      search.addEventListener('click',()=>search.focus());
+      search.addEventListener('input',()=>{if(window.renderProducts)renderProducts();if(window.renderFeatured)renderFeatured();document.getElementById('featuredSection')?.classList.toggle('hidden',!!search.value.trim())});
+    }
   });
 
   window.addEventListener('load',()=>{setTimeout(()=>{if(typeof load==='function')load()},25)});
