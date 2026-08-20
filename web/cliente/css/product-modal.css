@@ -1,0 +1,163 @@
+
+/* Miguel Lanches — modal de produto profissional */
+#productModal,
+.modal{
+  align-items:flex-end!important;
+  background:rgba(0,0,0,.68)!important;
+  backdrop-filter:blur(3px);
+}
+#productModal .modal-card,
+.modal .modal-card{
+  width:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:28px 28px 0 0!important;
+  box-shadow:0 -12px 45px rgba(0,0,0,.28);
+  animation:mlProductUp .24s ease-out;
+}
+@keyframes mlProductUp{
+  from{transform:translateY(35px);opacity:.6}
+  to{transform:translateY(0);opacity:1}
+}
+
+#productModal .product-main,
+.modal .product-main{
+  padding:0 20px 18px;
+  background:#fff;
+}
+.ml-product-hero{
+  position:relative;
+  height:205px;
+  margin:0 -20px 18px;
+  background:#f3f3f3;
+  overflow:hidden;
+}
+.ml-product-hero img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.ml-product-hero .ml-product-placeholder{
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:58px;
+}
+.ml-product-close{
+  position:absolute;
+  right:14px;
+  top:14px;
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,255,255,.94);
+  color:#111;
+  font-size:25px;
+  font-weight:700;
+  box-shadow:0 3px 14px rgba(0,0,0,.14);
+  z-index:2;
+}
+.ml-product-main-title{
+  margin:0;
+  padding-right:48px;
+  font-size:25px;
+  line-height:1.15;
+  font-weight:900;
+  color:#151515;
+}
+.ml-product-price{
+  margin-top:8px;
+  font-size:21px;
+  font-weight:900;
+  color:#c71922;
+}
+.ml-product-desc{
+  margin:9px 0 18px;
+  color:#737373;
+  font-size:13px;
+  line-height:1.45;
+}
+.ml-product-label{
+  display:block;
+  margin:0 0 8px;
+  font-size:13px;
+  font-weight:900;
+  color:#222;
+}
+.ml-product-note{
+  width:100%;
+  min-height:74px;
+  resize:none;
+  border:1px solid #dedede;
+  border-radius:13px;
+  padding:12px 13px;
+  outline:none;
+  background:#fafafa;
+  font-size:14px;
+  color:#222;
+}
+.ml-product-note:focus{
+  border-color:#e2b216;
+  box-shadow:0 0 0 3px rgba(244,189,23,.16);
+  background:#fff;
+}
+.ml-product-qty-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:18px 0 16px;
+}
+.ml-product-qty-title{
+  font-size:14px;
+  font-weight:900;
+}
+.ml-product-stepper{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:5px;
+  border:1px solid #dedede;
+  border-radius:14px;
+  background:#f7f7f7;
+}
+.ml-product-stepper button{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:10px;
+  background:#fff;
+  color:#111;
+  font-size:24px;
+  line-height:1;
+  font-weight:800;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+.ml-product-stepper button:active{transform:scale(.94)}
+.ml-product-qty{
+  min-width:22px;
+  text-align:center;
+  font-size:16px;
+  font-weight:900;
+}
+.ml-product-add{
+  width:100%;
+  min-height:54px;
+  border:0;
+  border-radius:14px;
+  background:#f4bd17;
+  color:#111;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 5px 15px rgba(244,189,23,.25);
+}
+.ml-product-add:active{transform:scale(.99)}
+@media(max-width:420px){
+  .ml-product-hero{height:185px}
+  #productModal .product-main,.modal .product-main{padding-left:18px;padding-right:18px}
+  .ml-product-hero{margin-left:-18px;margin-right:-18px}
+}
