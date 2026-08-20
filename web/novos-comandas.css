@@ -1,20 +1,20 @@
-
-/* Miguel Lanches - Novos pedidos dentro de Comandas */
-.novos-comandas{margin-bottom:22px}
-.novos-comandas .new-title{
-  display:flex;justify-content:space-between;align-items:center;
-  background:#b71924;color:#fff;padding:14px 16px;border-radius:12px 12px 0 0
-}
-.novos-comandas .new-title h2{margin:0;font-size:20px}
-.novos-comandas .new-count{background:#fff;color:#b71924;border-radius:999px;padding:4px 10px;font-weight:800}
-.novo-pedido-card{background:#fff;border:1px solid #ddd;border-top:0;padding:16px}
-.novo-pedido-card + .novo-pedido-card{border-top:1px solid #ddd}
-.novo-pedido-card h3{margin:0 0 6px}
-.novo-pedido-meta{color:#667085;font-size:13px;margin-bottom:10px}
-.novo-pedido-itens{line-height:1.55;margin-bottom:12px}
-.novo-pedido-total{font-size:17px;font-weight:800;margin-bottom:12px}
-.novo-pedido-actions{display:flex;flex-wrap:wrap;gap:8px}
-.novo-pedido-actions button{border:0;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}
-.novo-imprimir{background:#111;color:#fff}
-.novo-preparar{background:#159447;color:#fff}
-.novo-recusar{background:#c62828;color:#fff}
+/* NOVOS PEDIDOS - COMANDAS */
+.novos-comandas{margin:0 0 22px;width:100%}
+.novos-cabecalho{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#b71924;color:#fff;padding:14px 16px;border-radius:12px 12px 0 0}
+.novos-titulo{font-size:21px;font-weight:900}
+.novos-subtitulo{font-size:13px;opacity:.9;margin-top:2px}
+.novos-contador{min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#fff;color:#b71924;border-radius:999px;font-size:18px;font-weight:900}
+.novos-vazio{background:#fff;border:1px solid #ddd;border-top:0;border-radius:0 0 12px 12px;padding:20px;text-align:center;color:#667085}
+.novo-card{background:#fff;border:1px solid #ddd;border-top:0;padding:15px}
+.novo-card:last-child{border-radius:0 0 12px 12px}
+.novo-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.novo-card h3{margin:0 0 5px;font-size:20px}
+.novo-meta{font-size:13px;color:#667085}
+.novo-total{font-size:18px;white-space:nowrap}
+.novo-itens{margin:12px 0;line-height:1.55}
+.novo-itens small{display:block;color:#667085}
+.novo-acoes{display:flex;flex-wrap:wrap;gap:8px}
+.novo-btn{border:0;border-radius:9px;padding:11px 13px;font-weight:800;font-size:14px;cursor:pointer}
+.novo-btn.imprimir{background:#111;color:#fff}
+.novo-btn.preparar{background:#159447;color:#fff}
+.novo-btn.recusar{background:#c62828;color:#fff}
