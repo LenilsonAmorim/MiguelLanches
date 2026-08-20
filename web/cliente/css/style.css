@@ -859,3 +859,79 @@ body{background:#050505}
   .hero h1{font-size:35px}
   .hero p{font-size:12px}
 }
+
+/* =========================================================
+   SPLASH FINAL — fundo preto, sem logo duplicada ao fundo
+   ========================================================= */
+.splash{
+  background:#000!important;
+  overflow:hidden;
+}
+.splash::before,
+.splash::after{
+  display:none!important;
+  background:none!important;
+  content:none!important;
+}
+.splash-inner{
+  width:min(92%,430px);
+  padding:24px;
+  text-align:center;
+}
+.splash-inner img{
+  display:block;
+  width:min(310px,78vw);
+  max-height:310px;
+  height:auto;
+  object-fit:contain;
+  margin:0 auto 22px;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.7));
+}
+.splash-inner h2{
+  font-size:clamp(26px,7vw,34px)!important;
+  letter-spacing:4px!important;
+  line-height:1.05!important;
+  margin:0 0 14px!important;
+  color:#e4b52e!important;
+}
+.splash-line{
+  width:62px!important;
+  height:5px!important;
+  margin:0 auto 25px!important;
+  background:#c51d29!important;
+  border-radius:10px;
+}
+.splash-inner p{
+  font-size:clamp(17px,4.5vw,21px)!important;
+  color:#eee!important;
+  margin:0 0 18px!important;
+}
+.loader{
+  width:min(250px,68vw)!important;
+  height:6px!important;
+  margin:0 auto!important;
+  background:#252525!important;
+  border-radius:99px!important;
+  overflow:hidden;
+}
+.loader i{
+  display:block;
+  height:100%;
+  background:#e4b52e!important;
+  border-radius:99px;
+}
+
+@media(max-width:500px){
+  .splash-inner img{
+    width:min(300px,80vw);
+    max-height:300px;
+    margin-bottom:20px;
+  }
+  .splash-inner h2{
+    font-size:25px!important;
+    letter-spacing:3.5px!important;
+  }
+  .splash-inner p{
+    font-size:18px!important;
+  }
+}
