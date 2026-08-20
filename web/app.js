@@ -1,172 +1,60 @@
 const SUPABASE_URL="https://lifsxhyeqwppfvajvhpn.supabase.co";
 const SUPABASE_KEY="sb_publishable_Pgwh6gfcWc9JXorI5VlcnA_6MvHzGcQ";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let state={cats:[],products:[],ingredients:[],sizes:[],combos:[],clients:[],orders:[],cart:[],cat:"todos",history:"todos",admin:"produtos",delivery:0};
-window.db=db;
-window.state=state;
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-const uid=()=>crypto.randomUUID();
-const statusOf=o=>{let m=[...String(o||"").matchAll(/\[ML_STATUS\](novo|preparo|entrega|entregue|cancelado)\[\/ML_STATUS\]/g)];return m.length?m.at(-1)[1]:"novo"};
-const setStatus=(o,s)=>String(o||"").replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/g,"").trim()+`\n\n[ML_STATUS]${s}[/ML_STATUS]`;
-const itemsOf=o=>{let m=String(o||"").match(/\[ML_ITENS\]([\s\S]*?)\[\/ML_ITENS\]/);if(!m)return[];try{return JSON.parse(decodeURIComponent(m[1]))}catch{return[]}};
-const packItems=(items,o)=>String(o||"").replace(/\n?\n?\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/g,"").trim()+`\n\n[ML_ITENS]${encodeURIComponent(JSON.stringify(items))}[/ML_ITENS]`;
-
-async function loadAll(){
-  $("syncStatus").textContent="● sincronizando";
-  const queries=await Promise.all([
-    db.from("categorias").select("*").order("ordem"),
-    db.from("produtos").select("*,categorias(nome,emoji)").eq("ativo",true).order("ordem"),
-    db.from("ingredientes").select("*").eq("ativo",true).order("nome"),
-    db.from("tamanhos").select("*").eq("ativo",true).order("ordem"),
-    db.from("combos").select("*").eq("ativo",true).order("nome"),
-    db.from("clientes").select("*").order("nome"),
-    db.from("pedidos").select("*").order("created_at",{ascending:false})
-  ]);
-  state.cats=queries[0].data||[];state.products=queries[1].data||[];state.ingredients=queries[2].data||[];state.sizes=queries[3].data||[];state.combos=queries[4].data||[];state.clients=queries[5].data||[];state.orders=queries[6].data||[];
-  renderAll();$("syncStatus").textContent="● online";
+const state={orders:[],products:[],cats:[],clients:[],filter:"todos",menu:"products"};
+function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
+function statusOf(o){let m=[...String(o||"").matchAll(/\[ML_STATUS\](novo|preparo|entrega|entregue|cancelado)\[\/ML_STATUS\]/g)];return m.length?m.at(-1)[1]:"novo"}
+function setStatus(o,s){return String(o||"").replace(/\n?\n?\[ML_STATUS\][\s\S]*?\[\/ML_STATUS\]/g,"").trim()+`\n\n[ML_STATUS]${s}[/ML_STATUS]`}
+function itemsOf(o){let m=String(o||"").match(/\[ML_ITENS\]([\s\S]*?)\[\/ML_ITENS\]/);if(!m)return[];try{return JSON.parse(decodeURIComponent(m[1]))}catch{return[]}}
+async function load(){
+ const [o,p,c,cl]=await Promise.all([
+  db.from("pedidos").select("*").order("created_at",{ascending:false}).limit(300),
+  db.from("produtos").select("*,categorias(nome,emoji)").order("ordem"),
+  db.from("categorias").select("*").order("ordem"),
+  db.from("clientes").select("*").order("nome")
+ ]);
+ state.orders=o.data||[];state.products=p.data||[];state.cats=c.data||[];state.clients=cl.data||[];
+ $("connection").textContent="● online";
+ renderDashboard();renderOrders();renderMenu();renderClients();renderFinance();
 }
-
-function renderAll(){renderCats();renderProducts();renderCart();renderOrders();renderHistory();renderClients();renderAdmin();renderNewOrders()}
-
-function renderCats(){
-  $("categoryTabs").innerHTML=`<button class="${state.cat==="todos"?"active":""}" onclick="chooseCat('todos')">🍽️ Todos</button>`+
-    state.cats.filter(c=>c.ativo!==false).map(c=>`<button class="${state.cat===c.id?"active":""}" onclick="chooseCat('${c.id}')">${esc(c.emoji||"📦")} ${esc(c.nome)}</button>`).join("");
+function renderDashboard(){
+ const today=new Date().toISOString().slice(0,10),tod=state.orders.filter(o=>(o.created_at||"").slice(0,10)===today&&statusOf(o.observacoes)!=="cancelado"),sales=tod.reduce((a,o)=>a+Number(o.total||0),0);
+ $("kpis").innerHTML=`<div class=kpi><small>Pedidos hoje</small><b>${tod.length}</b></div><div class=kpi><small>Faturamento hoje</small><b>${money(sales)}</b></div><div class=kpi><small>Ticket médio</small><b>${money(tod.length?sales/tod.length:0)}</b></div><div class=kpi><small>Novos pedidos</small><b>${state.orders.filter(o=>statusOf(o.observacoes)==="novo").length}</b></div>`;
+ $("recent").innerHTML=state.orders.slice(0,8).map(o=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee"><span><b>#${String(o.id).slice(-5)}</b> · ${esc(o.Cliente||"Cliente")}</span><b>${money(o.total)}</b></div>`).join("")||"<span class=muted>Nenhum pedido.</span>";
+ const ss=["novo","preparo","entrega","entregue","cancelado"],nm={novo:"Novos",preparo:"Em preparo",entrega:"Para entrega",entregue:"Entregues",cancelado:"Cancelados"};
+ $("statusBox").innerHTML=ss.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee"><span>${nm[s]}</span><b>${state.orders.filter(o=>statusOf(o.observacoes)===s).length}</b></div>`).join("");
+ $("newCount").textContent=state.orders.filter(o=>statusOf(o.observacoes)==="novo").length;
 }
-function chooseCat(id){state.cat=id;renderCats();renderProducts()}
-function renderProducts(){
-  let q=$("search").value.toLowerCase().trim();
-  let list=state.products.filter(p=>(state.cat==="todos"||String(p.categoria_id)===String(state.cat))&&(!q||p.nome.toLowerCase().includes(q)));
-  $("productGrid").innerHTML=list.length?list.map(p=>`<article class="product-card"><div class="product-img">${p.imagem_url?`<img src="${esc(p.imagem_url)}" alt="">`:esc(p.emoji||"🍔")}</div><div class="product-info"><h3>${esc(p.nome)}</h3><div class="product-bottom"><span class="price">${money(p.preco)}</span><button class="plus" onclick="openProduct('${p.id}')">+</button></div></div></article>`).join(""):`<div class="empty">Nenhum produto encontrado.</div>`;
-}
-async function openProduct(id){
-  let p=state.products.find(x=>String(x.id)===String(id));if(!p)return;
-  let rel=await db.from("produto_ingredientes").select("ingrediente_id").eq("produto_id",id);let allowed=new Set((rel.data||[]).map(x=>String(x.ingrediente_id)));
-  $("modalContent").innerHTML=`<h2>${esc(p.nome)}</h2><p class="muted">Escolha os adicionais e a quantidade.</p><div class="form"><label>Quantidade<input id="mQty" type="number" min="1" value="1"></label>${state.ingredients.length?`<label>Ingredientes adicionais</label><div class="checkboxes">${state.ingredients.filter(i=>allowed.has(String(i.id))).map(i=>`<label class="check"><input type="checkbox" value="${i.id}" data-name="${esc(i.nome)}" data-price="${i.preco}"> ${esc(i.nome)} + ${money(i.preco)}</label>`).join("")||"<small>Este produto não possui adicionais cadastrados.</small>"}</div>`:""}<label>Observação<textarea id="mObs" placeholder="Ex.: sem cebola..."></textarea></label><div class="form-actions"><button class="mini" onclick="closeModal()">Voltar</button><button class="primary" onclick="addConfigured('${p.id}')">Adicionar ao pedido</button></div></div>`;
-  $("modal").classList.remove("hidden");
-}
-function addConfigured(id){
-  let p=state.products.find(x=>String(x.id)===String(id));let qty=Math.max(1,Number($("mQty").value||1));let adds=[...document.querySelectorAll("#modalContent input[type=checkbox]:checked")].map(x=>({id:x.value,nome:x.dataset.name,preco:Number(x.dataset.price||0)}));let obs=$("mObs").value.trim();
-  let unit=Number(p.preco)+adds.reduce((s,x)=>s+x.preco,0);state.cart.push({key:uid(),id:p.id,nome:p.nome,preco:unit,quantidade:qty,base:Number(p.preco),adicionais:adds,obs});closeModal();renderCart();
-}
-function openCart(){$("cart").classList.add("open");$("cartOverlay").classList.add("open");document.body.style.overflow="hidden"}
-function closeCart(){$("cart").classList.remove("open");$("cartOverlay").classList.remove("open");document.body.style.overflow=""}
-function renderCart(){
-  let n=state.cart.reduce((s,x)=>s+x.quantidade,0);$("cartCount").textContent=`${n} ${n===1?"item":"itens"}`;$("viewCartCount").textContent=`${n} ${n===1?"item":"itens"}`;
-  $("cartItems").innerHTML=state.cart.length?state.cart.map(x=>`<div class="cart-item"><div class="cart-main"><span class="cart-name">${x.quantidade}x ${esc(x.nome)}</span><span class="cart-price">${money(x.preco*x.quantidade)}</span></div>${x.adicionais.length?`<div class="cart-addons">+ ${x.adicionais.map(a=>esc(a.nome)).join(", ")}</div>`:""}${x.obs?`<div class="cart-addons">${esc(x.obs)}</div>`:""}<div class="qty"><button onclick="changeQty('${x.key}',-1)">−</button><b>${x.quantidade}</b><button onclick="changeQty('${x.key}',1)">+</button><button class="remove" onclick="removeCart('${x.key}')">🗑</button></div></div>`).join(""):`<div class="cart-empty">Sua comanda está vazia.<br>Toque no + de um produto.</div>`;
-  let sub=state.cart.reduce((s,x)=>s+x.preco*x.quantidade,0),fee=Number($("taxaEntrega").value||0);$("subtotal").textContent=money(sub);$("deliveryShow").textContent=money(fee);$("total").textContent=money(sub+fee);$("viewCartTotal").textContent=money(sub+fee);
-}
-function changeQty(k,d){let x=state.cart.find(x=>x.key===k);if(!x)return;x.quantidade+=d;if(x.quantidade<1)state.cart=state.cart.filter(y=>y.key!==k);renderCart()}
-function removeCart(k){state.cart=state.cart.filter(x=>x.key!==k);renderCart()}
-$("search").oninput=renderProducts;
-$("taxaEntrega").oninput=renderCart;
-$("clearCart").onclick=()=>{state.cart=[];renderCart()};
-$("viewCart").onclick=openCart;
-$("closeCart").onclick=closeCart;
-$("cartOverlay").onclick=closeCart;
-$("finish").onclick=finishOrder;
-
-async function finishOrder(){
-  if(!state.cart.length)return alert("Adicione pelo menos um produto.");
-  let nome=$("cliente").value.trim();if(!nome)return alert("Informe o nome do cliente.");
-  let phone=$("telefone").value.trim(),addr=$("endereco").value.trim(),ref=$("referencia").value.trim(),obs=$("observacoes").value.trim(),fee=Number($("taxaEntrega").value||0);
-  let items=state.cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,obs:x.obs}));let total=state.cart.reduce((s,x)=>s+x.preco*x.quantidade,0)+fee;
-  let finalObs=packItems(items,obs)+`\n[ML_ENTREGA]${fee}[/ML_ENTREGA]`+"\n[ML_STATUS]novo[/ML_STATUS]";
-  let {data,error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,endereco:addr,referencia:ref,observacoes:finalObs,total}).select().single();
-  if(error)return alert("Erro ao salvar: "+error.message);
-  if(phone&&!state.clients.some(c=>c.telefone===phone))await db.from("clientes").upsert({nome,telefone:phone,endereco:addr,referencia:ref},{onConflict:"telefone"});
-  state.cart=[];closeCart();["cliente","telefone","endereco","referencia","observacoes"].forEach(id=>$(id).value="");$("taxaEntrega").value=0;await loadAll();go("comandas");alert("Pedido criado com sucesso!");
-}
-
-function orderCard(p){
-  let s=statusOf(p.observacoes),it=itemsOf(p.observacoes),sum=it.map(x=>`${x.quantidade}x ${x.nome}`).join(", ");
-  return `<div class="order-card"><h3>#${String(p.id).slice(-5)} — ${esc(p.Cliente||"Cliente")}</h3><div class="meta">${esc(sum||"Pedido")} · ${money(p.total)} · ${new Date(p.created_at).toLocaleString("pt-BR")}</div><span class="badge ${s==="entrega"?"green":""}">${s==="preparo"?"🍔 Em preparo":"🛵 Saiu para entrega"}</span><div class="order-actions">${s==="preparo"?`<button class="action green" onclick="changeStatus('${p.id}','entrega')">🛵 Saiu para entrega</button>`:`<button class="action green" onclick="changeStatus('${p.id}','entregue')">✓ Entregue</button>`}<button class="action red" onclick="cancelOrder('${p.id}')">Cancelar</button>${p.telefone?`<button class="action whats" onclick="wa('${p.id}')">WhatsApp</button>`:""}</div></div>`;
-}
-
 function renderOrders(){
-  let open=state.orders.filter(p=>!["entregue","cancelado"].includes(statusOf(p.observacoes))),prep=open.filter(p=>statusOf(p.observacoes)==="preparo"),del=open.filter(p=>statusOf(p.observacoes)==="entrega");
-  $("prepList").innerHTML=prep.length?prep.map(orderCard).join(""):`<div class="empty">Nenhum pedido em preparo.</div>`;
-  $("deliveryList").innerHTML=del.length?del.map(orderCard).join(""):`<div class="empty">Nenhum pedido para entrega.</div>`;
-  $("countPrep").textContent=prep.length;$("countDelivery").textContent=del.length;$("openCount").textContent=open.length;
+ let list=state.filter==="todos"?state.orders:state.orders.filter(o=>statusOf(o.observacoes)===state.filter);
+ $("orders").innerHTML=list.map(o=>{let s=statusOf(o.observacoes),its=itemsOf(o.observacoes);return `<article class=order><div class=order-top><div><h3>Pedido #${String(o.id).slice(-5)}</h3><span class=muted>${esc(o.Cliente||"Cliente")} · ${new Date(o.created_at).toLocaleString("pt-BR")}</span></div><span class="status ${s}">${label(s)}</span></div><div class=items>${its.map(i=>`${i.quantidade}x ${esc(i.nome)} — ${money(Number(i.preco)*Number(i.quantidade))}${i.adicionais?.length?`<br><span class=muted>+ ${i.adicionais.map(a=>esc(a.nome)).join(", ")}</span>`:""}`).join("<br>")||"Itens não detalhados"}<br><br><span class=muted>${esc(o.endereco||"")} ${o.referencia?`· ${esc(o.referencia)}`:""}</span></div><div class=order-foot><b>${money(o.total)}</b><div><button class=print data-print="${o.id}">🖨</button> <select data-change="${o.id}">${["novo","preparo","entrega","entregue","cancelado"].map(x=>`<option value="${x}" ${x===s?"selected":""}>${label(x)}</option>`).join("")}</select></div></div></article>`}).join("")||"<div class=panel>Nenhum pedido encontrado.</div>";
+ document.querySelectorAll("[data-change]").forEach(x=>x.onchange=()=>changeStatus(x.dataset.change,x.value));
+ document.querySelectorAll("[data-print]").forEach(x=>x.onclick=()=>printOrder(state.orders.find(o=>String(o.id)===String(x.dataset.print))));
 }
-
-async function changeStatus(id,s){let p=state.orders.find(x=>String(x.id)===String(id));if(!p)return;let {error}=await db.from("pedidos").update({observacoes:setStatus(p.observacoes,s)}).eq("id",p.id);if(error)return alert(error.message);if(s==="entrega"&&p.telefone)wa(id);await loadAll()}
-async function cancelOrder(id){if(!confirm("Cancelar este pedido?"))return;let p=state.orders.find(x=>String(x.id)===String(id));if(!p)return;let {error}=await db.from("pedidos").update({observacoes:setStatus(p.observacoes,"cancelado")}).eq("id",p.id);if(error)return alert(error.message);await loadAll()}
-function wa(id){let p=state.orders.find(x=>String(x.id)===String(id));if(!p?.telefone)return;let n=p.telefone.replace(/\D/g,"");if(n.length===10||n.length===11)n="55"+n;let s=statusOf(p.observacoes),msg=encodeURIComponent(s==="entrega"?`Olá, ${p.Cliente}! 🛵 Seu pedido saiu para entrega e está a caminho.`:"Olá! Seu pedido foi atualizado.");location.href=`whatsapp://send?phone=${n}&text=${msg}`}
-
-function printNewOrder(id){
-  let p=state.orders.find(x=>String(x.id)===String(id));if(!p)return alert("Pedido não encontrado.");
-  let its=itemsOf(p.observacoes);
-  let rows=its.map(x=>{let adds=(x.adicionais||[]).map(a=>a.nome).join(", ");return `<div class="item"><div class="row"><span><b>${esc(x.quantidade)}x</b> ${esc(x.nome)}</span><b>${money(Number(x.preco||0)*Number(x.quantidade||1))}</b></div>${adds?`<div class="sub">+ ${esc(adds)}</div>`:""}${x.obs?`<div class="sub">Obs: ${esc(x.obs)}</div>`:""}</div>`}).join("");
-  let w=window.open("","_blank","width=420,height=700");if(!w)return alert("O navegador bloqueou a impressão. Permita pop-ups.");
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Pedido #${esc(String(p.id).slice(-5))}</title><style>@page{size:58mm auto;margin:0}*{box-sizing:border-box}body{width:58mm;margin:0;padding:3mm;font-family:Arial,sans-serif;font-size:12px;color:#000}.center{text-align:center}.logo{font-size:18px;font-weight:900}.line{border-top:1px dashed #000;margin:7px 0}.row{display:flex;justify-content:space-between;gap:5px;padding:5px 0}.item{border-bottom:1px dotted #777}.sub{font-size:10px;padding:2px 0}.total{font-size:16px;font-weight:900;display:flex;justify-content:space-between}</style></head><body><div class="center"><div class="logo">MIGUEL LANCHES</div><div class="line"></div><b>PEDIDO #${esc(String(p.id).slice(-5))}</b><br>${esc(new Date(p.created_at).toLocaleString("pt-BR"))}</div><div class="line"></div><b>CLIENTE:</b> ${esc(p.Cliente||"-")}<br><b>TELEFONE:</b> ${esc(p.telefone||"-")}<br><b>ENDEREÇO:</b> ${esc(p.endereco||"-")}<br><b>REF:</b> ${esc(p.referencia||"-")}<div class="line"></div>${rows}<div class="line"></div><div class="total"><span>TOTAL</span><span>${money(p.total)}</span></div><div class="line"></div><div class="center"><b>OBRIGADO!</b></div><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
-  w.document.close();
+function label(s){return{novo:"Novo",preparo:"Em preparo",entrega:"Saiu para entrega",entregue:"Entregue",cancelado:"Cancelado"}[s]||s}
+async function changeStatus(id,s){const o=state.orders.find(x=>String(x.id)===String(id));if(!o)return;const r=await db.from("pedidos").update({observacoes:setStatus(o.observacoes,s)}).eq("id",o.id);if(r.error)return toast(r.error.message);o.observacoes=setStatus(o.observacoes,s);renderDashboard();renderOrders();toast("Status atualizado")}
+function printOrder(o){
+ if(!o)return;let its=itemsOf(o.observacoes);let rows=its.map(i=>`<div style="padding:5px 0;border-bottom:1px dotted #777"><b>${i.quantidade}x</b> ${esc(i.nome)}<br><span>${money(Number(i.preco)*Number(i.quantidade))}</span>${i.adicionais?.length?`<br><small>+ ${i.adicionais.map(a=>esc(a.nome)).join(", ")}</small>`:""}${i.obs?`<br><small>Obs: ${esc(i.obs)}</small>`:""}</div>`).join("");
+ const w=window.open("","_blank","width=420,height=700");if(!w)return toast("Permita pop-ups para imprimir");
+ w.document.write(`<!doctype html><html><head><meta charset=utf-8><title>Pedido</title><style>@page{size:58mm auto;margin:0}body{width:58mm;margin:0;padding:3mm;font:12px Arial;color:#000}.center{text-align:center}.line{border-top:1px dashed #000;margin:7px 0}.total{font-weight:900;font-size:15px;display:flex;justify-content:space-between}</style></head><body><div class=center><b style="font-size:17px">MIGUEL LANCHES</b><br>PEDIDO #${String(o.id).slice(-5)}</div><div class=line></div><b>CLIENTE:</b> ${esc(o.Cliente)}<br><b>END:</b> ${esc(o.endereco||"")}<br><b>REF:</b> ${esc(o.referencia||"")}<div class=line></div>${rows}<div class=line></div><b>OBS:</b> ${esc(String(o.observacoes||"").replace(/\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"").replace(/\[ML_ENTREGA\].*?\[\/ML_ENTREGA\]/,"").replace(/\[ML_STATUS\].*?\[\/ML_STATUS\]/,"").trim())||"—"}<div class=line></div><div class=total><span>TOTAL</span><span>${money(o.total)}</span></div><div class=line></div><div class=center>Obrigado!</div><script>window.print()</script></body></html>`);w.document.close();
 }
-
-async function prepareNewOrder(id){
-  let p=state.orders.find(x=>String(x.id)===String(id));if(!p)return;
-  let r=await db.from("pedidos").update({observacoes:setStatus(p.observacoes,"preparo")}).eq("id",p.id);
-  if(r.error)return alert(r.error.message);
-  if(p.telefone)wa(id);
-  await loadAll();
+function renderMenu(){
+ if(state.menu==="categories"){$("menu").innerHTML=`<div class=panel><table class=table><tr><th>Categoria</th><th>Ícone</th><th>Status</th></tr>${state.cats.map(c=>`<tr><td>${esc(c.nome)}</td><td>${esc(c.emoji||"")}</td><td>${c.ativo===false?"Inativa":"Ativa"}</td></tr>`).join("")}</table></div>`;return}
+ $("menu").innerHTML=`<div class=panel style="overflow:auto"><table class=table><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Ação</th></tr>${state.products.map(p=>`<tr><td><b>${esc(p.nome)}</b><br><small class=muted>${esc(p.descricao||"")}</small></td><td>${esc(p.categorias?.nome||"—")}</td><td>${money(p.preco)}</td><td>${p.ativo===false?"Inativo":"Ativo"}</td><td><button class=print data-edit="${p.id}">Editar</button></td></tr>`).join("")}</table></div>`;
+ document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editProduct(state.products.find(p=>String(p.id)===String(b.dataset.edit))));
 }
-async function rejectNewOrder(id){
-  let p=state.orders.find(x=>String(x.id)===String(id));if(!p)return;
-  if(!confirm("Deseja recusar este pedido?"))return;
-  let r=await db.from("pedidos").update({observacoes:setStatus(p.observacoes,"cancelado")}).eq("id",p.id);
-  if(r.error)return alert(r.error.message);
-  await loadAll();
+function editProduct(p=null){
+ $("modal").classList.remove("hidden");$("modalBody").innerHTML=`<h2>${p?"Editar produto":"Novo produto"}</h2><div class=form><label>Nome<input id=fName value="${esc(p?.nome||"")}"></label><label>Descrição<textarea id=fDesc>${esc(p?.descricao||"")}</textarea></label><label>Preço<input id=fPrice type=number step=0.01 value="${p?.preco||""}"></label><label>Categoria<select id=fCat>${state.cats.map(c=>`<option value="${c.id}" ${String(p?.categoria_id)===String(c.id)?"selected":""}>${esc(c.nome)}</option>`).join("")}</select></label><button class=red id=saveProduct>Salvar</button></div>`;
+ $("saveProduct").onclick=async()=>{const data={nome:$("fName").value.trim(),descricao:$("fDesc").value.trim(),preco:Number($("fPrice").value),categoria_id:$("fCat").value,ativo:true};if(!data.nome||!data.preco)return toast("Preencha nome e preço");let r=p?await db.from("produtos").update(data).eq("id",p.id):await db.from("produtos").insert(data);if(r.error)return toast(r.error.message);$("modal").classList.add("hidden");await load();toast("Produto salvo")};
 }
-function renderNewOrders(){
-  let box=$("novosComandasBox");if(!box)return;
-  let novos=state.orders.filter(p=>statusOf(p.observacoes)==="novo");
-  box.innerHTML=`<div class="novos-pedidos-panel"><div class="novos-pedidos-head"><div><div class="novos-pedidos-head-left"><span style="font-size:27px">🔔</span><h2>Pedidos novos</h2></div><small>Escolha uma ação para cada pedido.</small></div><span class="novos-pedidos-badge">${novos.length}</span></div>${novos.length?`<div class="novos-pedidos-list">${novos.map(p=>{let its=itemsOf(p.observacoes);return `<article class="pedido-novo-card"><h3 class="pedido-novo-title">#${esc(String(p.id).slice(-5))} — ${esc(p.Cliente||"Cliente")}</h3><div class="pedido-novo-meta">${esc(new Date(p.created_at).toLocaleString("pt-BR"))} · ${money(p.total)}</div><div class="pedido-novo-items">${its.length?its.map(x=>`<span class="pedido-novo-item">${esc(x.quantidade)}x ${esc(x.nome)}</span>${x.adicionais?.length?`<span class="pedido-novo-sub">+ ${esc(x.adicionais.map(a=>a.nome).join(", "))}</span>`:""}`).join(""):"Pedido"}</div><div class="pedido-novo-actions"><button class="pedido-novo-print" onclick="printNewOrder('${p.id}')">🖨️ Imprimir</button><button class="pedido-novo-prep" onclick="prepareNewOrder('${p.id}')">🍔 Preparar pedido</button><button class="pedido-novo-reject" onclick="rejectNewOrder('${p.id}')">✕ Recusar</button></div></article>`}).join("")}</div>`:`<div class="novos-pedidos-empty">Nenhum pedido novo.</div>`}</div>`;
-}
-
-function renderHistory(){
-  let list=state.orders.filter(p=>state.history==="todos"||statusOf(p.observacoes)===state.history),valid=state.orders.filter(p=>statusOf(p.observacoes)!=="cancelado"),today=new Date().toLocaleDateString("pt-BR"),td=valid.filter(p=>new Date(p.created_at).toLocaleDateString("pt-BR")===today),sum=td.reduce((s,p)=>s+Number(p.total||0),0);
-  $("stats").innerHTML=`<div class="stat"><span>Vendas de hoje</span><strong>${money(sum)}</strong></div><div class="stat"><span>Pedidos válidos</span><strong>${td.length}</strong></div><div class="stat"><span>Ticket médio</span><strong>${money(td.length?sum/td.length:0)}</strong></div>`;
-  $("history").innerHTML=list.length?list.map(p=>{let s=statusOf(p.observacoes);return `<tr><td>#${String(p.id).slice(-5)}</td><td>${esc(p.Cliente||"")}</td><td>${new Date(p.created_at).toLocaleString("pt-BR")}</td><td><span class="badge ${s==="entregue"?"green":s==="cancelado"?"red":""}">${s}</span></td><td>${money(p.total)}</td></tr>`}).join(""):`<tr><td colspan="5">Nenhum pedido.</td></tr>`;
-}
-document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.history=b.dataset.history;renderHistory()});
-
-function renderClients(){let q=($("clientSearch")?.value||"").toLowerCase();let list=state.clients.filter(c=>(c.nome||"").toLowerCase().includes(q)||(c.telefone||"").includes(q));$("clientGrid").innerHTML=list.length?list.map(c=>`<div class="client-card"><h3>${esc(c.nome)}</h3><p>📞 ${esc(c.telefone||"Sem telefone")}</p><p>📍 ${esc(c.endereco||"Sem endereço")}</p><p>📌 ${esc(c.referencia||"")}</p><div class="client-actions"><button class="mini" onclick="useClient('${c.id}')">Usar no pedido</button><button class="mini" onclick="editClient('${c.id}')">Editar</button></div></div>`).join(""):`<div class="empty">Nenhum cliente.</div>`}
-$("clientSearch").oninput=renderClients;
-function useClient(id){let c=state.clients.find(x=>String(x.id)===String(id));if(!c)return;$("cliente").value=c.nome||"";$("telefone").value=c.telefone||"";$("endereco").value=c.endereco||"";$("referencia").value=c.referencia||"";go("pedido")}
-function clientForm(c={}){$("modalContent").innerHTML=`<h2>${c.id?"Editar":"Novo"} cliente</h2><div class="form"><label>Nome<input id="fNome" value="${esc(c.nome||"")}"></label><label>Telefone<input id="fTel" value="${esc(c.telefone||"")}"></label><label>Endereço<input id="fEnd" value="${esc(c.endereco||"")}"></label><label>Referência<input id="fRef" value="${esc(c.referencia||"")}"></label><div class="form-actions"><button class="mini" onclick="closeModal()">Cancelar</button><button class="primary" onclick="saveClient('${c.id||""}')">Salvar</button></div></div>`;$("modal").classList.remove("hidden")}
-$("newClient").onclick=()=>clientForm();window.editClient=id=>clientForm(state.clients.find(c=>String(c.id)===String(id)));
-window.saveClient=async id=>{let row={nome:$("fNome").value.trim(),telefone:$("fTel").value.trim(),endereco:$("fEnd").value.trim(),referencia:$("fRef").value.trim()};let r=id?await db.from("clientes").update(row).eq("id",id):await db.from("clientes").insert(row);if(r.error)return alert(r.error.message);closeModal();loadAll()};
-
-function adminTitle(type){return{produtos:"Produtos",categorias:"Categorias",adicionais:"Ingredientes adicionais",tamanhos:"Tamanhos",combos:"Combos",entrega:"Entrega",pagamento:"Pagamento"}[type]}
-function renderAdmin(){
-  let type=state.admin,html=`<div class="admin-top"><h2>${adminTitle(type)}</h2>${["entrega","pagamento"].includes(type)?"":`<button class="primary" onclick="adminNew('${type}')">+ Adicionar</button>`}</div>`;
-  if(type==="produtos")html+=state.products.map(p=>`<div class="admin-row"><div class="product-img" style="width:70px;height:55px;border-radius:8px;font-size:25px">${p.imagem_url?`<img src="${esc(p.imagem_url)}" style="width:100%;height:100%;object-fit:cover">`:esc(p.emoji||"🍔")}</div><div class="grow"><h3>${esc(p.nome)}</h3><small>${money(p.preco)} · ${esc(p.categorias?.nome||"Sem categoria")}</small></div><div class="row-actions"><button class="mini" onclick="adminEdit('produtos','${p.id}')">Editar</button><button class="mini danger" onclick="adminDelete('produtos','${p.id}')">Desativar</button></div></div>`).join("")||`<div class="empty">Nenhum produto.</div>`;
-  if(type==="categorias")html+=state.cats.map(c=>`<div class="admin-row"><div class="grow"><h3>${esc(c.emoji||"📦")} ${esc(c.nome)}</h3><small>Ordem ${c.ordem||99}</small></div><div class="row-actions"><button class="mini" onclick="adminEdit('categorias','${c.id}')">Editar</button><button class="mini danger" onclick="adminDelete('categorias','${c.id}')">Desativar</button></div></div>`).join("")||`<div class="empty">Nenhuma categoria.</div>`;
-  if(type==="adicionais")html+=state.ingredients.map(i=>`<div class="admin-row"><div class="grow"><h3>${esc(i.nome)}</h3><small>${money(i.preco)}</small></div><div class="row-actions"><button class="mini" onclick="adminEdit('adicionais','${i.id}')">Editar</button><button class="mini danger" onclick="adminDelete('adicionais','${i.id}')">Desativar</button></div></div>`).join("")||`<div class="empty">Nenhum adicional.</div>`;
-  if(type==="tamanhos")html+=state.sizes.map(s=>`<div class="admin-row"><div class="grow"><h3>${esc(s.nome)}</h3><small>${money(s.acrescimo||s.preco||0)}</small></div><div class="row-actions"><button class="mini" onclick="adminEdit('tamanhos','${s.id}')">Editar</button><button class="mini danger" onclick="adminDelete('tamanhos','${s.id}')">Desativar</button></div></div>`).join("")||`<div class="empty">Nenhum tamanho.</div>`;
-  if(type==="combos")html+=state.combos.map(c=>`<div class="admin-row"><div class="grow"><h3>${esc(c.nome)}</h3><small>${money(c.preco)}</small></div><div class="row-actions"><button class="mini" onclick="adminEdit('combos','${c.id}')">Editar</button><button class="mini danger" onclick="adminDelete('combos','${c.id}')">Desativar</button></div></div>`).join("")||`<div class="empty">Nenhum combo.</div>`;
-  if(type==="entrega")html+=`<div class="panel"><div class="form"><label>Taxa padrão de entrega<input id="cfgFee" type="number" step="0.01" value="${state.delivery}"></label><button class="primary" onclick="saveDelivery()">Salvar configuração</button></div></div>`;
-  if(type==="pagamento")html+=`<div class="panel"><div class="form"><label>Formas de pagamento</label><div class="checkboxes">${["Dinheiro","Pix","Cartão de débito","Cartão de crédito"].map(x=>`<label class="check"><input type="checkbox" checked> ${x}</label>`).join("")}</div><small>O cálculo de troco será usado no pedido; a impressão fica para a próxima etapa.</small></div></div>`;
-  $("adminContent").innerHTML=html;
-}
-document.querySelectorAll(".admin-tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".admin-tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.admin=b.dataset.admin;renderAdmin()});
-function formFor(type,row={}){
-  let fields="";
-  if(type==="categorias")fields=`<label>Nome<input id="f1" value="${esc(row.nome||"")}"></label><label>Emoji<input id="f2" value="${esc(row.emoji||"📦")}"></label><label>Ordem<input id="f3" type="number" value="${row.ordem||99}"></label>`;
-  if(type==="adicionais")fields=`<label>Nome<input id="f1" value="${esc(row.nome||"")}"></label><label>Preço<input id="f2" type="number" step="0.01" value="${row.preco||0}"></label>`;
-  if(type==="tamanhos")fields=`<label>Nome<input id="f1" value="${esc(row.nome||"")}"></label><label>Acréscimo<input id="f2" type="number" step="0.01" value="${row.acrescimo||0}"></label><label>Ordem<input id="f3" type="number" value="${row.ordem||99}"></label>`;
-  if(type==="combos")fields=`<label>Nome<input id="f1" value="${esc(row.nome||"")}"></label><label>Preço<input id="f2" type="number" step="0.01" value="${row.preco||0}"></label><label>Descrição<textarea id="f3">${esc(row.descricao||"")}</textarea></label>`;
-  if(type==="produtos")fields=`<label>Nome<input id="f1" value="${esc(row.nome||"")}"></label><label>Categoria<select id="f2">${state.cats.map(c=>`<option value="${c.id}" ${String(c.id)===String(row.categoria_id)?"selected":""}>${esc(c.nome)}</option>`).join("")}</select></label><label>Preço<input id="f3" type="number" step="0.01" value="${row.preco||0}"></label><label>URL da imagem<input id="f4" placeholder="https://..." value="${esc(row.imagem_url||"")}"></label><label>Emoji reserva<input id="f5" value="${esc(row.emoji||"🍔")}"></label><label>Ordem<input id="f6" type="number" value="${row.ordem||99}"></label>`;
-  $("modalContent").innerHTML=`<h2>${row.id?"Editar":"Adicionar"} ${adminTitle(type)}</h2><div class="form">${fields}<div class="form-actions"><button class="mini" onclick="closeModal()">Cancelar</button><button class="primary" onclick="adminSave('${type}','${row.id||""}')">Salvar</button></div></div>`;$("modal").classList.remove("hidden");
-}
-window.adminNew=t=>formFor(t);window.adminEdit=(t,id)=>{let maps={produtos:state.products,categorias:state.cats,adicionais:state.ingredients,tamanhos:state.sizes,combos:state.combos};formFor(t,(maps[t]||[]).find(x=>String(x.id)===String(id))||{})};
-window.adminSave=async(t,id)=>{let row={};if(t==="categorias")row={nome:$("f1").value.trim(),emoji:$("f2").value.trim(),ordem:Number($("f3").value||99),ativo:true};if(t==="adicionais")row={nome:$("f1").value.trim(),preco:Number($("f2").value||0),ativo:true};if(t==="tamanhos")row={nome:$("f1").value.trim(),acrescimo:Number($("f2").value||0),ordem:Number($("f3").value||99),ativo:true};if(t==="combos")row={nome:$("f1").value.trim(),preco:Number($("f2").value||0),descricao:$("f3").value.trim(),ativo:true};if(t==="produtos")row={nome:$("f1").value.trim(),categoria_id:$("f2").value,preco:Number($("f3").value||0),imagem_url:$("f4").value.trim()||null,emoji:$("f5").value.trim(),ordem:Number($("f6").value||99),ativo:true};let table={produtos:"produtos",categorias:"categorias",adicionais:"ingredientes",tamanhos:"tamanhos",combos:"combos"}[t];let r=id?await db.from(table).update(row).eq("id",id):await db.from(table).insert(row);if(r.error)return alert(r.error.message);closeModal();loadAll()};
-window.adminDelete=async(t,id)=>{if(!confirm("Desativar este item?"))return;let table={produtos:"produtos",categorias:"categorias",adicionais:"ingredientes",tamanhos:"tamanhos",combos:"combos"}[t];let r=await db.from(table).update({ativo:false}).eq("id",id);if(r.error)return alert(r.error.message);loadAll()};
-async function saveDelivery(){let v=Number($("cfgFee").value||0);let r=await db.from("configuracoes").upsert({chave:"taxa_entrega",valor:String(v),updated_at:new Date().toISOString()},{onConflict:"chave"});if(r.error)return alert(r.error.message);state.delivery=v;alert("Taxa salva.")}
-async function loadConfig(){let r=await db.from("configuracoes").select("*").eq("chave","taxa_entrega").maybeSingle();state.delivery=Number(r.data?.valor||0);$("taxaEntrega").value=state.delivery}
-function go(page){if(typeof closeCart==="function")closeCart();document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$("page-"+page).classList.add("active");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===page));let names={pedido:["Novo Pedido","Monte o pedido rapidamente"],comandas:["Comandas","Acompanhe os pedidos em tempo real"],historico:["Histórico","Vendas e pedidos cancelados"],clientes:["Clientes","Clientes salvos"],admin:["Administração","Gerencie seu cardápio"]};$("pageTitle").textContent=names[page][0];$("pageSubtitle").textContent=names[page][1];$("sidebar").classList.remove("open");if(page==="pedido")loadConfig()}
-document.querySelectorAll(".nav-item").forEach(b=>b.onclick=()=>go(b.dataset.page));$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");$("closeModal").onclick=closeModal;$("modal").onclick=e=>{if(e.target===$("modal"))closeModal()};function closeModal(){$("modal").classList.add("hidden")}
-$("findClient").onclick=()=>go("clientes");
-function realtime(){db.channel("ml-web").on("postgres_changes",{event:"*",schema:"public",table:"pedidos"},loadAll).subscribe();db.channel("ml-cardapio").on("postgres_changes",{event:"*",schema:"public",table:"produtos"},loadAll).subscribe()}
-loadConfig();loadAll();realtime();
+function renderClients(){const q=($("clientSearch").value||"").toLowerCase();$("clients").innerHTML=state.clients.filter(c=>(c.nome||"").toLowerCase().includes(q)||(c.telefone||"").includes(q)).map(c=>`<div class=client><b>${esc(c.nome)}</b><p class=muted>${esc(c.telefone||"")}</p><p>${esc(c.endereco||"")}</p></div>`).join("")||"<div class=panel>Nenhum cliente encontrado.</div>"}
+function renderFinance(){const ok=state.orders.filter(o=>statusOf(o.observacoes)!=="cancelado"),sales=ok.reduce((a,o)=>a+Number(o.total||0),0);$("finance").innerHTML=`<div class=finance-card><small>Faturamento</small><br><b>${money(sales)}</b></div><div class=finance-card><small>Pedidos</small><br><b>${ok.length}</b></div><div class=finance-card><small>Ticket médio</small><br><b>${money(ok.length?sales/ok.length:0)}</b></div>`}
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$("page-"+b.dataset.page).classList.add("active");$("pageTitle").textContent=b.querySelector("span")?.textContent||"Gestão"});
+document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderOrders()});
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.menu=b.dataset.menu;renderMenu()});
+$("addProduct").onclick=()=>editProduct();$("closeModal").onclick=()=>$("modal").classList.add("hidden");$("clientSearch").oninput=renderClients;$("refresh").onclick=load;
+db.channel("pedidos-v2").on("postgres_changes",{event:"*",schema:"public",table:"pedidos"},()=>load()).subscribe();
+load();
