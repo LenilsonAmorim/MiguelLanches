@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#b71924">
 <title>Miguel Lanches</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="web/novos-comandas.css">
 </head>
 <body>
 <div id="app">
@@ -26,6 +27,7 @@
       <div><strong id="pageTitle">Novo Pedido</strong><small id="pageSubtitle">Monte o pedido rapidamente</small></div>
       <div class="top-actions"><span class="sync" id="syncStatus">● conectando</span></div>
     </header>
+
     <section class="page active" id="page-pedido">
       <div class="page-head"><div><h1>Novo Pedido</h1><p>Escolha os produtos e monte a comanda.</p></div></div>
       <div class="search"><span>⌕</span><input id="search" placeholder="Buscar produto..."></div>
@@ -35,10 +37,7 @@
       <div class="order-layout">
         <div class="catalog"><div class="product-grid" id="productGrid"></div></div>
         <aside class="cart" id="cart">
-          <div class="cart-title">
-            <div><h2>Comanda</h2><small id="cartCount">0 itens</small></div>
-            <div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div>
-          </div>
+          <div class="cart-title"><div><h2>Comanda</h2><small id="cartCount">0 itens</small></div><div class="cart-head-actions"><button class="link-danger" id="clearCart">Limpar</button><button class="close-cart" id="closeCart">×</button></div></div>
           <div class="customer-mini">
             <div class="customer-row"><input id="cliente" placeholder="Nome do cliente"><button id="findClient" title="Buscar cliente">👤</button></div>
             <input id="telefone" placeholder="WhatsApp / telefone">
@@ -56,24 +55,29 @@
         </aside>
       </div>
     </section>
+
     <section class="page" id="page-comandas">
       <div class="page-head"><div><h1>Comandas</h1><p>Acompanhe os pedidos em tempo real.</p></div></div>
+      <div id="novosComandasBox"></div>
       <div class="status-columns">
         <div class="status-col"><div class="col-head prep"><span>🍔 Em preparo</span><b id="countPrep">0</b></div><div id="prepList"></div></div>
         <div class="status-col"><div class="col-head delivery"><span>🛵 Saiu para entrega</span><b id="countDelivery">0</b></div><div id="deliveryList"></div></div>
       </div>
     </section>
+
     <section class="page" id="page-historico">
       <div class="page-head"><div><h1>Histórico</h1><p>Vendas reais e pedidos cancelados separados.</p></div></div>
       <div class="stats" id="stats"></div>
       <div class="filters"><button class="filter active" data-history="todos">Todos</button><button class="filter" data-history="entregue">Entregues</button><button class="filter" data-history="cancelado">Cancelados</button></div>
       <div class="panel"><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead><tbody id="history"></tbody></table></div></div>
     </section>
+
     <section class="page" id="page-clientes">
       <div class="page-head"><div><h1>Clientes</h1><p>Salve clientes para preencher pedidos mais rápido.</p></div><button class="primary" id="newClient">+ Novo cliente</button></div>
       <div class="search"><span>⌕</span><input id="clientSearch" placeholder="Buscar por nome ou telefone..."></div>
       <div class="client-grid" id="clientGrid"></div>
     </section>
+
     <section class="page" id="page-admin">
       <div class="page-head"><div><h1>Administração</h1><p>Gerencie o cardápio sem mexer no código.</p></div></div>
       <div class="admin-tabs">
@@ -89,8 +93,12 @@
     </section>
   </main>
 </div>
+
 <div class="modal hidden" id="modal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+<script src="web/app.js"></script>
+<script src="web/new-orders.js"></script>
+<script src="web/novos-comandas.js"></script>
 </body>
 </html>
