@@ -56,106 +56,127 @@ window.addEventListener('load',()=>setTimeout(()=>{if(typeof load==='function')l
 
 
 
+
 (function(){
-  function parseCash(v){
-    const s=String(v ?? '').trim().replace(/\s/g,'');
+  function parseCash(value){
+    let s=String(value??'').trim().replace(/\s/g,'');
     if(!s) return 0;
-    // Supports both 50 and 50,00 as the browser number input provides.
-    return Number(s.replace(',','.')) || 0;
+    // Brazilian format: 10,00 / 10.00 / 10
+    s=s.replace(/\./g,'').replace(',','.');
+    return Number(s)||0;
   }
 
-  function getCurrentTotal(){
+  function formatCash(value){
+    if(value==='') return '';
+    let s=String(value).replace(/[^\d,]/g,'');
+    if(s.includes(',')){
+      let parts=s.split(',');
+      let whole=parts[0].replace(/\D/g,'')||'0';
+      let decimals=(parts[1]||'').replace(/\D/g,'').slice(0,2);
+      return whole+','+decimals;
+    }
+    return s;
+  }
+
+  function totalPedido(){
     const list=Array.isArray(window.cart)?window.cart:[];
-    const subtotal=list.reduce((sum,item)=>sum+(Number(item.preco)||0)*(Number(item.quantidade)||0),0);
-    const method=document.querySelector('.receive.selected')?.dataset.method || 'entrega';
-    const fee=method==='entrega' ? Number(window.DELIVERY_FEE||0) : 0;
-    return subtotal+fee;
+    return list.reduce((sum,item)=>sum+(Number(item.preco)||0)*(Number(item.quantidade)||0),0)
+      +(document.querySelector('.receive.selected')?.dataset.method==='entrega'?Number(window.DELIVERY_FEE||0):0);
   }
 
-  function updateCash(){
+  function atualizarDinheiro(){
     const payment=document.getElementById('payment');
-    const box=document.getElementById('cashBox');
     const input=document.getElementById('cashValue');
-    const output=document.getElementById('changeValue');
-    const cash=parseCash(input?.value);
-    const total=getCurrentTotal();
-    const isCash=payment?.value==='Dinheiro';
+    const box=document.getElementById('cashBox');
+    const error=document.getElementById('cashError');
+    const troco=document.getElementById('changeValue');
+    if(!payment||!input)return;
 
+    const isCash=payment.value==='Dinheiro';
     box?.classList.toggle('hidden',!isCash);
 
-    if(output){
-      const change=cash>=total && cash>0 ? cash-total : 0;
-      output.textContent=money2(change);
-    }
-
-    // Visual feedback when the amount is insufficient.
-    if(input){
-      input.setCustomValidity(isCash && cash>0 && cash<total
-        ? `O valor mínimo é ${money2(total)}`
-        : '');
-    }
-  }
-
-  function installCash(){
-    const payment=document.getElementById('payment');
-    const input=document.getElementById('cashValue');
-    payment?.addEventListener('change',updateCash);
-    input?.addEventListener('input',updateCash);
-    input?.addEventListener('keyup',updateCash);
-    updateCash();
-  }
-
-  document.addEventListener('DOMContentLoaded',installCash);
-
-  // Validate and add payment information before the existing sendOrder.
-  const originalSendOrder=window.sendOrder;
-  window.sendOrder=async function(){
-    const payment=document.getElementById('payment')?.value || '';
-    const cash=parseCash(document.getElementById('cashValue')?.value);
-    const total=getCurrentTotal();
-
-    if(!payment){
-      toast('Escolha a forma de pagamento');
+    if(!isCash){
+      if(error) error.textContent='';
+      if(troco) troco.textContent='R$ 0,00';
+      input.setCustomValidity('');
       return;
     }
 
+    const pago=parseCash(input.value);
+    const total=totalPedido();
+
+    if(!input.value.trim()){
+      if(error) error.textContent='';
+      if(troco) troco.textContent='R$ 0,00';
+      input.setCustomValidity('');
+      return;
+    }
+
+    if(pago < total){
+      const faltam=total-pago;
+      if(error) error.textContent=`Valor insuficiente. Faltam ${money2(faltam)}.`;
+      if(troco) troco.textContent='R$ 0,00';
+      input.setCustomValidity(`O valor deve ser no mínimo ${money2(total)}`);
+    }else{
+      if(error) error.textContent='';
+      if(troco) troco.textContent=money2(pago-total);
+      input.setCustomValidity('');
+    }
+  }
+
+  function formatarEAtualizar(){
+    const input=document.getElementById('cashValue');
+    if(!input)return;
+    input.value=formatCash(input.value);
+    atualizarDinheiro();
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    const payment=document.getElementById('payment');
+    const input=document.getElementById('cashValue');
+    payment?.addEventListener('change',atualizarDinheiro);
+    input?.addEventListener('input',formatarEAtualizar);
+    input?.addEventListener('change',formatarEAtualizar);
+    input?.addEventListener('blur',()=>{
+      if(input.value && !input.value.includes(',')) input.value += ',00';
+      else if(input.value.includes(',')){
+        const p=input.value.split(',');
+        input.value=p[0]+','+(p[1]||'').padEnd(2,'0').slice(0,2);
+      }
+      atualizarDinheiro();
+    });
+    atualizarDinheiro();
+  });
+
+  const originalSendOrder=window.sendOrder;
+  window.sendOrder=async function(){
+    const payment=document.getElementById('payment')?.value||'';
+    const input=document.getElementById('cashValue');
+    const pago=parseCash(input?.value);
+    const total=totalPedido();
+
+    if(!payment){ toast('Escolha a forma de pagamento'); return; }
     if(payment==='Dinheiro'){
-      if(cash<=0){
-        toast('Informe o valor que você vai pagar');
-        document.getElementById('cashValue')?.focus();
-        return;
-      }
-      if(cash<total){
+      atualizarDinheiro();
+      if(pago<=0){ toast('Informe o valor que você vai pagar'); input?.focus(); return; }
+      if(pago<total){
         toast(`Valor insuficiente. O total é ${money2(total)}`);
-        document.getElementById('cashValue')?.focus();
+        input?.focus();
         return;
       }
     }
 
-    // The existing client.js closes over its own `db` constant, so we do not
-    // replace window.db. Instead, add payment information through the order
-    // observations field before sending.
     const note=document.getElementById('orderNote');
-    const previous=note?.value || '';
+    const previous=note?.value||'';
     if(note){
-      const change=payment==='Dinheiro' ? cash-total : 0;
-      const tag=`\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({
-        forma:payment,
-        valor_pago:payment==='Dinheiro'?cash:0,
-        troco:change
+      const troco=payment==='Dinheiro'?pago-total:0;
+      note.value=previous+`\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({
+        forma:payment,valor_pago:payment==='Dinheiro'?pago:0,troco:troco
       }))}[/ML_PAGAMENTO]`;
-      note.value=previous+tag;
     }
-
-    try{
-      return await originalSendOrder();
-    }finally{
-      if(note) note.value=previous;
-    }
+    try{return await originalSendOrder();}
+    finally{if(note)note.value=previous;}
   };
 
-  // Recalculate when the cart or receiving method changes.
-  document.addEventListener('click',()=>{
-    setTimeout(updateCash,0);
-  });
+  document.addEventListener('click',()=>setTimeout(atualizarDinheiro,0));
 })();
