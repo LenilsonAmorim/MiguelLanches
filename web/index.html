@@ -1,13 +1,120 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Miguel Lanches Admin</title><link rel="stylesheet" href="admin.css"></head><body>
-<div id=login class=login><div><h1>MIGUEL <b>LANCHES</b></h1><small>PAINEL ADMINISTRATIVO</small><label>Usuário<input id=user></label><label>Senha<input id=pass type=password></label><button id=loginBtn>Entrar</button><p id=msg></p></div></div>
-<div id=app class=hide><aside id=side><h2>MIGUEL <b>LANCHES</b></h2><nav><button data-page=pedidos class=active>Pedidos <b id=badge>0</b></button><button data-page=dashboard>Dashboard</button><button data-page=cardapio>Cardápio</button><button data-page=categorias>Categorias</button><button data-page=clientes>Clientes</button><button data-page=promocoes>Promoções</button><button data-page=relatorios>Relatórios</button><button data-page=config>Configurações</button><button data-page=impressao>Impressão</button></nav><a href="../cliente/index.html">Site do cliente</a><button id=logout>Sair</button></aside><main><header><button id=menu>☰</button><b id=title>Pedidos</b><button id=refresh>Atualizar</button></header>
-<section id=page-pedidos class="page active"><div class=head><div><h1>Pedidos</h1><p>Recebidos do site do cliente.</p></div></div><div id=tabs class=tabs><button class=active data-f=todos>Todos <b>0</b></button><button data-f=novo>Novos <b>0</b></button><button data-f=preparo>Preparando <b>0</b></button><button data-f=entrega>Entrega <b>0</b></button><button data-f=entregue>Entregues <b>0</b></button><button data-f=cancelado>Cancelados <b>0</b></button></div><div id=orders class=board></div></section>
-<section id=page-dashboard class=page><h1>Dashboard</h1><div id=stats class=stats></div><div class=panel id=recent></div></section>
-<section id=page-cardapio class=page><div class=head><h1>Cardápio</h1><button id=newProduct class=primary>+ Produto</button></div><input id=ps class=search placeholder="Buscar produto"><div class=panel><table><tbody id=products></tbody></table></div></section>
-<section id=page-categorias class=page><div class=head><h1>Categorias</h1><button id=newCat class=primary>+ Categoria</button></div><div id=cats class=cards></div></section>
-<section id=page-clientes class=page><h1>Clientes</h1><input id=cs class=search placeholder="Buscar cliente"><div class=panel><table><tbody id=clients></tbody></table></div></section>
-<section id=page-promocoes class=page><h1>Promoções</h1><div class=panel><p>Área pronta para campanhas vinculadas ao cardápio.</p></div></section>
-<section id=page-relatorios class=page><h1>Relatórios</h1><div id=reports class=stats></div><button id=csv>Exportar CSV</button></section>
-<section id=page-config class=page><h1>Configurações</h1><div class=form><label>Nome<input id=store></label><label>Telefone<input id=phoneStore></label><label>Taxa de entrega<input id=fee type=number step=.01></label><button id=save class=primary>Salvar</button></div></section>
-<section id=page-impressao class=page><h1>Impressão</h1><div class=panel><button id=test class=primary>Imprimir teste 58 mm</button></div></section>
-</main></div><div id=modal class="overlay hide"><div class=modal><button id=close>×</button><div id=body></div></div></div><div id=toast></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../cliente/config.js"></script><script src="admin.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080808">
+<title>Miguel Lanches — Painel Admin</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="logo-mark">ML</div>
+    <h1>MIGUEL <span>LANCHES</span></h1>
+    <p>Painel administrativo</p>
+    <label>Usuário<input id="user" autocomplete="username"></label>
+    <label>Senha<input id="pass" type="password" autocomplete="current-password"></label>
+    <button id="loginBtn" class="btn primary wide">Entrar</button>
+    <div id="msg" class="message"></div>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <aside id="side" class="sidebar">
+    <div class="brand"><div class="logo-mark small">ML</div><div><strong>MIGUEL LANCHES</strong><small>PAINEL ADMIN</small></div></div>
+    <nav id="nav">
+      <button class="nav-btn active" data-page="pedidos">🧾 <span>Pedidos</span><b id="badge">0</b></button>
+      <button class="nav-btn" data-page="dashboard">📊 <span>Dashboard</span></button>
+      <button class="nav-btn" data-page="cardapio">🍔 <span>Cardápio</span></button>
+      <button class="nav-btn" data-page="categorias">🗂️ <span>Categorias</span></button>
+      <button class="nav-btn" data-page="clientes">👥 <span>Clientes</span></button>
+      <button class="nav-btn" data-page="promocoes">🏷️ <span>Promoções</span></button>
+      <button class="nav-btn" data-page="relatorios">📈 <span>Relatórios</span></button>
+      <button class="nav-btn" data-page="config">⚙️ <span>Configurações</span></button>
+      <button class="nav-btn" data-page="impressao">🖨️ <span>Impressão</span></button>
+    </nav>
+    <a class="client-link" href="cliente/index.html">Abrir site do cliente ↗</a>
+    <button id="logout" class="logout">Sair</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button id="menu" class="icon-btn">☰</button>
+      <div><strong id="title">Pedidos</strong><small id="connection">Conectando...</small></div>
+      <button id="refresh" class="btn">Atualizar</button>
+    </header>
+
+    <section id="page-pedidos" class="page active">
+      <div class="page-head">
+        <div><h1>Pedidos</h1><p>Pedidos do site do cliente em tempo real.</p></div>
+      </div>
+      <div id="tabs" class="tabs">
+        <button class="active" data-filter="todos">Todos <b>0</b></button>
+        <button data-filter="novo">Novos <b>0</b></button>
+        <button data-filter="preparo">Preparando <b>0</b></button>
+        <button data-filter="entrega">Saiu para entrega <b>0</b></button>
+        <button data-filter="entregue">Entregues <b>0</b></button>
+        <button data-filter="cancelado">Cancelados <b>0</b></button>
+      </div>
+      <div id="orders" class="orders-board"></div>
+    </section>
+
+    <section id="page-dashboard" class="page">
+      <div class="page-head"><div><h1>Dashboard</h1><p>Resumo do movimento.</p></div></div>
+      <div id="stats" class="stats"></div>
+      <div class="panel"><div class="panel-title">Pedidos recentes</div><div id="recent"></div></div>
+    </section>
+
+    <section id="page-cardapio" class="page">
+      <div class="page-head"><div><h1>Cardápio</h1><p>Ative, desative e destaque produtos.</p></div><button id="newProduct" class="btn primary">+ Produto</button></div>
+      <input id="ps" class="search" placeholder="Buscar produto...">
+      <div class="panel table-wrap"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Destaque</th><th></th></tr></thead><tbody id="products"></tbody></table></div>
+    </section>
+
+    <section id="page-categorias" class="page">
+      <div class="page-head"><div><h1>Categorias</h1><p>Organize o cardápio.</p></div><button id="newCat" class="btn primary">+ Categoria</button></div>
+      <div id="cats" class="category-admin-grid"></div>
+    </section>
+
+    <section id="page-clientes" class="page">
+      <div class="page-head"><div><h1>Clientes</h1><p>Clientes que já fizeram pedidos.</p></div></div>
+      <input id="cs" class="search" placeholder="Buscar por nome ou telefone...">
+      <div class="panel table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Pedidos</th><th>Total</th></tr></thead><tbody id="clients"></tbody></table></div>
+    </section>
+
+    <section id="page-promocoes" class="page">
+      <div class="page-head"><div><h1>Promoções</h1><p>Use os produtos em destaque para montar as ofertas.</p></div></div>
+      <div class="panel"><h3>Produtos em destaque</h3><p class="muted">Marque produtos como <b>Destaque</b> no Cardápio. Eles aparecem na área de destaques do site do cliente.</p><div id="featuredProducts" class="mini-list"></div></div>
+    </section>
+
+    <section id="page-relatorios" class="page">
+      <div class="page-head"><div><h1>Relatórios</h1><p>Resumo dos pedidos carregados.</p></div><button id="csv" class="btn primary">Exportar CSV</button></div>
+      <div id="reports" class="stats"></div>
+    </section>
+
+    <section id="page-config" class="page">
+      <div class="page-head"><div><h1>Configurações</h1><p>Informações exibidas no painel.</p></div></div>
+      <div class="panel form">
+        <label>Nome da loja<input id="store"></label>
+        <label>Telefone<input id="phoneStore"></label>
+        <label>Taxa de entrega padrão<input id="fee" type="number" step="0.01"></label>
+        <button id="save" class="btn primary">Salvar configurações</button>
+      </div>
+    </section>
+
+    <section id="page-impressao" class="page">
+      <div class="page-head"><div><h1>Impressão</h1><p>Teste do formato térmico 58 mm.</p></div></div>
+      <div class="panel print-test"><div class="receipt-preview"><b>MIGUEL LANCHES</b><hr>TESTE DE IMPRESSÃO<br>Pedido #00001<br>1x Produto de teste<br><hr><b>TOTAL R$ 10,00</b></div><button id="test" class="btn primary">Imprimir teste 58 mm</button></div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="overlay hidden"><div class="modal"><button id="close" class="modal-close">×</button><div id="body"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="cliente/config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
