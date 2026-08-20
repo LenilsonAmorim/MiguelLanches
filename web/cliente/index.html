@@ -66,8 +66,14 @@
 <button class="modal-close" type="button" onclick="closeCheckout()">×</button>
 <div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você vai receber?</h2></div>
 <div class="receive-grid">
-<button class="receive" data-method="retirada" type="button" onclick="selectReceive('retirada')"><b>🏪 Retirada</b><small>Vou buscar na lanchonete</small></button>
-<button class="receive" data-method="entrega" type="button" onclick="selectReceive('entrega')"><b>🛵 Entrega</b><small>Receber no endereço</small></button>
+<button class="receive" data-method="entrega" type="button" onclick="selectReceive('entrega')">
+  <b>Entrega</b>
+  <small>Receber no endereço</small>
+</button>
+<button class="receive" data-method="retirada" type="button" onclick="selectReceive('retirada')">
+  <b>Retirada</b>
+  <small>Vou buscar na lanchonete</small>
+</button>
 </div>
 <form id="checkoutForm">
 <label>Nome *</label><input id="customerName" required placeholder="Seu nome">
@@ -93,5 +99,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=20260820-3"></script>
 <script src="app.js?v=20260820-3"></script>
+
+<!-- Ajuste: Entrega é a opção padrão e fica à esquerda. -->
+<script>
+(function () {
+  const originalOpenCheckout = window.openCheckout;
+  window.openCheckout = function () {
+    originalOpenCheckout();
+    if (typeof window.selectReceive === "function") {
+      window.selectReceive("entrega");
+    }
+  };
+})();
+</script>
 </body>
 </html>
