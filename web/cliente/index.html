@@ -6,12 +6,23 @@
 <link rel="manifest" href="manifest.json"><link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <img src="assets/logo.png" alt="Miguel Lanches">
+    <span>PEDIDO ONLINE</span>
+    <h1>Seu lanche favorito,<br><b>do seu jeito.</b></h1>
+    <p>Preparando seu cardápio...</p>
+    <div class="loader"><i></i></div>
+  </div>
+</div>
+<div id="site" class="site-hidden">
 <header><a href="#top"><img src="assets/logo.png" alt="Miguel Lanches"></a><a class="cart" href="#carrinho">🛒 <span id="cartBadge">0</span></a></header>
 <section class="hero" id="top"><div><img src="assets/logo.png" alt=""><span>PEDIDO ONLINE</span><h1>Seu lanche favorito,<br><b>do seu jeito.</b></h1><p>Faça seu pedido e acompanhe o andamento.</p><a class="btn red" href="#cardapio">Ver cardápio</a></div></section>
 <section class="section" id="cardapio"><div class="title"><div><small>CARDÁPIO</small><h2>Escolha seus favoritos</h2></div><input id="search" placeholder="Buscar produto..."></div><div id="cats" class="chips"></div><div id="products" class="products"></div></section>
 <section class="section" id="carrinho"><div class="title"><div><small>SEU PEDIDO</small><h2>Monte sua comanda</h2></div></div><div class="checkout"><div class="panel"><div id="cartItems"></div><div id="empty" class="empty">Seu carrinho está vazio.</div></div><div class="panel form"><h3>Dados do cliente</h3><input id="name" placeholder="Nome"><input id="phone" placeholder="WhatsApp / telefone"><input id="address" placeholder="Endereço completo"><input id="reference" placeholder="Ponto de referência"><textarea id="notes" placeholder="Observações"></textarea><select id="payment"><option value="pix">Pix</option><option value="dinheiro">Dinheiro</option><option value="cartao">Cartão</option></select><input id="change" type="number" step=".01" placeholder="Troco para quanto?"><div class="totals"><span>Subtotal <b id="subtotal">R$ 0,00</b></span><span>Entrega <b id="delivery">R$ 0,00</b></span><strong>Total <b id="total">R$ 0,00</b></strong></div><button id="send" class="btn red">Finalizar pedido</button></div></div></section>
 <section class="section track"><div class="title"><div><small>ACOMPANHAMENTO</small><h2>Onde está meu pedido?</h2></div></div><div class="track-form"><input id="track" placeholder="Número do pedido"><button id="trackBtn" class="btn dark">Acompanhar</button></div><div id="trackResult"></div></section>
-<footer><img src="assets/logo.png"><span>Miguel Lanches</span><a href="web/">Área de atendimento</a></footer>
+<footer><img src="assets/logo.png"><span>Miguel Lanches</span><a href="../">Área de atendimento</a></footer>
 <div id="toast" class="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script src="js/client.js"></script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script src="js/client.js"></script><script>window.addEventListener("load",()=>setTimeout(()=>{document.getElementById("splash").classList.add("hide");document.getElementById("site").classList.remove("site-hidden");},3000));</script>
 </body></html>
