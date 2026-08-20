@@ -19,10 +19,4 @@
 .pedido-novo-prep{background:#eaf8ef;color:#0b7a39}
 .pedido-novo-reject{background:#fff0f0;color:#c71926}
 .novos-pedidos-empty{padding:28px 16px;text-align:center;color:#6d7788;font-size:17px}
-@media(max-width:520px){
-  .novos-pedidos-head{padding:15px 14px}
-  .novos-pedidos-head h2{font-size:21px}
-  .pedido-novo-card{padding:16px 14px}
-  .pedido-novo-title{font-size:21px}
-  .pedido-novo-actions button{flex:1;min-width:0}
-}
+@media(max-width:520px){.novos-pedidos-head{padding:15px 14px}.novos-pedidos-head h2{font-size:21px}.pedido-novo-card{padding:16px 14px}.pedido-novo-title{font-size:21px}.pedido-novo-actions button{flex:1;min-width:0}}
