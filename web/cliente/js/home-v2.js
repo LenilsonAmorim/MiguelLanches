@@ -59,159 +59,135 @@ window.addEventListener('load',()=>setTimeout(()=>{if(typeof load==='function')l
 
 
 
-(function(){
-  const byId=id=>document.getElementById(id);
 
-  function toNumber(v){
-    let s=String(v||'').replace(/\s/g,'');
+(function(){
+  const $=id=>document.getElementById(id);
+
+  function parseBR(v){
+    let s=String(v??'').trim().replace(/[^\d,.-]/g,'');
     if(!s)return 0;
     if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
     return Number(s)||0;
   }
 
-  function totalPedido(){
+  function totalDaTela(){
+    // Use the checkout total shown to the customer. This prevents the cash
+    // calculation from depending on a stale cart reference.
+    const el=$('checkoutTotal');
+    const n=parseBR(el?.textContent||'');
+    if(n>0)return n;
+
     const items=Array.isArray(window.cart)?window.cart:[];
-    const subtotal=items.reduce((sum,x)=>sum+(Number(x.preco)||0)*(Number(x.quantidade)||0),0);
+    const subtotal=items.reduce((s,x)=>s+(Number(x.preco)||0)*(Number(x.quantidade)||0),0);
     const method=document.querySelector('.receive.selected')?.dataset.method||'entrega';
     return subtotal+(method==='entrega'?Number(window.DELIVERY_FEE||0):0);
   }
 
-  function atualizarTroco(){
-    const payment=byId('payment');
-    const input=byId('cashValue');
-    const box=byId('cashBox');
-    const troco=byId('changeValue');
-    const erro=byId('cashError');
+  function atualizar(){
+    const payment=$('payment'), input=$('cashValue'), box=$('cashBox');
+    const out=$('changeValue'), err=$('cashError');
     if(!payment||!input)return;
 
     const isCash=payment.value==='Dinheiro';
     box?.classList.toggle('hidden',!isCash);
-
     if(!isCash){
-      if(troco)troco.textContent='R$ 0,00';
-      if(erro)erro.textContent='';
+      if(out)out.textContent='R$ 0,00';
+      if(err)err.textContent='';
       return;
     }
 
-    const pago=toNumber(input.value);
-    const total=totalPedido();
+    const pago=parseBR(input.value);
+    const total=totalDaTela();
 
     if(!input.value.trim()){
-      if(troco)troco.textContent='R$ 0,00';
-      if(erro)erro.textContent='';
+      if(out)out.textContent='R$ 0,00';
+      if(err)err.textContent='';
       return;
     }
 
     if(pago<total){
-      if(troco)troco.textContent='R$ 0,00';
-      if(erro)erro.textContent=`Valor insuficiente. Faltam ${money2(total-pago)}.`;
+      if(out)out.textContent='R$ 0,00';
+      if(err)err.textContent='Valor insuficiente. Faltam '+money2(total-pago)+'.';
     }else{
-      if(troco)troco.textContent=money2(pago-total);
-      if(erro)erro.textContent='';
+      if(out)out.textContent=money2(pago-total);
+      if(err)err.textContent='';
     }
   }
 
-  // Digite 1 -> 1,00; continue digitando 0 -> 10,00.
-  // The caret is kept before the comma so typing remains natural.
-  function mascaraValor(input){
-    let value=input.value.replace(/[^\d,]/g,'');
-    const comma=value.indexOf(',');
+  function formatar(){
+    const input=$('cashValue');
+    if(!input)return;
 
-    if(comma===-1){
-      const digits=value.replace(/\D/g,'');
-      if(!digits){
-        input.value='';
-        return;
-      }
+    let raw=input.value.replace(/[^\d,]/g,'');
+    if(!raw){ input.value=''; atualizar(); return; }
+
+    // Keep the comma as the decimal separator. When the user has not typed
+    // a comma yet, show two decimals but keep the caret before the comma.
+    if(!raw.includes(',')){
+      const digits=raw.replace(/\D/g,'');
       input.value=digits+',00';
-      const pos=digits.length;
-      try{input.setSelectionRange(pos,pos);}catch(e){}
-      return;
+      try{input.setSelectionRange(digits.length,digits.length);}catch(e){}
+    }else{
+      const p=raw.split(',');
+      const inteiro=(p[0].replace(/\D/g,'')||'0');
+      const dec=p.slice(1).join('').replace(/\D/g,'').slice(0,2);
+      input.value=inteiro+','+dec;
+      try{input.setSelectionRange(inteiro.length+(dec?1+dec.length:0),inteiro.length+(dec?1+dec.length:0));}catch(e){}
     }
-
-    let integer=value.slice(0,comma).replace(/\D/g,'')||'0';
-    let decimals=value.slice(comma+1).replace(/\D/g,'').slice(0,2);
-    input.value=integer+','+decimals;
-
-    const caret=Math.min(integer.length+(decimals?1+decimals.length:0),input.value.length);
-    try{input.setSelectionRange(caret,caret);}catch(e){}
+    atualizar();
   }
 
-  function instalar(){
-    const payment=byId('payment');
-    const input=byId('cashValue');
-    if(!payment||!input)return;
+  function setup(){
+    const input=$('cashValue'), payment=$('payment');
+    if(!input||!payment)return;
 
-    payment.addEventListener('change',atualizarTroco);
-
-    input.addEventListener('input',function(){
-      mascaraValor(input);
-      atualizarTroco();
-    });
-
-    input.addEventListener('keyup',atualizarTroco);
-
-    input.addEventListener('focus',function(){
-      // Select the integer part when focusing a formatted empty/zero field.
-      if(input.value==='0,00')input.select();
-      atualizarTroco();
-    });
-
-    input.addEventListener('blur',function(){
+    payment.addEventListener('change',atualizar);
+    input.addEventListener('input',formatar);
+    input.addEventListener('keyup',atualizar);
+    input.addEventListener('paste',()=>setTimeout(formatar,0));
+    input.addEventListener('blur',()=>{
       if(input.value && !input.value.includes(',')){
         input.value=input.value+',00';
       }else if(input.value.includes(',')){
         const p=input.value.split(',');
         input.value=(p[0]||'0')+','+(p[1]||'').padEnd(2,'0').slice(0,2);
       }
-      atualizarTroco();
+      atualizar();
     });
-
-    atualizarTroco();
+    atualizar();
   }
 
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',instalar);
-  }else{
-    instalar();
-  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
+  else setup();
 
-  // Recalculate after cart or delivery-method changes.
-  document.addEventListener('click',()=>setTimeout(atualizarTroco,0));
+  // Cart/receive changes can alter the total.
+  document.addEventListener('click',()=>setTimeout(atualizar,20));
 
   const originalSend=window.sendOrder;
   if(typeof originalSend==='function'){
     window.sendOrder=async function(){
-      const payment=byId('payment')?.value||'';
-      const input=byId('cashValue');
-      const pago=toNumber(input?.value);
-      const total=totalPedido();
+      const payment=$('payment')?.value||'';
+      const pago=parseBR($('cashValue')?.value||'');
+      const total=totalDaTela();
 
-      if(!payment){
-        toast('Escolha a forma de pagamento');
-        return;
-      }
+      if(!payment){toast('Escolha a forma de pagamento');return;}
 
       if(payment==='Dinheiro' && pago<total){
-        atualizarTroco();
-        toast(pago>0 ? `Valor insuficiente. Faltam ${money2(total-pago)}.` : 'Informe o valor que você vai pagar');
-        input?.focus();
+        atualizar();
+        toast('Valor insuficiente. O total é '+money2(total));
+        $('cashValue')?.focus();
         return;
       }
 
-      const note=byId('orderNote');
+      const note=$('orderNote');
       const old=note?.value||'';
       if(note && payment==='Dinheiro'){
-        note.value=old+`\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({
+        note.value=old+'\n[ML_PAGAMENTO]'+encodeURIComponent(JSON.stringify({
           forma:'Dinheiro',valor_pago:pago,troco:pago-total
-        }))}[/ML_PAGAMENTO]`;
+        }))+'[/ML_PAGAMENTO]';
       }
-
-      try{
-        return await originalSend();
-      }finally{
-        if(note)note.value=old;
-      }
+      try{return await originalSend();}
+      finally{if(note)note.value=old;}
     };
   }
 })();
