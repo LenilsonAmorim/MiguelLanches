@@ -54,56 +54,132 @@ document.addEventListener('click',function(e){
 window.addEventListener('load',()=>setTimeout(()=>{if(typeof load==='function')load()},25));
 
 
+
+
 (function(){
-  function parseMoney(v){
-    return Number(String(v||'').replace(/\./g,'').replace(',','.')) || 0;
+  function parseCash(v){
+    const s=String(v ?? '').trim().replace(/\s/g,'');
+    if(!s) return 0;
+    // Supports both 50 and 50,00 as the browser number input provides.
+    return Number(s.replace(',','.')) || 0;
   }
-  function updateCashChange(){
+
+  function getCurrentTotal(){
+    const list=Array.isArray(window.cart)?window.cart:[];
+    const subtotal=list.reduce((sum,item)=>sum+(Number(item.preco)||0)*(Number(item.quantidade)||0),0);
+    const method=document.querySelector('.receive.selected')?.dataset.method || 'entrega';
+    const fee=method==='entrega' ? Number(window.DELIVERY_FEE||0) : 0;
+    return subtotal+fee;
+  }
+
+  function updateCash(){
     const payment=document.getElementById('payment');
     const box=document.getElementById('cashBox');
     const input=document.getElementById('cashValue');
-    const out=document.getElementById('changeValue');
-    const totalText=document.getElementById('checkoutTotal')?.textContent||'';
-    const total=parseMoney(totalText.replace(/[^\d,.-]/g,''));
-    const cash=parseMoney(input?.value);
+    const output=document.getElementById('changeValue');
+    const cash=parseCash(input?.value);
+    const total=getCurrentTotal();
     const isCash=payment?.value==='Dinheiro';
+
     box?.classList.toggle('hidden',!isCash);
-    if(out) out.textContent=isCash && cash>=total ? money2(cash-total) : 'R$ 0,00';
+
+    if(output){
+      const change=cash>=total && cash>0 ? cash-total : 0;
+      output.textContent=money2(change);
+    }
+
+    // Visual feedback when the amount is insufficient.
+    if(input){
+      input.setCustomValidity(isCash && cash>0 && cash<total
+        ? `O valor mínimo é ${money2(total)}`
+        : '');
+    }
+  }
+
+  function installCash(){
+    const payment=document.getElementById('payment');
+    const input=document.getElementById('cashValue');
+    payment?.addEventListener('change',updateCash);
+    input?.addEventListener('input',updateCash);
+    input?.addEventListener('keyup',updateCash);
+    updateCash();
+  }
+
+  document.addEventListener('DOMContentLoaded',installCash);
+
+  // Validate and add payment information before the existing sendOrder.
+  const originalSendOrder=window.sendOrder;
+  window.sendOrder=async function(){
+    const payment=document.getElementById('payment')?.value || '';
+    const cash=parseCash(document.getElementById('cashValue')?.value);
+    const total=getCurrentTotal();
+
+    if(!payment){
+      toast('Escolha a forma de pagamento');
+      return;
+    }
+
+    if(payment==='Dinheiro'){
+      if(cash<=0){
+        toast('Informe o valor que você vai pagar');
+        document.getElementById('cashValue')?.focus();
+        return;
+      }
+      if(cash<total){
+        toast(`Valor insuficiente. O total é ${money2(total)}`);
+        document.getElementById('cashValue')?.focus();
+        return;
+      }
+    }
+
+    // The existing client.js closes over its own `db` constant, so we do not
+    // replace window.db. Instead, add payment information through the order
+    // observations field before sending.
+    const note=document.getElementById('orderNote');
+    const previous=note?.value || '';
+    if(note){
+      const change=payment==='Dinheiro' ? cash-total : 0;
+      const tag=`\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({
+        forma:payment,
+        valor_pago:payment==='Dinheiro'?cash:0,
+        troco:change
+      }))}[/ML_PAGAMENTO]`;
+      note.value=previous+tag;
+    }
+
+    try{
+      return await originalSendOrder();
+    }finally{
+      if(note) note.value=previous;
+    }
+  };
+
+  // Recalculate when the cart or receiving method changes.
+  document.addEventListener('click',()=>{
+    setTimeout(updateCash,0);
+  });
+})();
+
+(function(){
+  function formatCashInput(el){
+    if(!el) return;
+    let raw=el.value.replace(/\D/g,'');
+    if(!raw){ el.value=''; return; }
+    let cents=Number(raw);
+    let value=(cents/100).toFixed(2);
+    el.value=value.replace('.',',');
   }
   document.addEventListener('DOMContentLoaded',()=>{
-    const payment=document.getElementById('payment');
-    const cash=document.getElementById('cashValue');
-    payment?.addEventListener('change',updateCashChange);
-    cash?.addEventListener('input',updateCashChange);
+    const input=document.getElementById('cashValue');
+    if(!input)return;
+    input.addEventListener('input',()=>{
+      const pos=input.selectionStart;
+      const oldLen=input.value.length;
+      formatCashInput(input);
+      const newLen=input.value.length;
+      input.setSelectionRange(newLen,newLen);
+      input.dispatchEvent(new Event('keyup',{bubbles:true}));
+    });
+    input.addEventListener('blur',()=>formatCashInput(input));
   });
-  const oldSend=window.sendOrder;
-  window.sendOrder=async function(){
-    const payment=document.getElementById('payment')?.value||'';
-    const cash=parseMoney(document.getElementById('cashValue')?.value);
-    const total=parseMoney((document.getElementById('checkoutTotal')?.textContent||'').replace(/[^\d,.-]/g,''));
-    if(!payment){ toast('Escolha a forma de pagamento'); return; }
-    if(payment==='Dinheiro'){
-      if(cash<=0){ toast('Informe o valor que vai pagar'); return; }
-      if(cash<total){ toast('O valor pago é menor que o total'); return; }
-    }
-    const originalInsert=window.db.from.bind(window.db);
-    let captured=null;
-    // The existing sendOrder builds and inserts the order. We append payment data
-    // to the observation field immediately before calling it by temporarily wrapping db.from.
-    window.db.from=function(table){
-      const q=originalInsert(table);
-      if(table!=='pedidos') return q;
-      const originalInsertMethod=q.insert.bind(q);
-      q.insert=function(payload){
-        if(payload && typeof payload.observacoes==='string'){
-          const change=payment==='Dinheiro'?cash-total:0;
-          payload.observacoes += `\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({forma:payment,valor_pago:cash,troco:change}))}[/ML_PAGAMENTO]`;
-        }
-        return originalInsertMethod(payload);
-      };
-      return q;
-    };
-    try{ return await oldSend(); } finally { window.db.from=originalInsert; }
-  };
-  updateCashChange();
 })();
