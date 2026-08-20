@@ -8,7 +8,6 @@
 <body>
 <div id="splash" class="splash">
   <div class="splash-inner">
-    <img src="assets/logo.png" alt="Miguel Lanches">
     <span>PEDIDO ONLINE</span>
     <h1>Seu lanche favorito,<br><b>do seu jeito.</b></h1>
     <p>Preparando seu cardápio...</p>
@@ -26,12 +25,15 @@
   </div>
 </section>
 <section class="menu-section" id="cardapio"><div class="menu-shell">
-  <div class="menu-head"><div class="menu-title"><span class="hamb">☰</span><h2>Cardápio</h2></div><a class="menu-cart" href="#carrinho">🛒 <b id="cartBadgeMenu">0</b></a></div>
+  <div class="menu-head"><div class="menu-title"><h2>Cardápio</h2></div></div>
   <div class="search-wrap"><span>⌕</span><input id="search" placeholder="Buscar produto..." autocomplete="off"></div>
   <div id="cats" class="chips"></div>
   <div class="section-label"><span>🔥</span><h3>Mais pedidos</h3></div>
   <div id="products" class="products"></div>
 </div></section>
+<a id="floatingBag" class="floating-bag" href="#carrinho" aria-label="Abrir sacola">
+  <span class="bag-icon">🛍️</span><span class="bag-label">Ver sacola</span><strong id="floatingBagCount">0</strong>
+</a>
 <section class="section checkout-section" id="carrinho"><div class="section-heading"><small>SEU PEDIDO</small><h2>Monte sua comanda</h2></div>
   <div class="checkout"><div class="panel"><div id="cartItems"></div><div id="empty" class="empty">Seu carrinho está vazio.</div></div>
   <div class="panel form"><h3>Dados do cliente</h3><input id="name" placeholder="Nome"><input id="phone" placeholder="WhatsApp / telefone"><input id="address" placeholder="Endereço completo"><input id="reference" placeholder="Ponto de referência"><textarea id="notes" placeholder="Observações"></textarea><select id="payment"><option value="pix">Pix</option><option value="dinheiro">Dinheiro</option><option value="cartao">Cartão</option></select><input id="change" type="number" step=".01" placeholder="Troco para quanto?"><div class="totals"><span>Subtotal <b id="subtotal">R$ 0,00</b></span><span>Entrega <b id="delivery">R$ 0,00</b></span><strong>Total <b id="total">R$ 0,00</b></strong></div><button id="send" class="btn red">Finalizar pedido</button></div></div>
