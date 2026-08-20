@@ -92,6 +92,62 @@
 .price{font-weight:900;color:#d71920}.cart-item{padding:12px 0;border-bottom:1px solid #eee}.cart-row{display:flex;justify-content:space-between;gap:8px}
 .cart-name{font-size:13px}.cart-sub{font-size:10px;color:#777;margin-top:3px}.qty{display:flex;gap:7px;margin-top:8px}.qty button{min-height:28px;border:1px solid #ddd;background:#fff;border-radius:7px}
 </style>
+
+<style>
+/* Destaques: conteúdo separado corretamente */
+#featured .highlight-card{display:block}
+#featured .highlight-body{display:flex;flex-direction:column;align-items:flex-start;gap:0}
+#featured .highlight-body small{margin:0 0 2px;font-size:10px;line-height:1.2}
+#featured .highlight-body strong{margin:0;font-size:14px;line-height:1.2;font-weight:900}
+#featured .highlight-body span{margin:4px 0 0;font-size:11px;line-height:1.25}
+#featured .highlight-body .highlight-price{display:block;margin-top:4px;color:#d71920;font-size:15px;font-weight:900}
+</style>
+<script>
+(function(){
+  function cleanFeatured(){
+    document.querySelectorAll("#featured .highlight-card").forEach(card=>{
+      const body=card.querySelector(".highlight-body");
+      if(!body)return;
+
+      // Normalize accidental whitespace/text concatenation created by the renderer.
+      const all=[...body.children];
+      all.forEach(el=>{
+        if(el.tagName==="SMALL"||el.tagName==="STRONG"||el.tagName==="SPAN"){
+          el.textContent=el.textContent.replace(/\s+/g," ").trim();
+        }
+      });
+
+      // If the old renderer put "Mais pedido" into the product name/price line,
+      // split it back out and leave the badge as the only occurrence.
+      const badge=card.querySelector(".highlight-badge");
+      if(badge){
+        const label=(badge.textContent||"").trim();
+        all.forEach(el=>{
+          if(el!==badge && el.textContent.includes(label)){
+            el.textContent=el.textContent.replace(label,"").replace(/\s+/g," ").trim();
+          }
+        });
+      }
+
+      // Move any price-like span to the end and keep it visually independent.
+      const spans=[...body.querySelectorAll("span")];
+      spans.forEach(s=>{
+        const txt=s.textContent.trim();
+        if(/R\$\s*[\d.,]+/.test(txt)){
+          s.classList.add("highlight-price");
+          body.appendChild(s);
+        }
+      });
+    });
+  }
+  window.addEventListener("load",()=>{
+    cleanFeatured();
+    const target=document.getElementById("featured");
+    if(target)new MutationObserver(cleanFeatured).observe(target,{childList:true,subtree:true});
+    [300,800,1500,3000].forEach(ms=>setTimeout(cleanFeatured,ms));
+  });
+})();
+</script>
 </head>
 <body>
 <div id="splash" class="splash"><div class="splash-inner"><img src="assets/logo.png" alt="Miguel Lanches"><div class="splash-brand">MIGUEL <span>LANCHES</span></div><p>Carregando seu cardápio...</p><div class="loader"><i></i></div></div></div>
