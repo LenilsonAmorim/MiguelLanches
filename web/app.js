@@ -72,7 +72,7 @@ async function finishOrder(){
   let nome=$("cliente").value.trim();if(!nome)return alert("Informe o nome do cliente.");
   let phone=$("telefone").value.trim(),addr=$("endereco").value.trim(),ref=$("referencia").value.trim(),obs=$("observacoes").value.trim(),fee=Number($("taxaEntrega").value||0);
   let items=state.cart.map(x=>({nome:x.nome,quantidade:x.quantidade,preco:x.preco,adicionais:x.adicionais,obs:x.obs}));let total=state.cart.reduce((s,x)=>s+x.preco*x.quantidade,0)+fee;
-  let finalObs=packItems(items,obs)+`\n[ML_ENTREGA]${fee}[/ML_ENTREGA]`+"\n[ML_STATUS]preparo[/ML_STATUS]";
+  let finalObs=packItems(items,obs)+`\n[ML_ENTREGA]${fee}[/ML_ENTREGA]`+"\n[ML_STATUS]novo[/ML_STATUS]";
   let {data,error}=await db.from("pedidos").insert({Cliente:nome,telefone:phone,endereco:addr,referencia:ref,observacoes:finalObs,total}).select().single();
   if(error)return alert("Erro ao salvar: "+error.message);
   if(phone&&!state.clients.some(c=>c.telefone===phone))await db.from("clientes").upsert({nome,telefone:phone,endereco:addr,referencia:ref},{onConflict:"telefone"});
