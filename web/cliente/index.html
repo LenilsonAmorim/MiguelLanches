@@ -15,79 +15,57 @@ body{padding-bottom:82px}
 </style>
 </head>
 <body>
+<div id="splash" class="splash"><div class="splash-box"><div class="splash-logo">MIGUEL <span>LANCHES</span></div><p>Hamburgueria e Pizzaria</p><div class="loader"><i></i></div></div></div>
 
-<div id="splash" class="splash">
-  <div class="splash-box">
-    <div class="splash-logo">MIGUEL <span>LANCHES</span></div>
-    <p>Hamburgueria e Pizzaria</p>
-    <div class="loader"><i></i></div>
+<div id="site" class="hidden">
+<header class="header">
+  <div class="logo"><img src="assets/logo.png" alt="Miguel Lanches"></div>
+  <div class="search"><span>⌕</span><input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off"></div>
+</header>
+<nav id="categories" class="categories" aria-label="Categorias"></nav>
+
+<main class="section">
+  <section class="category-block">
+    <div class="section-title"><h2>Destaques</h2></div>
+    <div id="featured" class="featured"></div>
+  </section>
+  <div id="products"></div>
+</main>
+
+<div id="bagBar" class="bag-bar empty">
+  <div class="bag-info"><div class="bag-icon">🛍️</div><div><b>Sua sacola</b><small id="bagText">Sua sacola está vazia</small></div></div>
+  <button id="openCart" type="button">Ver sacola · <span id="bagTotal">R$ 0,00</span></button>
+</div>
+
+<div id="shade" class="shade"></div>
+<div id="cartDrawer" class="cart-drawer" aria-hidden="true">
+  <div class="drawer-head"><div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div><button id="closeCart" class="round" type="button">×</button></div>
+  <div id="cartItems" class="cart-items"></div>
+  <div class="drawer-bottom">
+    <div class="line"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
+    <button id="addMoreItems" class="main-btn" type="button" style="margin-bottom:10px;background:#fff;border:1px solid #ddd">Adicionar mais itens</button>
+    <button id="checkoutBtn" class="main-btn" type="button">Finalizar o pedido</button>
   </div>
 </div>
 
-<div id="site" class="hidden">
-  <header class="header">
-    <div class="logo"><img src="assets/logo.png" alt="Miguel Lanches"></div>
-    <div class="search">
-      <span>⌕</span>
-      <input id="search" type="search" placeholder="Buscar em Miguel Lanches" autocomplete="off">
-    </div>
-  </header>
+<div id="productModal" class="modal hidden"><div id="productBody" class="product-card"></div></div>
+<div id="checkoutModal" class="modal hidden"><div id="checkoutBody" class="checkout-card"></div></div>
 
-  <nav id="categories" class="categories" aria-label="Categorias"></nav>
-
-  <main class="section">
-    <section class="category-block">
-      <div class="section-title"><h2>Destaques</h2></div>
-      <div id="featured" class="featured"></div>
-    </section>
-    <div id="products"></div>
-  </main>
-
-  <div id="bagBar" class="bag-bar empty">
-    <div class="bag-info">
-      <div class="bag-icon">🛍️</div>
-      <div><b>Sua sacola</b><small id="bagText">Sua sacola está vazia</small></div>
-    </div>
-    <button id="openCart" type="button">Ver sacola · <span id="bagTotal">R$ 0,00</span></button>
-  </div>
-
-  <div id="shade" class="shade"></div>
-  <div id="cartDrawer" class="cart-drawer" aria-hidden="true">
-    <div class="drawer-head">
-      <div><small>SEU PEDIDO</small><h2>Sua sacola</h2></div>
-      <button id="closeCart" class="round" type="button">×</button>
-    </div>
-    <div id="cartItems" class="cart-items"></div>
-    <div class="drawer-bottom">
-      <div class="line"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
-      <button id="addMoreItems" class="main-btn" type="button" style="margin-bottom:10px;background:#fff;border:1px solid #ddd">Adicionar mais itens</button>
-      <button id="checkoutBtn" class="main-btn" type="button">Finalizar o pedido</button>
+<div id="successModal" class="modal hidden">
+  <div class="success-card">
+    <div class="success-icon">✓</div><h2>Pedido enviado!</h2><p id="orderNumber"></p>
+    <p>Seu pedido já foi enviado para a loja.</p>
+    <div style="display:grid;gap:10px;margin-top:22px">
+      <button id="trackOrderBtn" class="main-btn" type="button">Acompanhar pedido</button>
+      <button id="newOrderBtn" class="main-btn" type="button" style="background:#fff;border:1px solid #ddd">Novo pedido</button>
     </div>
   </div>
+</div>
 
-  <div id="productModal" class="modal hidden"><div id="productBody" class="product-card"></div></div>
-  <div id="checkoutModal" class="modal hidden"><div id="checkoutBody" class="checkout-card"></div></div>
-
-  <div id="successModal" class="modal hidden">
-    <div class="success-card">
-      <div class="success-icon">✓</div>
-      <h2>Pedido enviado!</h2>
-      <p id="orderNumber"></p>
-      <p>Seu pedido já foi enviado para a loja.</p>
-      <div style="display:grid;gap:10px;margin-top:22px">
-        <button id="trackOrderBtn" class="main-btn" type="button">Acompanhar pedido</button>
-        <button id="newOrderBtn" class="main-btn" type="button" style="background:#fff;border:1px solid #ddd">Novo pedido</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="trackingModal" class="hidden">
-    <div id="trackingCard"><div id="trackingBody"></div></div>
-  </div>
-
-  <div id="checkoutSubtotal" class="hidden">R$ 0,00</div>
-  <div id="checkoutTotal" class="hidden" data-value="0">R$ 0,00</div>
-  <select id="neighborhood" class="hidden"></select>
+<div id="trackingModal" class="hidden"><div id="trackingCard"><div id="trackingBody"></div></div></div>
+<div id="checkoutSubtotal" class="hidden">R$ 0,00</div>
+<div id="checkoutTotal" class="hidden" data-value="0">R$ 0,00</div>
+<select id="neighborhood" class="hidden"></select>
 </div>
 
 <nav id="ml-footer">
@@ -98,60 +76,69 @@ body{padding-bottom:82px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
-
-<!-- CORREÇÃO: o arquivo de opções fica em /web/cliente_opcoes.js -->
 <script src="../cliente_opcoes.js"></script>
-
-<!-- Mantém o sistema de produto/sabor esgotado -->
 <script src="cliente_final_status_opcoes.js"></script>
-
-<!-- Acompanhamento em tempo real + som de mudança de status -->
 <script src="acompanhamento_realtime.js"></script>
 <script src="integracao_acompanhamento.js"></script>
 
 <script>
-window.addEventListener("load",function(){
-  setTimeout(function(){
-    document.getElementById("splash")?.classList.add("hide");
-    document.getElementById("site")?.classList.remove("hidden");
-  },1600);
-});
-
-document.getElementById("mlHome")?.addEventListener("click",function(){
-  this.classList.add("active");
-  document.getElementById("mlOrders")?.classList.remove("active");
-  document.getElementById("trackingModal")?.classList.add("hidden");
-  window.scrollTo({top:0,behavior:"smooth"});
-});
-
-document.getElementById("mlOrders")?.addEventListener("click",function(){
-  this.classList.add("active");
-  document.getElementById("mlHome")?.classList.remove("active");
-  if(typeof window.openTracking==="function"){
-    window.openTracking();
-  }else{
-    location.href="acompanhar-pedido.html";
+(function(){
+  function showSite(){
+    document.getElementById('splash')?.classList.add('hide');
+    document.getElementById('site')?.classList.remove('hidden');
   }
-});
 
-document.getElementById("trackOrderBtn")?.addEventListener("click",function(){
-  if(typeof window.openTracking==="function"){
-    document.getElementById("successModal")?.classList.add("hidden");
-    window.openTracking();
-  }else{
-    location.href="acompanhar-pedido.html";
+  function startApp(){
+    try{
+      // O app.js atual declara load(), mas a página nova precisa
+      // iniciar explicitamente o carregamento do cardápio.
+      if(typeof window.load === 'function'){
+        window.load();
+      }else{
+        console.error('app.js não expôs a função load().');
+      }
+    }catch(e){
+      console.error('Falha ao iniciar cardápio:', e);
+    }
+    setTimeout(showSite,1800);
   }
+
+  if(document.readyState === 'complete'){
+    startApp();
+  }else{
+    window.addEventListener('load',startApp,{once:true});
+  }
+})();
+
+document.getElementById('mlHome')?.addEventListener('click',function(){
+  this.classList.add('active');
+  document.getElementById('mlOrders')?.classList.remove('active');
+  document.getElementById('trackingModal')?.classList.add('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
 });
 
-document.getElementById("newOrderBtn")?.addEventListener("click",function(){
-  document.getElementById("successModal")?.classList.add("hidden");
-  document.getElementById("trackingModal")?.classList.add("hidden");
-  document.getElementById("mlHome")?.click();
+document.getElementById('mlOrders')?.addEventListener('click',function(){
+  this.classList.add('active');
+  document.getElementById('mlHome')?.classList.remove('active');
+  if(typeof window.openTracking==='function') window.openTracking();
+  else location.href='acompanhar-pedido.html';
 });
 
-document.getElementById("addMoreItems")?.addEventListener("click",function(){
-  document.getElementById("cartDrawer")?.classList.remove("open");
-  document.getElementById("shade")?.classList.remove("open");
+document.getElementById('trackOrderBtn')?.addEventListener('click',function(){
+  document.getElementById('successModal')?.classList.add('hidden');
+  if(typeof window.openTracking==='function') window.openTracking();
+  else location.href='acompanhar-pedido.html';
+});
+
+document.getElementById('newOrderBtn')?.addEventListener('click',function(){
+  document.getElementById('successModal')?.classList.add('hidden');
+  document.getElementById('trackingModal')?.classList.add('hidden');
+  document.getElementById('mlHome')?.click();
+});
+
+document.getElementById('addMoreItems')?.addEventListener('click',function(){
+  document.getElementById('cartDrawer')?.classList.remove('open');
+  document.getElementById('shade')?.classList.remove('open');
 });
 </script>
 </body>
