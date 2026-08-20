@@ -108,7 +108,6 @@ function fallbackOptions(p){
  if(isCreme(p))return flavorOptions(p,"creme","Escolha o sabor");
  return "";
 }
-
 async function openProduct(pid){
  const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
  const saved=await getSavedOptions(pid);
