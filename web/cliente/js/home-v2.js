@@ -56,149 +56,106 @@ window.addEventListener('load',()=>setTimeout(()=>{if(typeof load==='function')l
 
 
 
-
-
-
-
-
 (function(){
-  const $=id=>document.getElementById(id);
-  let integerDigits='';
-
-  function parseBR(v){
-    let s=String(v||'').replace(/\s/g,'');
-    if(!s)return 0;
-    if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
-    return Number(s)||0;
+  function parseCash(v){
+    const s=String(v ?? '').trim().replace(/\s/g,'');
+    if(!s) return 0;
+    // Supports both 50 and 50,00 as the browser number input provides.
+    return Number(s.replace(',','.')) || 0;
   }
 
-  function totalPedido(){
-    const el=$('checkoutTotal');
-    const shown=parseBR(el?.textContent||'');
-    if(shown>0)return shown;
-    const items=Array.isArray(window.cart)?window.cart:[];
-    return items.reduce((s,x)=>s+(Number(x.preco)||0)*(Number(x.quantidade)||0),0);
+  function getCurrentTotal(){
+    const list=Array.isArray(window.cart)?window.cart:[];
+    const subtotal=list.reduce((sum,item)=>sum+(Number(item.preco)||0)*(Number(item.quantidade)||0),0);
+    const method=document.querySelector('.receive.selected')?.dataset.method || 'entrega';
+    const fee=method==='entrega' ? Number(window.DELIVERY_FEE||0) : 0;
+    return subtotal+fee;
   }
 
-  function update(){
-    const payment=$('payment'), input=$('cashValue');
-    const box=$('cashBox'), out=$('changeValue'), err=$('cashError');
-    if(!payment||!input)return;
+  function updateCash(){
+    const payment=document.getElementById('payment');
+    const box=document.getElementById('cashBox');
+    const input=document.getElementById('cashValue');
+    const output=document.getElementById('changeValue');
+    const cash=parseCash(input?.value);
+    const total=getCurrentTotal();
+    const isCash=payment?.value==='Dinheiro';
 
-    const cash=payment.value==='Dinheiro';
-    box?.classList.toggle('hidden',!cash);
+    box?.classList.toggle('hidden',!isCash);
 
-    if(!cash){
-      if(out)out.textContent='R$ 0,00';
-      if(err)err.textContent='';
+    if(output){
+      const change=cash>=total && cash>0 ? cash-total : 0;
+      output.textContent=money2(change);
+    }
+
+    // Visual feedback when the amount is insufficient.
+    if(input){
+      input.setCustomValidity(isCash && cash>0 && cash<total
+        ? `O valor mínimo é ${money2(total)}`
+        : '');
+    }
+  }
+
+  function installCash(){
+    const payment=document.getElementById('payment');
+    const input=document.getElementById('cashValue');
+    payment?.addEventListener('change',updateCash);
+    input?.addEventListener('input',updateCash);
+    input?.addEventListener('keyup',updateCash);
+    updateCash();
+  }
+
+  document.addEventListener('DOMContentLoaded',installCash);
+
+  // Validate and add payment information before the existing sendOrder.
+  const originalSendOrder=window.sendOrder;
+  window.sendOrder=async function(){
+    const payment=document.getElementById('payment')?.value || '';
+    const cash=parseCash(document.getElementById('cashValue')?.value);
+    const total=getCurrentTotal();
+
+    if(!payment){
+      toast('Escolha a forma de pagamento');
       return;
     }
 
-    const paid=parseBR(input.value);
-    const total=totalPedido();
-
-    if(!input.value){
-      if(out)out.textContent='R$ 0,00';
-      if(err)err.textContent='';
-    }else if(paid<total){
-      if(out)out.textContent='R$ 0,00';
-      if(err)err.textContent='Valor insuficiente. Faltam '+money2(total-paid)+'.';
-    }else{
-      if(out)out.textContent=money2(paid-total);
-      if(err)err.textContent='';
+    if(payment==='Dinheiro'){
+      if(cash<=0){
+        toast('Informe o valor que você vai pagar');
+        document.getElementById('cashValue')?.focus();
+        return;
+      }
+      if(cash<total){
+        toast(`Valor insuficiente. O total é ${money2(total)}`);
+        document.getElementById('cashValue')?.focus();
+        return;
+      }
     }
-  }
 
-  // Controlled integer input:
-  // Typing 1 -> 1,00; typing 0 next -> 10,00.
-  // The automatically added ",00" is never treated as user input, preventing
-  // the "01,1" / "1,10" behavior from the previous version.
-  function renderInput(input){
-    input.value=integerDigits ? integerDigits+',00' : '';
-    const pos=integerDigits.length;
-    try{input.setSelectionRange(pos,pos);}catch(e){}
-    update();
-  }
+    // The existing client.js closes over its own `db` constant, so we do not
+    // replace window.db. Instead, add payment information through the order
+    // observations field before sending.
+    const note=document.getElementById('orderNote');
+    const previous=note?.value || '';
+    if(note){
+      const change=payment==='Dinheiro' ? cash-total : 0;
+      const tag=`\n[ML_PAGAMENTO]${encodeURIComponent(JSON.stringify({
+        forma:payment,
+        valor_pago:payment==='Dinheiro'?cash:0,
+        troco:change
+      }))}[/ML_PAGAMENTO]`;
+      note.value=previous+tag;
+    }
 
-  function setup(){
-    const input=$('cashValue'), payment=$('payment');
-    if(!input||!payment)return;
+    try{
+      return await originalSendOrder();
+    }finally{
+      if(note) note.value=previous;
+    }
+  };
 
-    integerDigits=(input.value.match(/\d+/)?.[0]||'').replace(/^0+(?=\d)/,'');
-    renderInput(input);
-
-    input.addEventListener('beforeinput',function(e){
-      if(e.inputType==='insertText' && /\d/.test(e.data||'')){
-        e.preventDefault();
-        integerDigits += String(e.data).replace(/\D/g,'');
-        integerDigits=integerDigits.replace(/^0+(?=\d)/,'');
-        renderInput(input);
-        return;
-      }
-
-      if(e.inputType==='deleteContentBackward' || e.inputType==='deleteContentForward'){
-        e.preventDefault();
-        integerDigits=integerDigits.slice(0,-1);
-        renderInput(input);
-        return;
-      }
-
-      if(e.inputType==='insertFromPaste'){
-        e.preventDefault();
-        const pasted=String(e.data||'').replace(/\D/g,'');
-        integerDigits=pasted.replace(/^0+(?=\d)/,'');
-        renderInput(input);
-      }
-    });
-
-    // Android keyboards can skip beforeinput, so input is also handled.
-    input.addEventListener('input',function(){
-      const digits=input.value.replace(/\D/g,'');
-      // Ignore the auto ",00" suffix when reconstructing.
-      if(digits.length>=2 && input.value.endsWith(',00')){
-        integerDigits=digits.slice(0,-2).replace(/^0+(?=\d)/,'');
-      }else{
-        integerDigits=digits.replace(/^0+(?=\d)/,'');
-      }
-      renderInput(input);
-    });
-
-    input.addEventListener('focus',function(){
-      renderInput(input);
-    });
-
-    payment.addEventListener('change',update);
-    document.addEventListener('click',()=>setTimeout(update,20));
-    update();
-  }
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);
-  else setup();
-
-  const originalSend=window.sendOrder;
-  if(typeof originalSend==='function'){
-    window.sendOrder=async function(){
-      const payment=$('payment')?.value||'';
-      const paid=parseBR($('cashValue')?.value||'');
-      const total=totalPedido();
-
-      if(!payment){toast('Escolha a forma de pagamento');return;}
-      if(payment==='Dinheiro' && paid<total){
-        update();
-        toast(paid>0?'Valor insuficiente. O total é '+money2(total):'Informe o valor que você vai pagar');
-        $('cashValue')?.focus();
-        return;
-      }
-
-      const note=$('orderNote');
-      const old=note?.value||'';
-      if(note && payment==='Dinheiro'){
-        note.value=old+'\n[ML_PAGAMENTO]'+encodeURIComponent(JSON.stringify({
-          forma:'Dinheiro',valor_pago:paid,troco:paid-total
-        }))+'[/ML_PAGAMENTO]';
-      }
-      try{return await originalSend();}
-      finally{if(note)note.value=old;}
-    };
-  }
+  // Recalculate when the cart or receiving method changes.
+  document.addEventListener('click',()=>{
+    setTimeout(updateCash,0);
+  });
 })();
