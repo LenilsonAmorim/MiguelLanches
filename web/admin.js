@@ -51,19 +51,15 @@ function render(){
   renderOrders();renderDashboard();renderProducts();renderCats();renderClients();renderPromos();renderReports();renderConfig();
 }
 function renderOrders(){
-  const groups=[["novo","Novos"],["preparo","Preparando"],["entrega","Saiu para entrega"],["entregue","Entregues"]];
-  const data=filter==="cancelado"?[["cancelado","Cancelados"]]:groups;
-  $("orders").innerHTML=data.map(([s,title])=>{
+  const groups=[["novo","Novos"],["preparo","Preparando"],["entrega","Saiu para entrega"],["entregue","Entregues"],["cancelado","Cancelados"]];
+  $("orders").innerHTML=groups.map(([s,title])=>{
     const arr=orders.filter(o=>statusOf(o.observacoes)===s);
-    const visible=filter==="todos"||filter===s;
-    if(!visible)return `<div class="column"><h2>${title}<small>${arr.length}</small></h2><p class="muted">Use a aba ${title} para ver.</p></div>`;
     return `<div class="column"><h2>${title}<small>${arr.length}</small></h2>${arr.map(orderCard).join("")||"<p class='muted'>Nenhum pedido.</p>"}</div>`;
   }).join("");
-  if(filter==="cancelado")return bindOrderButtons();
   bindOrderButtons();
-  document.querySelectorAll("#tabs button").forEach(b=>b.querySelector("b").textContent=b.dataset.filter==="todos"?orders.length:orders.filter(o=>statusOf(o.observacoes)===b.dataset.filter).length);
   $("badge").textContent=orders.filter(o=>statusOf(o.observacoes)==="novo").length;
 }
+
 function orderCard(o){
   const s=statusOf(o.observacoes),items=itemsOf(o.observacoes);
   const cliente=o.cliente||o.Cliente||"Cliente";
@@ -185,7 +181,6 @@ function printTest(){
 function setup(){
   document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));$("page-"+b.dataset.page).classList.add("active");document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");$("title").textContent=b.querySelector("span").textContent;$("side").classList.remove("open")});
   $("menu").onclick=()=>$("side").classList.toggle("open");$("refresh").onclick=load;$("loginBtn").onclick=login;$("pass").onkeydown=e=>e.key==="Enter"&&login();$("logout").onclick=async()=>{await db.auth.signOut();location.reload()};
-  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");filter=b.dataset.filter;renderOrders()});
   $("ps").oninput=renderProducts;$("cs").oninput=renderClients;$("newProduct").onclick=()=>productModal();$("newCat").onclick=()=>catModal();$("close").onclick=closeModal;$("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};$("test").onclick=printTest;
   $("save").onclick=()=>{localStorage.setItem("ml_admin_config",JSON.stringify({store:$("store").value.trim(),phone:$("phoneStore").value.trim(),fee:Number($("fee").value||0)}));toast("Configurações salvas")};
   $("csv").onclick=()=>{const rows=[["id","cliente","telefone","total","status","criado_em"],...orders.map(o=>[o.id,o.cliente||o.Cliente||"",o.telefone||"",o.total||0,statusOf(o.observacoes),o.created_at||""])];const csv="\ufeff"+rows.map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="miguel-lanches-pedidos.csv";a.click();URL.revokeObjectURL(a.href)};
