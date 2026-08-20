@@ -36,7 +36,10 @@
 .change-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #e5e5e5;font-size:14px}
 .change-row strong{font-size:18px;color:#16803c}
 .cash-error{min-height:18px;margin-top:5px;font-size:12px;font-weight:800;color:#d71920}.cash-error:empty{display:none}</style>
-</head>
+<style>
+.track-access{padding:10px 14px;background:#fff;border-bottom:1px solid #eee;text-align:right}.track-access a{display:inline-flex;align-items:center;min-height:34px;padding:0 13px;border-radius:9px;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:900}
+.success-card{text-align:center;padding:30px 20px 26px}.success-card h2{font-size:26px;margin:8px 0 5px}.success-card #orderNumber{font-weight:900;color:#c71922;margin:0 0 10px}.success-text{color:#666;font-size:13px;line-height:1.4;margin:0 0 20px}.success-actions{display:grid;gap:9px}.success-actions .ghost{min-height:46px}
+</style></head>
 <body>
 <div id="splash" class="splash"><div class="splash-inner"><img src="assets/logo.png" alt="Miguel Lanches"><div class="splash-brand">MIGUEL <span>LANCHES</span></div><p>Carregando seu cardápio...</p><div class="loader"><i></i></div></div></div>
 <div id="site" class="site-hidden">
@@ -46,6 +49,7 @@
 </header>
 <main id="inicio"><section class="menu-home" id="cardapio">
 <div id="categoriesWrap" class="categories-wrap"><div id="categories" class="categories"></div></div>
+<div class="track-access"><a href="acompanhar-pedido.html">Acompanhar pedido</a></div>
 <section id="featuredSection" class="home-section featured-section"><div class="section-head"><h2>Destaques</h2></div><div id="featured" class="featured-slider"></div></section>
 <section class="home-section"><div id="products" class="catalog"></div></section>
 </section></main>
@@ -76,10 +80,19 @@
 <textarea id="orderNote" placeholder="Observações do pedido"></textarea><select id="payment"><option value="">Forma de pagamento *</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option></select>
 <div id="cashBox" class="cash-box hidden">
   <label for="cashValue">Valor que você vai pagar</label>
-  <input id="cashValue" inputmode="decimal" type="text" autocomplete="off" placeholder="Ex.: 50,00"><div id="cashError" class="cash-error"></div>
+  <input id="cashValue" inputmode="decimal" type="text" autocomplete="off" placeholder="Ex.: 10,00"><div id="cashError" class="cash-error"></div>
   <div class="change-row"><span>Troco</span><strong id="changeValue">R$ 0,00</strong></div>
 </div><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b id="checkoutFee">R$ 0,00</b></span><strong>Total <b id="checkoutTotal">R$ 0,00</b></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
-<div id="successModal" class="modal hidden"><div class="modal-card"><div class="success-icon">✓</div><h2 id="orderNumber">Pedido #0000</h2><button id="successClose" class="primary full" type="button">Entendi</button></div></div>
+<div id="successModal" class="modal hidden"><div class="modal-card success-card">
+  <div class="success-icon">✓</div>
+  <h2>Pedido enviado!</h2>
+  <p id="orderNumber">Pedido #0000</p>
+  <p class="success-text">Recebemos seu pedido. Você pode acompanhar o andamento a qualquer momento.</p>
+  <div class="success-actions">
+    <button id="trackOrderBtn" class="primary full" type="button">Acompanhar pedido</button>
+    <button id="successClose" class="ghost full" type="button">Fechar</button>
+  </div>
+</div></div>
 <div id="toast" class="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script><script src="js/client.js"></script><script src="js/home-v2.js"></script>

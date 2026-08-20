@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Acompanhar pedido — Miguel Lanches</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f7f7;color:#151515}
+.top{background:#090909;color:#fff;padding:18px 18px 20px;text-align:center}.top img{width:72px;height:72px;object-fit:contain}.top h1{font-size:20px;margin:5px 0 0}
+.page{max-width:560px;margin:0 auto;padding:18px 15px 35px}.back{display:inline-flex;text-decoration:none;color:#111;font-weight:800;font-size:13px;margin-bottom:15px}
+.card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 2px 14px #0000000d;border:1px solid #eee}.empty{text-align:center;padding:35px 15px}.empty h2{font-size:22px;margin:0 0 8px}.empty p{color:#777;line-height:1.4}
+.order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.order-head h2{margin:0;font-size:22px}.order-date{font-size:11px;color:#777;margin-top:5px}.badge{padding:7px 10px;border-radius:999px;background:#fff5d6;color:#8a6400;font-size:11px;font-weight:900;white-space:nowrap}
+.timeline{margin:24px 0 18px}.step{display:flex;gap:13px;position:relative;padding-bottom:20px}.step:last-child{padding-bottom:0}.dot{width:30px;height:30px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:900;z-index:2}.step.active .dot,.step.done .dot{background:#f6c116;color:#111}.line{position:absolute;left:14px;top:30px;bottom:0;width:2px;background:#e5e5e5}.step.done .line{background:#f6c116}.step h3{margin:2px 0 4px;font-size:14px}.step p{margin:0;color:#777;font-size:11px;line-height:1.35}
+.items{border-top:1px solid #eee;margin-top:18px;padding-top:14px}.item{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:13px}.item small{display:block;color:#777;margin-top:2px}.total{display:flex;justify-content:space-between;border-top:1px solid #eee;margin-top:8px;padding-top:12px;font-size:17px;font-weight:900}.refresh{margin-top:16px;text-align:center;color:#777;font-size:10px}
+.primary{width:100%;min-height:46px;border:0;border-radius:11px;background:#f6c116;color:#111;font-weight:900;margin-top:15px}.muted{color:#777;font-size:11px}
+</style>
+</head>
+<body>
+<header class="top"><img src="assets/logo.png" alt="Miguel Lanches"><h1>Acompanhar pedido</h1></header>
+<main class="page"><a class="back" href="index.html">← Voltar ao cardápio</a><div id="app"></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/tracking.js"></script>
+</body>
+</html>
