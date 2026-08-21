@@ -101,7 +101,7 @@ function renderFeatured(){
  }).join(""):"<p class='muted'>Nenhum destaque cadastrado.</p>";
 }
 function renderProducts(){
- const q=norm($("search").value);
+ const q=norm($("search")?.value || "");
  const list=products.filter(p=>!q||norm(p.nome).includes(q)||norm(p.descricao).includes(q));
  let html="";
  for(const c of categories){
@@ -115,7 +115,7 @@ function renderProducts(){
 }
 function card(p){
  const img=productImage(p);
- return `<article class="product" onclick="openProduct('${p.id}')"><div class="product-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="product-body"><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"Toque para ver as opções.")}</p><div class="product-foot"><strong>${money(p.preco)}</strong><button type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></div></div></article>`;
+ return `<article class="product" data-open-product="${esc(p.id)}"><div class="product-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="product-body"><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"Toque para ver as opções.")}</p><div class="product-foot"><strong>${money(p.preco)}</strong><button type="button" data-open-product="${esc(p.id)}">+</button></div></div></article>`;
 }
 
 /* Opções do produto: versão estável baseada no comportamento anterior. */
@@ -148,6 +148,18 @@ async function openProduct(pid){
 }
 function stepQty(d){window.currentQty=Math.max(1,Math.min(99,(window.currentQty||1)+d));$("productQty").textContent=window.currentQty}
 function closeProduct(){$("productModal").classList.add("hidden")}
+window.openProduct=openProduct;
+window.closeProduct=closeProduct;
+window.addCurrent=addCurrent;
+
+document.addEventListener("click", event => {
+  const trigger = event.target.closest("[data-open-product]");
+  if (!trigger) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const pid = trigger.getAttribute("data-open-product");
+  if (pid) openProduct(pid);
+});
 
 /* Opções cadastradas no Admin/Supabase. */
 function renderSavedOptions(config,options){
@@ -304,4 +316,7 @@ window.addEventListener("DOMContentLoaded",()=>{
     $("checkoutForm")?.addEventListener("submit",sendOrder);
   }catch(e){console.error("Eventos:",e)}
   load();
+});
+window.addEventListener("error", event => {
+  console.error("Erro no cardápio:", event.error || event.message);
 });
