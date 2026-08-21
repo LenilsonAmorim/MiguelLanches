@@ -41,10 +41,10 @@
     const id=String(order?.id ?? "").slice(-5).padStart(3,"0");
     const items=itemsOf(order?.observacoes);
 
-    lines.push("\x1B\x40");                 // init
-    lines.push("\x1B\x61\x01");             // center
+    lines.push("\x1B\x40");
+    lines.push("\x1B\x61\x01");
     lines.push("MIGUEL LANCHES");
-    lines.push("\x1B\x61\x00");             // left
+    lines.push("\x1B\x61\x00");
     lines.push(sep);
     lines.push("PEDIDO: #"+id);
     if(order?.created_at) lines.push("DATA/HORA: "+new Date(order.created_at).toLocaleString("pt-BR"));
@@ -83,8 +83,8 @@
     lines.push(sep);
     lines.push("\x1B\x61\x01");
     lines.push("OBRIGADO!");
-    lines.push("\x1B\x64\x04");             // feed
-    lines.push("\x1D\x56\x00");             // cut if supported
+    lines.push("\x1B\x64\x04");
+    lines.push("\x1D\x56\x00");
     return new TextEncoder().encode(lines.join("\n")+"\n");
   }
 
@@ -145,7 +145,6 @@
       const btn=e.target.closest?.("[data-print]");
       if(!btn) return;
 
-      // Captura antes do handler atual do admin.js.
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -162,7 +161,6 @@
     }, true);
   }
 
-  // Botão opcional para conectar/testar a impressora no painel.
   function addConnectButton(){
     const topbar=document.querySelector(".topbar");
     if(!topbar || document.getElementById("usbPrinterBtn")) return;
