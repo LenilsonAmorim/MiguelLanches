@@ -36,56 +36,186 @@
   }
 
   function receipt(order) {
-    const lines=[];
-    const sep="--------------------------------";
-    const id=String(order?.id ?? "").slice(-5).padStart(3,"0");
-    const items=itemsOf(order?.observacoes);
+    const lines = [];
+    const sep = "--------------------------------";
+    const id = String(order?.id ?? "").slice(-5).padStart(3, "0");
+    const items = itemsOf(order?.observacoes);
+
+    const receiveText = (() => {
+      const direct = String(order?.forma_recebimento || "").toLowerCase();
+      if (direct) return direct;
+      const m = String(order?.observacoes || "")
+        .match(/\[ML_RECEBIMENTO\](.*?)\[\/ML_RECEBIMENTO\]/);
+      return String(m?.[1] || "").toLowerCase();
+    })();
+
+    const isPickup =
+      receiveText.includes("retirada") ||
+      receiveText.includes("retirar") ||
+      receiveText.includes("pickup");
 
     lines.push("\x1B\x40");
     lines.push("\x1B\x61\x01");
     lines.push("MIGUEL LANCHES");
     lines.push("\x1B\x61\x00");
     lines.push(sep);
-    lines.push("PEDIDO: #"+id);
-    if(order?.created_at) lines.push("DATA/HORA: "+new Date(order.created_at).toLocaleString("pt-BR"));
+    lines.push("PEDIDO: #" + id);
+
+    if (order?.created_at) {
+      lines.push(
+        "DATA/HORA: " +
+        new Date(order.created_at).toLocaleString("pt-BR")
+      );
+    }
+
     lines.push("");
-    lines.push("CLIENTE: "+strip(order?.cliente || order?.Cliente || "Cliente"));
-    if(order?.endereco) lines.push("ENDERECO: "+strip(order.endereco));
-    if(order?.referencia) lines.push("REF: "+strip(order.referencia));
+    lines.push(
+      "CLIENTE: " +
+      strip(order?.cliente || order?.Cliente || "Cliente")
+    );
+
+    // PRIVACIDADE:
+    // Nunca imprimir telefone/WhatsApp.
+    // Em retirada, também não imprimir endereço nem referência.
+    if (!isPickup) {
+      if (order?.endereco) {
+        lines.push("ENDERECO: " + strip(order.endereco));
+      }
+
+      if (order?.referencia) {
+        lines.push("REF: " + strip(order.referencia));
+      }
+    }
+
     lines.push(sep);
     lines.push(fit("QTD  ITEM                         VALOR"));
     lines.push(sep);
 
-    if(items.length){
-      items.forEach(i=>{
-        const q=Number(i.quantidade||1);
-        const total=Number(i.preco||0)*q;
-        let name=strip(i.nome||"Item");
-        lines.push(twoCol(`${String(q).padStart(2,"0")}   ${name}`,money(total)));
+    if (items.length) {
+      items.forEach(i => {
+        const q = Number(i.quantidade || 1);
+        const total = Number(i.preco || 0) * q;
+        let name = strip(i.nome || "Item");
+
+        lines.push(
+          twoCol(
+            `${String(q).padStart(2, "0")}   ${name}`,
+            money(total)
+          )
+        );
+
+        if (i.config?.sabores?.length) {
+          lines.push(
+            "  Sabores: " +
+            strip(i.config.sabores.join(" + ")).slice(0, 27)
+          );
+        }
+
+        if (i.config?.coberturas?.length) {
+          lines.push(
+            "  Coberturas: " +
+            strip(i.config.coberturas.join(", ")).slice(0, 25)
+          );
+        }
+
+        if (i.config?.sabor) {
+          lines.push(
+            "  Sabor: " +
+            strip(i.config.sabor).slice(0, 25)
+          );
+        }
+
+        if (i.obs) {
+          lines.push(
+            "  Obs: " +
+            strip(i.obs).slice(0, 26)
+          );
+        }
       });
     } else {
       lines.push("Itens do pedido");
     }
 
     lines.push(sep);
-    lines.push(twoCol("TOTAL:",money(order?.total)));
-    if(order?.observacoes){
-      const clean=String(order.observacoes)
-        .replace(/\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,"")
-        .replace(/\[ML_STATUS\].*?\[\/ML_STATUS\]/g,"")
-        .trim();
-      if(clean){
-        lines.push(sep);
-        lines.push("OBSERVACOES:");
-        clean.split(/\r?\n/).forEach(x=>{if(x.trim()) lines.push(strip(x.trim()).slice(0,32));});
+
+    const pagamento =
+      order?.pagamento ||
+      (() => {
+        const m = String(order?.observacoes || "")
+          .match(/\[ML_PAGAMENTO\](.*?)\[\/ML_PAGAMENTO\]/);
+        return m?.[1] || "";
+      })();
+
+    if (pagamento) {
+      lines.push("PAGAMENTO: " + strip(pagamento));
+    }
+
+    if (
+      order?.valor_pago &&
+      String(pagamento).toLowerCase() === "dinheiro"
+    ) {
+      lines.push(
+        "VALOR PAGO: " +
+        money(order.valor_pago)
+      );
+
+      const troco =
+        Number(order.valor_pago) -
+        Number(order.total || 0);
+
+      if (troco >= 0) {
+        lines.push(
+          "TROCO: " +
+          money(troco)
+        );
       }
     }
+
+    lines.push(twoCol("TOTAL:", money(order?.total)));
+
+    if (order?.observacoes) {
+      const clean = String(order.observacoes)
+        .replace(
+          /\[ML_ITENS\][\s\S]*?\[\/ML_ITENS\]/,
+          ""
+        )
+        .replace(
+          /\[ML_STATUS\].*?\[\/ML_STATUS\]/g,
+          ""
+        )
+        .replace(
+          /\[ML_RECEBIMENTO\].*?\[\/ML_RECEBIMENTO\]/g,
+          ""
+        )
+        .replace(
+          /\[ML_PAGAMENTO\].*?\[\/ML_PAGAMENTO\]/g,
+          ""
+        )
+        .trim();
+
+      if (clean) {
+        lines.push(sep);
+        lines.push("OBSERVACOES:");
+
+        clean.split(/\r?\n/).forEach(x => {
+          if (x.trim()) {
+            lines.push(
+              strip(x.trim()).slice(0, 32)
+            );
+          }
+        });
+      }
+    }
+
     lines.push(sep);
     lines.push("\x1B\x61\x01");
     lines.push("OBRIGADO!");
     lines.push("\x1B\x64\x04");
     lines.push("\x1D\x56\x00");
-    return new TextEncoder().encode(lines.join("\n")+"\n");
+
+    return new TextEncoder().encode(
+      lines.join("\n") + "\n"
+    );
   }
 
   async function findEndpoint() {
