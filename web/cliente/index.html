@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/style.css?v=20260820-3">
 <link rel="stylesheet" href="css/checkout-polish.css?v=20260820-1">
 <link rel="stylesheet" href="css/menu-layout.css?v=20260822-1">
+<link rel="stylesheet" href="css/destaques.css?v=20260822-3">
 </head>
 <body>
 <section id="splash" class="splash"><div class="splash-inner">
@@ -16,59 +17,22 @@
 <p>Carregando cardápio...</p><div class="loader"><i></i></div>
 </div></section>
 <div id="site" class="hidden">
-<header class="mobile-header">
-<div class="brand-mini"><img src="assets/logo.png" alt="Miguel Lanches"></div>
-<div class="header-search">
-<span class="search-icon" aria-hidden="true">⌕</span>
-<input id="search" type="search" autocomplete="off" placeholder="Buscar em Miguel Lanches">
-<button type="button" onclick="document.getElementById('search').value='';renderProducts()">×</button>
-</div>
-</header>
+<header class="mobile-header"><div class="brand-mini"><img src="assets/logo.png" alt="Miguel Lanches"></div><div class="header-search"><span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" autocomplete="off" placeholder="Buscar em Miguel Lanches"><button type="button" onclick="document.getElementById('search').value='';renderProducts()">×</button></div></header>
 <main class="menu-home">
 <nav class="categories-wrap" aria-label="Categorias"><div id="categories" class="categories"></div></nav>
-<section class="home-section featured-section">
-<div class="section-head"><h2>Destaques</h2><div class="section-head-right"><span class="section-accent">★</span><button type="button" class="section-link" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Ver todos</button></div></div>
-<div id="featured" class="featured-slider"></div>
-</section>
-<section id="popular" class="popular-block"></section>
-<section id="products"></section>
+<section class="home-section featured-section"><div class="section-head"><h2>Destaques</h2><div class="section-head-right"><span class="section-accent">★</span><button type="button" class="section-link" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Ver todos</button></div></div><div id="featured" class="featured-slider"></div></section>
+<section id="popular" class="popular-block"></section><section id="products"></section>
 </main>
-<div id="bagBar" class="bag-bar empty">
-<div class="bag-info"><span class="bag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8h12l1 13H5L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
-<div class="bag-copy"><b id="bagText">Sua sacola está vazia</b><small>Total: <span id="bagTotal">R$ 0,00</span></small></div></div>
-<button id="bagOpenButton" type="button" onclick="openCart()"><span>Ver sacola</span><em id="bagCount">0</em></button>
-</div>
+<div id="bagBar" class="bag-bar empty"><div class="bag-info"><span class="bag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8h12l1 13H5L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><div class="bag-copy"><b id="bagText">Sua sacola está vazia</b><small>Total: <span id="bagTotal">R$ 0,00</span></small></div></div><button id="bagOpenButton" type="button" onclick="openCart()"><span>Ver sacola</span><em id="bagCount">0</em></button></div>
 <div id="shade" class="shade" onclick="closeCart()"></div>
-<aside id="cartDrawer" class="cart-drawer" aria-label="Sacola">
-<div class="drawer-head"><div><small>SUA COMPRA</small><h2>Sacola</h2></div><button type="button" onclick="closeCart()">×</button></div>
-<div id="cartItems" class="drawer-items"></div><div id="emptyCart" class="empty-cart">Sua sacola está vazia.</div>
-<div class="drawer-bottom"><div class="drawer-total"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div>
-<div class="drawer-actions"><button type="button" class="add-more" onclick="closeCart()">Adicionar mais itens</button><button id="checkoutBtn" type="button" class="finish-order" onclick="openCheckout()" disabled>Finalizar pedido</button></div></div>
-</aside>
+<aside id="cartDrawer" class="cart-drawer" aria-label="Sacola"><div class="drawer-head"><div><small>SUA COMPRA</small><h2>Sacola</h2></div><button type="button" onclick="closeCart()">×</button></div><div id="cartItems" class="drawer-items"></div><div id="emptyCart" class="empty-cart">Sua sacola está vazia.</div><div class="drawer-bottom"><div class="drawer-total"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div><div class="drawer-actions"><button type="button" class="add-more" onclick="closeCart()">Adicionar mais itens</button><button id="checkoutBtn" type="button" class="finish-order" onclick="openCheckout()" disabled>Finalizar pedido</button></div></div></aside>
 <div id="productModal" class="modal hidden"><div id="productBody" class="modal-card product-modal"></div></div>
-<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal">
-<button class="modal-close" type="button" onclick="closeCheckout()">×</button>
-<div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você vai receber?</h2></div>
-<div class="receive-grid">
-<button class="receive" data-method="entrega" type="button" onclick="selectReceive('entrega')"><b>Entrega</b><small>Receber no endereço</small></button>
-<button class="receive" data-method="retirada" type="button" onclick="selectReceive('retirada')"><b>Retirada</b><small>Vou buscar na lanchonete</small></button>
-</div>
-<form id="checkoutForm">
-<label>Nome *</label><input id="customerName" required placeholder="Seu nome">
-<div id="phoneBox"><label>WhatsApp *</label><input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999"></div>
-<div id="deliveryBox" class="delivery-box hidden"><label>Bairro *</label><select id="neighborhood"><option value="">Bairro *</option></select><label>Endereço *</label><input id="address" placeholder="Rua, número"><label>Referência</label><input id="reference" placeholder="Ponto de referência"></div>
-<label>Forma de pagamento *</label><select id="payment"><option value="">Escolha uma opção</option><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select>
-<div id="cashBox" class="cash-box hidden"><input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor pago"><b id="change"></b></div>
-<label>Observação</label><textarea id="orderNote" placeholder="Alguma observação?"></textarea>
-<div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b>R$ 0,00</b></span><strong>Total <span id="checkoutTotal" data-value="0">R$ 0,00</span></strong></div>
-<button class="primary full" type="submit">Enviar pedido</button>
-</form></div></div>
+<div id="checkoutModal" class="modal hidden"><div class="modal-card checkout-modal"><button class="modal-close" type="button" onclick="closeCheckout()">×</button><div class="modal-title"><small>FINALIZAR PEDIDO</small><h2>Como você vai receber?</h2></div><div class="receive-grid"><button class="receive" data-method="entrega" type="button" onclick="selectReceive('entrega')"><b>Entrega</b><small>Receber no endereço</small></button><button class="receive" data-method="retirada" type="button" onclick="selectReceive('retirada')"><b>Retirada</b><small>Vou buscar na lanchonete</small></button></div><form id="checkoutForm"><label>Nome *</label><input id="customerName" required placeholder="Seu nome"><div id="phoneBox"><label>WhatsApp *</label><input id="customerPhone" required inputmode="tel" placeholder="(84) 99999-9999"></div><div id="deliveryBox" class="delivery-box hidden"><label>Bairro *</label><select id="neighborhood"><option value="">Bairro *</option></select><label>Endereço *</label><input id="address" placeholder="Rua, número"><label>Referência</label><input id="reference" placeholder="Ponto de referência"></div><label>Forma de pagamento *</label><select id="payment"><option value="">Escolha uma opção</option><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select><div id="cashBox" class="cash-box hidden"><input id="cashValue" type="number" min="0" step="0.01" placeholder="Valor pago"><b id="change"></b></div><label>Observação</label><textarea id="orderNote" placeholder="Alguma observação?"></textarea><div class="checkout-totals"><span>Subtotal <b id="checkoutSubtotal">R$ 0,00</b></span><span>Entrega <b>R$ 0,00</b></span><strong>Total <span id="checkoutTotal" data-value="0">R$ 0,00</span></strong></div><button class="primary full" type="submit">Enviar pedido</button></form></div></div>
 <div id="successModal" class="modal hidden"><div class="modal-card success-card"><div class="success-icon">✓</div><small>PEDIDO RECEBIDO</small><h2>Obrigado!</h2><p>Seu pedido foi enviado para a Miguel Lanches.</p><h3 id="orderNumber">Pedido recebido</h3><button class="primary full" type="button" onclick="closeSuccess()">Voltar ao cardápio</button></div></div>
-<nav class="bottom-nav" aria-label="Navegação"><button type="button" class="bottom-nav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bottom-icon">⌂</span><b>Início</b></button><button type="button" class="bottom-nav-item" onclick="openCart()"><span class="bottom-icon">▣</span><b>Acompanhar Pedidos</b></button></nav>
-<div id="toast" class="toast"></div>
+<nav class="bottom-nav" aria-label="Navegação"><button type="button" class="bottom-nav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bottom-icon">⌂</span><b>Início</b></button><button type="button" class="bottom-nav-item" onclick="openCart()"><span class="bottom-icon">▣</span><b>Acompanhar Pedidos</b></button></nav><div id="toast" class="toast"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=20260820-3"></script>
 <script src="app.js?v=20260820-4"></script>
-</body>
-</html>
+<script src="destaques.js?v=20260822-3"></script>
+</body></html>
