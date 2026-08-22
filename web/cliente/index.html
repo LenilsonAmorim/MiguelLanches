@@ -7,6 +7,7 @@
 <title>Miguel Lanches — Cardápio</title>
 <link rel="stylesheet" href="css/style.css?v=20260820-3">
 <link rel="stylesheet" href="css/checkout-polish.css?v=20260820-1">
+<link rel="stylesheet" href="css/menu-layout.css?v=20260822-1">
 </head>
 <body>
 <section id="splash" class="splash"><div class="splash-inner">
@@ -26,7 +27,7 @@
 <main class="menu-home">
 <nav class="categories-wrap" aria-label="Categorias"><div id="categories" class="categories"></div></nav>
 <section class="home-section featured-section">
-<div class="section-head"><h2>Destaques</h2><span class="section-accent">★</span></div>
+<div class="section-head"><h2>Destaques</h2><div class="section-head-right"><span class="section-accent">★</span><button type="button" class="section-link" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Ver todos</button></div></div>
 <div id="featured" class="featured-slider"></div>
 </section>
 <section id="popular" class="popular-block"></section>

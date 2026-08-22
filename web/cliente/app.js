@@ -30,7 +30,36 @@ const FLAVORS={
  creme:["Morango","Maracujá","Chocolate","Cupuaçu","Açaí","Ninho","Oreo","Ovomaltine","Paçoca","Nutella"]
 };
 
-function productImage(p){return p?.imagem_url||p?.imagem||p?.image_url||""}
+const FALLBACK_FOOD_IMAGES={
+  lanche:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=85",
+  porcao:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=900&q=85",
+  churrasco:"https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=85",
+  dogao:"https://images.unsplash.com/photo-1612392062631-94dd858cba88?auto=format&fit=crop&w=900&q=85",
+  petisco:"https://images.unsplash.com/photo-1527477396000-e27163b481c2?auto=format&fit=crop&w=900&q=85",
+  bebida:"https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=85",
+  pizza:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=85",
+  pastel:"https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=900&q=85",
+  acai:"https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&w=900&q=85",
+  suco:"https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=900&q=85",
+  "milk shake":"https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=900&q=85",
+  creme:"https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=900&q=85"
+};
+function fallbackFoodImage(p){
+  const n=norm(p?.nome||"")+" "+catName(p);
+  if(n.includes("pizza"))return FALLBACK_FOOD_IMAGES.pizza;
+  if(n.includes("pastel"))return FALLBACK_FOOD_IMAGES.pastel;
+  if(n.includes("acai"))return FALLBACK_FOOD_IMAGES.acai;
+  if(n.includes("milk shake")||n.includes("milkshake"))return FALLBACK_FOOD_IMAGES["milk shake"];
+  if(n.includes("suco")||n.includes("juice"))return FALLBACK_FOOD_IMAGES.suco;
+  if(n.includes("creme")||n.includes("sorvete"))return FALLBACK_FOOD_IMAGES.creme;
+  if(n.includes("dog")||n.includes("cachorro quente"))return FALLBACK_FOOD_IMAGES.dogao;
+  if(n.includes("churrasco")||n.includes("carne")||n.includes("bovina"))return FALLBACK_FOOD_IMAGES.churrasco;
+  if(n.includes("porcao")||n.includes("batata")||n.includes("fritas"))return FALLBACK_FOOD_IMAGES.porcao;
+  if(n.includes("petisco")||n.includes("frango")||n.includes("asa"))return FALLBACK_FOOD_IMAGES.petisco;
+  if(n.includes("bebida")||n.includes("refrigerante")||n.includes("agua"))return FALLBACK_FOOD_IMAGES.bebida;
+  return FALLBACK_FOOD_IMAGES.lanche;
+}
+function productImage(p){return p?.imagem_url||p?.imagem||p?.image_url||fallbackFoodImage(p)}
 function catName(p){return norm(p?.categorias?.nome||"")}
 function isPizza(p){return catName(p).includes("pizza")||norm(p?.nome).includes("pizza")}
 function isPastel(p){return catName(p).includes("pastel")||norm(p?.nome).includes("pastel")}
@@ -97,7 +126,7 @@ function renderFeatured(){
  const list=products.slice(0,6);
  $("featured").innerHTML=list.length?list.map(p=>{
   const img=productImage(p);
-  return `<button class="highlight" onclick="openProduct('${p.id}')"><div class="highlight-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="highlight-body"><small>Mais pedido</small><b>${esc(p.nome)}</b><strong>${money(p.preco)}</strong></div></button>`;
+  return `<button class="highlight" onclick="openProduct('${p.id}')"><div class="highlight-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}" onerror="this.onerror=null;this.src=fallbackFoodImage(window.currentProduct||{});">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="highlight-body"><small>Mais pedido</small><b>${esc(p.nome)}</b><strong>${money(p.preco)}</strong></div></button>`;
  }).join(""):"<p class='muted'>Nenhum destaque cadastrado.</p>";
 }
 function renderProducts(){
@@ -115,7 +144,7 @@ function renderProducts(){
 }
 function card(p){
  const img=productImage(p);
- return `<article class="product" onclick="openProduct('${p.id}')"><div class="product-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="product-body"><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"Toque para ver as opções.")}</p><div class="product-foot"><strong>${money(p.preco)}</strong><button type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></div></div></article>`;
+ return `<article class="product" onclick="openProduct('${p.id}')"><div class="product-img">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}" onerror="this.onerror=null;this.src=fallbackFoodImage(window.currentProduct||{});">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}</div><div class="product-body"><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||"Toque para ver as opções.")}</p><div class="product-foot"><strong>${money(p.preco)}</strong><button type="button" onclick="event.stopPropagation();openProduct('${p.id}')">+</button></div></div></article>`;
 }
 
 /* Opções do produto: versão estável baseada no comportamento anterior. */
@@ -134,21 +163,6 @@ function fallbackOptions(p){
  if(isCreme(p))return flavorOptions(p,"creme","Escolha o sabor");
  return "";
 }
-async function getSavedOptions(pid){
-  try{
-    if(!db || !pid) return null;
-    const configResult = await db.from("produto_opcoes_config").select("*").eq("produto_id", pid).maybeSingle();
-    const optionsResult = await db.from("produto_opcoes").select("*").eq("produto_id", pid).eq("ativo", true).order("ordem");
-    return {
-      config: configResult.error ? null : configResult.data,
-      options: optionsResult.error ? [] : (optionsResult.data || [])
-    };
-  }catch(error){
-    console.error("Erro ao carregar opções do produto:", error);
-    return null;
-  }
-}
-
 async function openProduct(pid){
  const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
  const saved=await getSavedOptions(pid);
@@ -158,7 +172,7 @@ async function openProduct(pid){
  else extra=fallbackOptions(p);
 
  const img=productImage(p);
- $("productBody").innerHTML=`<div class="product-main"><div class="product-hero">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}<button class="hero-close" onclick="closeProduct()">×</button></div><div class="product-content"><h2>${esc(p.nome)}</h2><div class="modal-price">${money(p.preco)}</div>${p.descricao?`<p class="modal-desc">${esc(p.descricao)}</p>`:""}${extra}<label class="field-label">Observação <small>(opcional)</small></label><textarea id="productNote" class="field" placeholder="Ex.: sem açúcar, bem gelado..."></textarea><div class="qty-row"><b>Quantidade</b><div class="stepper"><button onclick="stepQty(-1)">−</button><span id="productQty">1</span><button onclick="stepQty(1)">+</button></div></div><button class="main-btn" onclick="addCurrent('${p.id}')">Adicionar à sacola · <span id="addPrice">${money(p.preco)}</span></button></div></div>`;
+ $("productBody").innerHTML=`<div class="product-main"><div class="product-hero">${img?`<img src="${esc(img)}" alt="${esc(p.nome)}" onerror="this.onerror=null;this.src=fallbackFoodImage(window.currentProduct||{});">`:`<span>${esc(p.emoji||p.categorias?.emoji||"")}</span>`}<button class="hero-close" onclick="closeProduct()">×</button></div><div class="product-content"><h2>${esc(p.nome)}</h2><div class="modal-price">${money(p.preco)}</div>${p.descricao?`<p class="modal-desc">${esc(p.descricao)}</p>`:""}${extra}<label class="field-label">Observação <small>(opcional)</small></label><textarea id="productNote" class="field" placeholder="Ex.: sem açúcar, bem gelado..."></textarea><div class="qty-row"><b>Quantidade</b><div class="stepper"><button onclick="stepQty(-1)">−</button><span id="productQty">1</span><button onclick="stepQty(1)">+</button></div></div><button class="main-btn" onclick="addCurrent('${p.id}')">Adicionar à sacola · <span id="addPrice">${money(p.preco)}</span></button></div></div>`;
  $("productModal").classList.remove("hidden");window.currentProduct=p;window.currentQty=1;
 }
 function stepQty(d){window.currentQty=Math.max(1,Math.min(99,(window.currentQty||1)+d));$("productQty").textContent=window.currentQty}
