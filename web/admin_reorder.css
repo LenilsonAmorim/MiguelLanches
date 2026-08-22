@@ -1,0 +1,50 @@
+/* Reordenação de produtos no Admin */
+#products tr{
+  transition:transform .12s ease, opacity .12s ease, background .12s ease;
+}
+#products tr.reorder-dragging{
+  opacity:.55;
+  background:#fff7d6;
+}
+#products tr.reorder-over{
+  box-shadow:inset 0 -3px 0 #f5b900;
+}
+.reorder-th{
+  width:44px;
+  text-align:center !important;
+  font-size:20px !important;
+}
+.drag-handle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:32px;
+  height:34px;
+  margin-right:8px;
+  border-radius:9px;
+  background:#f3f3f3;
+  color:#777;
+  font-size:20px;
+  font-weight:900;
+  line-height:1;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  vertical-align:middle;
+}
+.drag-handle:active{
+  cursor:grabbing;
+  background:#ffd43b;
+  color:#111;
+}
+#products tr td:first-child{
+  white-space:nowrap;
+}
+@media(max-width:700px){
+  .drag-handle{
+    width:38px;
+    height:42px;
+    margin-right:8px;
+    font-size:22px;
+  }
+}
