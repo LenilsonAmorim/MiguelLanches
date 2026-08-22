@@ -9,6 +9,7 @@ try{
 }catch(e){console.error("Supabase não inicializou:",e)}
 
 let products=[],categories=[],cart=[],receiveMethod=null,neighborhoods=[];
+window.products=products;
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
@@ -89,6 +90,7 @@ async function load(){
       const [c,p]=result;
       categories=(!c.error&&c.data?.length)?c.data.filter(x=>norm(x.nome)!=="todos"):fallbackCats;
       products=(!p.error&&p.data)?p.data:[];
+      window.products=products;
     }
   }catch(e){console.error("Erro no carregamento:",e);categories=fallbackCats;products=[];}
   try{renderCategories()}catch(e){console.error(e)}
