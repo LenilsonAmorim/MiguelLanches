@@ -1,0 +1,15 @@
+/* Estrela de destaque — amarelo */
+#products .table-btn.featured-yellow {
+  color: #d89d00 !important;
+  background: #fff8d6 !important;
+  border-color: #f4bd17 !important;
+  font-weight: 1000;
+}
+
+#products .table-btn.featured-yellow::first-letter {
+  color: #f4bd17;
+}
+
+#products .table-btn.featured-saving {
+  opacity: .75;
+}
