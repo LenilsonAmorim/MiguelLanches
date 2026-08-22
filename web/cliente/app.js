@@ -163,6 +163,37 @@ function fallbackOptions(p){
  if(isCreme(p))return flavorOptions(p,"creme","Escolha o sabor");
  return "";
 }
+async function getSavedOptions(pid){
+  try{
+    if(!db || !pid) return null;
+
+    // Opções cadastradas são opcionais. Se as tabelas de opções não existirem
+    // ou houver qualquer erro, o produto segue para as opções padrão.
+    const configResult = await db
+      .from("produto_opcoes_config")
+      .select("*")
+      .eq("produto_id", pid)
+      .maybeSingle();
+
+    const optionsResult = await db
+      .from("produto_opcoes")
+      .select("*")
+      .eq("produto_id", pid)
+      .eq("ativo", true)
+      .order("ordem");
+
+    if(configResult.error && optionsResult.error) return null;
+
+    return {
+      config: configResult.error ? null : configResult.data,
+      options: optionsResult.error ? [] : (optionsResult.data || [])
+    };
+  }catch(error){
+    console.warn("Opções salvas indisponíveis; usando opções padrão.", error);
+    return null;
+  }
+}
+
 async function openProduct(pid){
  const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
  const saved=await getSavedOptions(pid);
