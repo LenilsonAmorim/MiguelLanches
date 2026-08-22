@@ -183,8 +183,7 @@
   async function moveOrder(id,status) {
     const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
     if(status==="cancelado"&&!confirm("Cancelar este pedido?"))return;
-    const clean=String(o.observacoes||"").replace(/
-?\[ML_STATUS\].*?\[\/ML_STATUS\]/,"");
+    const clean=String(o.observacoes||"").replace(/\n?\[ML_STATUS\].*?\[\/ML_STATUS\]/,"");
     const obs=clean+`
 [ML_STATUS]${status}[/ML_STATUS]`;
     const r=await db.from("pedidos").update({observacoes:obs}).eq("id",o.id);
