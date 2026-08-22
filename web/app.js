@@ -134,6 +134,21 @@ function fallbackOptions(p){
  if(isCreme(p))return flavorOptions(p,"creme","Escolha o sabor");
  return "";
 }
+async function getSavedOptions(pid){
+  try{
+    if(!db || !pid) return null;
+    const configResult = await db.from("produto_opcoes_config").select("*").eq("produto_id", pid).maybeSingle();
+    const optionsResult = await db.from("produto_opcoes").select("*").eq("produto_id", pid).eq("ativo", true).order("ordem");
+    return {
+      config: configResult.error ? null : configResult.data,
+      options: optionsResult.error ? [] : (optionsResult.data || [])
+    };
+  }catch(error){
+    console.error("Erro ao carregar opções do produto:", error);
+    return null;
+  }
+}
+
 async function openProduct(pid){
  const p=products.find(x=>String(x.id)===String(pid));if(!p)return;
  const saved=await getSavedOptions(pid);
@@ -253,8 +268,17 @@ function closeCart(){$("cartDrawer").classList.remove("open");$("shade").classLi
 function openCheckout(){if(!cart.length)return alert("Sua sacola está vazia.");closeCart();$("checkoutModal").classList.remove("hidden");if(!receiveMethod)selectReceive("retirada");updatePayment()}
 function closeCheckout(){$("checkoutModal").classList.add("hidden")}
 function selectReceive(m){
- receiveMethod=m;document.querySelectorAll(".receive").forEach(b=>b.classList.toggle("selected",b.dataset.method===m));
- const delivery=m==="entrega";$("deliveryBox").classList.toggle("hidden",!delivery);if(delivery)loadSavedAddress();
+ receiveMethod=m;
+ document.querySelectorAll(".receive").forEach(b=>b.classList.toggle("selected",b.dataset.method===m));
+ const delivery=m==="entrega";
+ $("deliveryBox").classList.toggle("hidden",!delivery);
+ const phoneBox=$("phoneBox"), phone=$("customerPhone");
+ if(phoneBox)phoneBox.classList.toggle("hidden",!delivery);
+ if(phone){
+   phone.required=delivery;
+   if(!delivery)phone.value="";
+ }
+ if(delivery)loadSavedAddress();
 }
 function loadSavedAddress(){try{const d=JSON.parse(localStorage.getItem("miguel_lanches_cliente_v1")||"null");if(!d)return;$("customerName").value||=d.nome||"";$("customerPhone").value||=d.telefone||"";$("neighborhood").value=d.bairro||"";$("address").value=d.endereco||"";$("reference").value=d.referencia||""}catch{}}
 function updatePayment(){
@@ -268,7 +292,9 @@ function updateChange(){
 async function sendOrder(e){
  e.preventDefault();if(!cart.length)return alert("Sua sacola está vazia.");if(!receiveMethod)return alert("Escolha Entrega ou Retirada.");
  const name=$("customerName").value.trim(),phone=$("customerPhone").value.trim(),payment=$("payment").value,delivery=receiveMethod==="entrega";
- if(!name||!phone)return alert("Informe nome e WhatsApp.");if(!payment)return alert("Escolha a forma de pagamento.");
+ if(!name)return alert("Informe seu nome.");
+ if(delivery&&!phone)return alert("Informe seu WhatsApp.");
+ if(!payment)return alert("Escolha a forma de pagamento.");
  if(delivery&&!$("address").value.trim())return alert("Informe o endereço.");
  const total=cart.reduce((s,x)=>s+Number(x.preco||0)*Number(x.quantidade||1),0);
  if(payment==="Dinheiro"&&Number($("cashValue").value||0)<total)return alert("O valor pago precisa ser igual ou maior que o total.");
@@ -276,10 +302,10 @@ async function sendOrder(e){
  let r=await db.from("pedidos").insert(payload).select("id").maybeSingle();
  if(r.error){
   const packed=`${payload.observacoes||""}\n[ML_ITENS]${encodeURIComponent(JSON.stringify(cart))}[/ML_ITENS]\n[ML_RECEBIMENTO]${receiveMethod}[/ML_RECEBIMENTO]\n[ML_PAGAMENTO]${payment}[/ML_PAGAMENTO]`;
-  r=await db.from("pedidos").insert({Cliente:name,telefone:phone,endereco:payload.endereco,referencia:payload.referencia,observacoes:packed,total}).select("id").maybeSingle();
+  r=await db.from("pedidos").insert({Cliente:name,telefone:delivery?phone:"",endereco:payload.endereco,referencia:payload.referencia,observacoes:packed,total}).select("id").maybeSingle();
  }
  if(r.error){console.error(r.error);return alert("Não foi possível enviar o pedido. Verifique a conexão com o sistema.");}
- localStorage.setItem("miguel_lanches_cliente_v1",JSON.stringify({nome:name,telefone:phone,bairro:payload.bairro,endereco:payload.endereco,referencia:payload.referencia}));
+ localStorage.setItem("miguel_lanches_cliente_v1",JSON.stringify({nome:name,telefone:delivery?phone:"",bairro:payload.bairro,endereco:payload.endereco,referencia:payload.referencia}));
  const num=r.data?.id||"";cart=[];renderCart();closeCheckout();$("orderNumber").textContent=num?`Pedido #${num}`:"Pedido recebido";$("successModal").classList.remove("hidden");
 }
 function closeSuccess(){$("successModal").classList.add("hidden")}
